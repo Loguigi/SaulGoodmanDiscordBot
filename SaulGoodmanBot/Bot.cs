@@ -21,8 +21,7 @@ public class Bot {
 
         var configJSON = JsonConvert.DeserializeObject<ConfigJSON>(json);
 
-        // Config for Discord client
-        var discordConfig = new DiscordConfiguration() {
+        var config = new DiscordConfiguration() {
             Intents = DiscordIntents.All,
             Token = configJSON.Token,
             TokenType = TokenType.Bot,
@@ -42,7 +41,7 @@ public class Bot {
             EnableDefaultHelp = false,
         };
 
-        // Command registration
+
         Commands = Client.UseCommandsNext(commandsConfig);
         Commands.RegisterCommands<TextCommands>();
 
