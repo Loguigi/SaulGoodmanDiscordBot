@@ -4,6 +4,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using Newtonsoft.Json;
+using SaulGoodmanBot.Commands;
 
 namespace SaulGoodmanBot;
 
@@ -21,6 +22,7 @@ public class Bot {
         var configJSON = JsonConvert.DeserializeObject<ConfigJSON>(json);
 
         var config = new DiscordConfiguration() {
+            Intents = DiscordIntents.All,
             Token = configJSON.Token,
             TokenType = TokenType.Bot,
             AutoReconnect = true,
@@ -35,7 +37,12 @@ public class Bot {
             StringPrefixes = new string[] { configJSON.Prefix },
             EnableMentionPrefix = true,
             EnableDms = true,
+            EnableDefaultHelp = false,
         };
+
+        Commands = Client.UseCommandsNext(commandsConfig);
+
+        Commands.RegisterCommands<TextCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
