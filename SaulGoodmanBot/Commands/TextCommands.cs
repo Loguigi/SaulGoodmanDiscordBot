@@ -25,5 +25,13 @@ public class TextCommands : BaseCommandModule {
         };
 
         await cmd.RespondAsync(response);
-    }   
+    }
+
+    [Command("8ball")]
+    public async Task Magic8Ball(CommandContext cmd, string question="") {
+        if (question == "") await cmd.RespondAsync("You must provide a question");
+        else {
+            
+        }
+    }
 }
