@@ -28,11 +28,12 @@ public class Bot {
             AutoReconnect = true,
         };
 
-        Client = new DiscordClient(config);
+        Client = new DiscordClient(discordConfig);
         Client.UseInteractivity(new InteractivityConfiguration() {
             Timeout = TimeSpan.FromMinutes(2)
         });
 
+        // Config for Discord commands
         var commandsConfig = new CommandsNextConfiguration() {
             StringPrefixes = new string[] { configJSON.Prefix },
             EnableMentionPrefix = true,
@@ -40,8 +41,8 @@ public class Bot {
             EnableDefaultHelp = false,
         };
 
-        Commands = Client.UseCommandsNext(commandsConfig);
 
+        Commands = Client.UseCommandsNext(commandsConfig);
         Commands.RegisterCommands<TextCommands>();
 
         await Client.ConnectAsync();

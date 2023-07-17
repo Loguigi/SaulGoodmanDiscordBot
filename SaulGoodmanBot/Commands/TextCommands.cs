@@ -1,3 +1,15 @@
+/*
+    TextCommands.cs
+
+    Text commands for the bot
+
+    *Commands:
+    -flip: flip a coin
+*/
+
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 
@@ -6,18 +18,22 @@ namespace SaulGoodmanBot.Commands;
 public class TextCommands : BaseCommandModule {
     [Command("flip")]
     public async Task CoinFlip(CommandContext cmd) {
-        Random coin = new Random();
+        var coin = new Random();
         int flip = coin.Next(1, 3);
-        await cmd.Channel.SendMessageAsync((flip == 1) ? $"`Heads` {cmd.Message.Author.Mention}" : $"`Tails` {cmd.Message.Author.Mention}");
+        var response = new DiscordEmbedBuilder() {
+            Title = (flip == 1) ? "HEADS" : "TAILS",
+            Description = "Coin Flip Results",
+            Color = (flip == 1) ? DiscordColor.Aquamarine : DiscordColor.Rose
+        };
+
+        await cmd.RespondAsync(response);
     }
 
-    [Command("wheel")]
-    public async Task Wheel(CommandContext cmd, List<String> contents) {
-        if (contents.Count == 0) {
-            await cmd.Channel.SendMessageAsync("`Error: theres nothing to put in the wheel you god damn idiot`");
-        }
+    [Command("8ball")]
+    public async Task Magic8Ball(CommandContext cmd, string question="") {
+        if (question == "") await cmd.RespondAsync("You must provide a question");
         else {
-            // TODO
+            
         }
     }
 }
