@@ -12,7 +12,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
-using SaulGoodmanBot.External;
+using SaulGoodmanBot.Library;
 
 
 namespace SaulGoodmanBot.Commands;

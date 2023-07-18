@@ -1,4 +1,4 @@
-namespace SaulGoodmanBot.External;
+namespace SaulGoodmanBot.Library;
 
 public class Magic8Ball {
     private static readonly List<String> Answers = new List<string>() {
