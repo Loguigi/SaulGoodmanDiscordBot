@@ -3,8 +3,9 @@
 
     Text commands for the bot
 
-    *Commands:
+    *Slash Commands:
     -flip: flip a coin
+    -8ball: asks question to magic 8 ball
 */
 
 using DSharpPlus.CommandsNext;
