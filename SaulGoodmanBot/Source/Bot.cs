@@ -5,9 +5,10 @@ using DSharpPlus.SlashCommands;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using Newtonsoft.Json;
+using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
 
-namespace SaulGoodmanBot;
+namespace SaulGoodmanBot.Source;
 
 public class Bot {
     public DiscordClient? Client { get; private set; }
@@ -16,7 +17,7 @@ public class Bot {
 
     public async Task RunAsync() {
         var json = string.Empty;
-        using (var fs = File.OpenRead("config.json"))
+        using (var fs = File.OpenRead("Config/config.json"))
         using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
             json = await sr.ReadToEndAsync();
 

@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace SaulGoodmanBot;
+namespace SaulGoodmanBot.Config;
 
 internal struct ConfigJSON {
     [JsonProperty("Token")]
