@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.SlashCommands;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using Newtonsoft.Json;
@@ -21,7 +22,8 @@ public class Bot {
 
         var configJSON = JsonConvert.DeserializeObject<ConfigJSON>(json);
 
-        var config = new DiscordConfiguration() {
+        // Config for Discord client
+        var discordConfig = new DiscordConfiguration() {
             Intents = DiscordIntents.All,
             Token = configJSON.Token,
             TokenType = TokenType.Bot,
@@ -41,7 +43,7 @@ public class Bot {
             EnableDefaultHelp = false,
         };
 
-
+        // Commands registration
         Commands = Client.UseCommandsNext(commandsConfig);
         Commands.RegisterCommands<TextCommands>();
 
