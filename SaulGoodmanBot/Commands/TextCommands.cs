@@ -10,14 +10,16 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.External;
 
 
 namespace SaulGoodmanBot.Commands;
 
-public class TextCommands : BaseCommandModule {
-    [Command("flip")]
-    public async Task CoinFlipCommand(CommandContext cmd) {
+public class TextCommands : ApplicationCommandModule {
+    [SlashCommand("flip", "Flips a coin")]
+    public async Task CoinFlipCommand(InteractionContext cmd) {
         var coin = new Random();
         int flip = coin.Next(1, 3);
         var response = new DiscordEmbedBuilder() {
@@ -26,12 +28,12 @@ public class TextCommands : BaseCommandModule {
             Color = (flip == 1) ? DiscordColor.Aquamarine : DiscordColor.Rose
         };
 
-        await cmd.RespondAsync(response);
+        await cmd.CreateResponseAsync(response);
     }
 
-    [Command("8ball")]
-    public async Task Magic8BallCommand(CommandContext cmd, string question="") {
-        if (question == "") await cmd.RespondAsync("You must provide a question");
+    [SlashCommand("8ball", "Ask the magic 8 ball a question")]
+    public async Task Magic8BallCommand(InteractionContext cmd, [Option("question", "Question to ask the 8 ball")] string question) {
+        if (question == "") await cmd.CreateResponseAsync("You must provide a question");
         else {
             var answer = new DiscordEmbedBuilder() {
                 Title = $"{cmd.Member.DisplayName} asked '{question}'",
@@ -39,7 +41,7 @@ public class TextCommands : BaseCommandModule {
                 Color = DiscordColor.Azure,
             };
 
-            await cmd.RespondAsync(answer);
+            await cmd.CreateResponseAsync(answer);
         }
     }
 }

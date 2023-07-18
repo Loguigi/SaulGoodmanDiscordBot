@@ -45,7 +45,9 @@ public class Bot {
 
         // Commands registration
         Commands = Client.UseCommandsNext(commandsConfig);
-        Commands.RegisterCommands<TextCommands>();
+
+        var slashCommandsConfig = Client.UseSlashCommands();
+        slashCommandsConfig.RegisterCommands<TextCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
