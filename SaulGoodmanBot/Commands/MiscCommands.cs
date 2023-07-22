@@ -8,6 +8,7 @@
     -8ball: asks question to magic 8 ball
 */
 
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
@@ -18,16 +19,16 @@ using SaulGoodmanBot.Library;
 
 namespace SaulGoodmanBot.Commands;
 
-public class TextCommands : ApplicationCommandModule {
+public class MiscCommands : ApplicationCommandModule {
     [SlashCommand("flip", "Flips a coin")]
     public async Task CoinFlipCommand(InteractionContext cmd) {
         var coin = new Random();
         int flip = coin.Next(1, 3);
-        var response = new DiscordEmbedBuilder() {
-            Title = (flip == 1) ? "HEADS" : "TAILS",
-            Description = "Coin Flip Results",
-            Color = (flip == 1) ? DiscordColor.Aquamarine : DiscordColor.Rose
-        };
+        var response = new DiscordEmbedBuilder()
+            .WithAuthor($"{cmd.User.GlobalName}'s Coin Flip", "", cmd.User.AvatarUrl)
+            .WithTitle((flip == 1) ? "Heads" : "Tails")
+            .WithColor((flip == 1) ? DiscordColor.Aquamarine : DiscordColor.Rose)
+            .WithTimestamp(DateTimeOffset.Now);
 
         await cmd.CreateResponseAsync(response);
     }
@@ -36,11 +37,12 @@ public class TextCommands : ApplicationCommandModule {
     public async Task Magic8BallCommand(InteractionContext cmd, [Option("question", "Question to ask the 8 ball")] string question) {
         if (question == "") await cmd.CreateResponseAsync("You must provide a question");
         else {
-            var answer = new DiscordEmbedBuilder() {
-                Title = $"{cmd.Member.DisplayName} asked '{question}'",
-                Description = $"Answer: {Magic8Ball.GetAnswer()}",
-                Color = DiscordColor.Azure,
-            };
+            var answer = new DiscordEmbedBuilder()
+                .WithAuthor($"{cmd.User.GlobalName} asked...", "", cmd.User.AvatarUrl)
+                .WithTitle($"\"{question}\"")
+                .WithDescription($"> {Magic8Ball.GetAnswer()}")
+                .WithColor(DiscordColor.Azure)
+                .WithTimestamp(DateTimeOffset.Now);
 
             await cmd.CreateResponseAsync(answer);
         }

@@ -7,6 +7,7 @@ using DSharpPlus.Interactivity.Extensions;
 using Newtonsoft.Json;
 using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
+using Microsoft.Extensions.Logging;
 
 namespace SaulGoodmanBot.Source;
 
@@ -29,6 +30,8 @@ public class Bot {
             Token = configJSON.Token,
             TokenType = TokenType.Bot,
             AutoReconnect = true,
+            LogTimestampFormat = "MMM dd yyyy - hh:mm:ss tt",
+            MinimumLogLevel = LogLevel.Debug
         };
 
         Client = new DiscordClient(discordConfig);
@@ -47,8 +50,10 @@ public class Bot {
         // Commands registration
         Commands = Client.UseCommandsNext(commandsConfig);
 
+        // Slash commands registration
         var slashCommandsConfig = Client.UseSlashCommands();
-        slashCommandsConfig.RegisterCommands<TextCommands>();
+        slashCommandsConfig.RegisterCommands<MiscCommands>();
+        slashCommandsConfig.RegisterCommands<WheelPickerCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);

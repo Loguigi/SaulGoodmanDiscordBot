@@ -1,5 +1,4 @@
 using Dapper;
-using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -7,22 +6,28 @@ namespace DataLibrary.Config;
 
 public static class SqlDataAccess
 {
-    public static string GetConnectionString(string name)
-    {
-        return ConfigurationManager.ConnectionStrings[name].ConnectionString;
-    }
+    public static string ConnectionString { get; } = "Server=.;Database=SaulGoodmanDB;Trusted_Connection=True;";
+    // public static string GetConnectionString(string name)
+    // {
+    //     return ConfigurationManager.ConnectionStrings[name].ConnectionString;
+    // }
 
     public static List<T> LoadData<T>(string sql)
     {
-        using (IDbConnection cnn = new SqlConnection("Server=.;Database=SaulGoodmanDB;Trusted_Connection=True;"))
-        {
-            return cnn.Query<T>(sql).ToList();
+        try {
+            using (IDbConnection cnn = new SqlConnection(ConnectionString))
+            {
+                return cnn.Query<T>(sql).ToList();
+            }
+        } catch (InvalidOperationException e) {
+            Console.WriteLine(e.Message);
+            return new List<T>();
         }
     }
 
     public static int SaveData<T>(string sql, T data)
     {
-        using (IDbConnection cnn = new SqlConnection("Server=.;Database=SaulGoodmanDB;Trusted_Connection=True;"))
+        using (IDbConnection cnn = new SqlConnection(ConnectionString))
         {
             return cnn.Execute(sql, data);
         }
