@@ -58,5 +58,6 @@ public class Bot {
         await Client.ConnectAsync();
         await Task.Delay(-1);
     }
+
     public static void Main() => new Bot().RunAsync().GetAwaiter().GetResult();
 }
