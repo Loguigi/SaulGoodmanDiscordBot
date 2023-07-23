@@ -49,6 +49,15 @@ public class WheelPicker {
         return WheelOptions[i];
     }
 
+    public bool DeleteOption(string option) {
+        if (WheelOptions.Contains(option)) {
+            WheelPickerProcessor.DeleteWheelOption(Server.Id, WheelName, option);
+            return true;
+        }
+        else
+            return false;
+    }
+
     public List<string> GetOptions() {
         return WheelOptions;
     }

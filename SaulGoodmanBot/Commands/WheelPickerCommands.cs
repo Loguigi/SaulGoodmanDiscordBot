@@ -86,7 +86,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
             wheel.SaveWheel();
             var response = new DiscordEmbedBuilder()
                 .WithAuthor("Success", "", ImageHelper.Images["Success"])
-                .WithTitle($"{option} added to {name}")
+                .WithTitle($"Values added to `{name}`")
                 .WithThumbnail(ImageHelper.Images["SmilingGus"])
                 .WithTimestamp(DateTimeOffset.Now)
                 .WithColor(DiscordColor.Green);
@@ -97,7 +97,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
 
     [SlashCommand("spin", "Spins the chosen wheel for a value")]
     public async Task SpinWheel(InteractionContext cmd, 
-        [ChoiceProvider(typeof(WheelChoiceProvider))][Option("name", "Name of the wheel picker")] string name) {
+        [Option("name", "Name of the wheel picker")] string name) {
         var wheel = new WheelPicker(cmd.Guild, name);
         
         if (!wheel.Exists()) {
@@ -126,9 +126,32 @@ public class WheelPickerCommands : ApplicationCommandModule {
     }
 
     [SlashCommand("deleteopt", "Deletes an existing option from a wheel")]
-    public async Task DeleteWheelOption(InteractionContext cmd) {
-        // TODO
-        await cmd.CreateResponseAsync("not implemented");
+    public async Task DeleteWheelOption(InteractionContext cmd,
+        [Option("name", "Name of the wheel to delete from")] string name,
+        [Option("option", "Option to delete from the wheel")] string option) {
+        var wheel = new WheelPicker(cmd.Guild, name);
+
+        if (wheel.DeleteOption(option)) {
+            // option successfully deleted
+            var response = new DiscordEmbedBuilder()
+                .WithAuthor("Success", "", ImageHelper.Images["Success"])
+                .WithTitle($"\"{option}\" deleted from `{name}`")
+                .WithThumbnail(ImageHelper.Images["SmilingGus"])
+                .WithTimestamp(DateTimeOffset.Now)
+                .WithColor(DiscordColor.Green);
+            
+            await cmd.CreateResponseAsync(response, ephemeral:true);
+        } else {
+            // wheel or option doesn't exist
+            var error = new DiscordEmbedBuilder()
+                .WithAuthor("Error", "", ImageHelper.Images["Error"])
+                .WithTitle("Invalid wheel option or invalid wheel")
+                .WithThumbnail(ImageHelper.Images["Finger"])
+                .WithTimestamp(DateTimeOffset.Now)
+                .WithColor(DiscordColor.Red);
+
+            await cmd.CreateResponseAsync(error, ephemeral:true);
+        }
     }
 
     [SlashCommand("delete", "Deletes an existing wheel picker")]
@@ -147,7 +170,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
             // error: wheel doesn't exist
             var error = new DiscordEmbedBuilder()
                 .WithAuthor("Error", "", ImageHelper.Images["Error"])
-                .WithTitle($"\"{name}\" wheel doesn't exist in {cmd.Guild.Name}")
+                .WithTitle($"`{name}` wheel doesn't exist in {cmd.Guild.Name}")
                 .WithColor(DiscordColor.Red)
                 .WithThumbnail(ImageHelper.Images["Finger"]);
 
@@ -212,19 +235,19 @@ public class WheelPickerCommands : ApplicationCommandModule {
     }
 }
 
-public class WheelChoiceProvider : IChoiceProvider {
-    public ulong GuildId { get; set; }
+// public class WheelChoiceProvider : IChoiceProvider {
+//     public ulong GuildId { get; set; }
 
-    public WheelChoiceProvider(ulong guildid) {
-        GuildId = guildid;
-    }
+//     public WheelChoiceProvider(ulong guildid) {
+//         GuildId = guildid;
+//     }
 
-    public async Task<IEnumerable<DiscordApplicationCommandOptionChoice>> Provider() {
-        return new DiscordApplicationCommandOptionChoice[]
-        {
-            //You would normally use a database call here
-            new DiscordApplicationCommandOptionChoice("testing", "testing"),
-            new DiscordApplicationCommandOptionChoice("testing2", "test option 2")
-        };
-    }
-}
+//     public async Task<IEnumerable<DiscordApplicationCommandOptionChoice>> Provider() {
+//         return new DiscordApplicationCommandOptionChoice[]
+//         {
+//             //You would normally use a database call here
+//             new DiscordApplicationCommandOptionChoice("testing", "testing"),
+//             new DiscordApplicationCommandOptionChoice("testing2", "test option 2")
+//         };
+//     }
+// }
