@@ -8,6 +8,8 @@ using Newtonsoft.Json;
 using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
 using Microsoft.Extensions.Logging;
+using DSharpPlus.EventArgs;
+using DSharpPlus.Entities;
 
 namespace SaulGoodmanBot.Source;
 
@@ -47,6 +49,8 @@ public class Bot {
             EnableDefaultHelp = false,
         };
 
+        // Client.MessageCreated += UpdateGuildIDHandler;
+
         // Commands registration
         Commands = Client.UseCommandsNext(commandsConfig);
 
@@ -54,6 +58,7 @@ public class Bot {
         var slashCommandsConfig = Client.UseSlashCommands();
         slashCommandsConfig.RegisterCommands<MiscCommands>();
         slashCommandsConfig.RegisterCommands<WheelPickerCommands>();
+        slashCommandsConfig.RegisterCommands<ReactionCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
