@@ -56,9 +56,21 @@ public class WheelPickerCommands : ApplicationCommandModule {
     [SlashCommand("add", "Adds a new option to the wheel")]
     public async Task AddWheelOption(InteractionContext cmd,
         [Option("name", "Name of the wheel picker")] string name,
-        [Option("option", "Option to be added to the wheel")] string option) {
+        [Option("option", "Option to be added to the wheel")] string option,
+        [Option("option2", "Option to be added to the wheel")] string option2="",
+        [Option("option3", "Option to be added to the wheel")] string option3="",
+        [Option("option4", "Option to be added to the wheel")] string option4="",
+        [Option("option5", "Option to be added to the wheel")] string option5="",
+        [Option("option6", "Option to be added to the wheel")] string option6="",
+        [Option("option7", "Option to be added to the wheel")] string option7="",
+        [Option("option8", "Option to be added to the wheel")] string option8="",
+        [Option("option9", "Option to be added to the wheel")] string option9="",
+        [Option("option10", "Option to be added to the wheel")] string option10="") {
 
-        var wheel = new WheelPicker(cmd.Guild, name, null, new List<string>(){option});
+        var optionsInput = new List<string>() {option, option2, option3, option4, option5, option6, option7, option8, option9, option10};
+        var options = optionsInput.Where(o => o != "").ToList();
+
+        var wheel = new WheelPicker(cmd.Guild, name, null, options);
 
         if (!wheel.Exists()) {
             // error: wheel doesn't exist
@@ -85,7 +97,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
 
     [SlashCommand("spin", "Spins the chosen wheel for a value")]
     public async Task SpinWheel(InteractionContext cmd, 
-        [Option("name", "Name of the wheel picker")] string name) {
+        [ChoiceProvider(typeof(WheelChoiceProvider))][Option("name", "Name of the wheel picker")] string name) {
         var wheel = new WheelPicker(cmd.Guild, name);
         
         if (!wheel.Exists()) {
@@ -192,5 +204,27 @@ public class WheelPickerCommands : ApplicationCommandModule {
 
             await cmd.CreateResponseAsync(response);
         }
+    }
+
+    [SlashCommand("refresh", "Refreshes the wheels in the server")]
+    public async Task Refresh(InteractionContext cmd) {
+
+    }
+}
+
+public class WheelChoiceProvider : IChoiceProvider {
+    public ulong GuildId { get; set; }
+
+    public WheelChoiceProvider(ulong guildid) {
+        GuildId = guildid;
+    }
+
+    public async Task<IEnumerable<DiscordApplicationCommandOptionChoice>> Provider() {
+        return new DiscordApplicationCommandOptionChoice[]
+        {
+            //You would normally use a database call here
+            new DiscordApplicationCommandOptionChoice("testing", "testing"),
+            new DiscordApplicationCommandOptionChoice("testing2", "test option 2")
+        };
     }
 }
