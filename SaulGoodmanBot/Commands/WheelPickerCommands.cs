@@ -76,7 +76,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
             // error: wheel doesn't exist
             var error = new DiscordEmbedBuilder()
                 .WithAuthor("Error", "", ImageHelper.Images["Error"])
-                .WithTitle($"\"{name}\" wheel doesn't exist in {cmd.Guild.Name}")
+                .WithTitle($"`{name}` wheel doesn't exist in {cmd.Guild.Name}")
                 .WithColor(DiscordColor.Red)
                 .WithThumbnail(ImageHelper.Images["Finger"]);
 
@@ -104,7 +104,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
             // error: wheel doesn't exist
             var error = new DiscordEmbedBuilder()
                 .WithAuthor("Error", "", ImageHelper.Images["Error"])
-                .WithTitle($"\"{name}\" wheel doesn't exist in {cmd.Guild.Name}")
+                .WithTitle($"`{name}` wheel doesn't exist in {cmd.Guild.Name}")
                 .WithColor(DiscordColor.Red)
                 .WithThumbnail(ImageHelper.Images["Finger"]);
 
@@ -137,7 +137,6 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 .WithAuthor("Success", "", ImageHelper.Images["Success"])
                 .WithTitle($"\"{option}\" deleted from `{name}`")
                 .WithThumbnail(ImageHelper.Images["SmilingGus"])
-                .WithTimestamp(DateTimeOffset.Now)
                 .WithColor(DiscordColor.Green);
             
             await cmd.CreateResponseAsync(response, ephemeral:true);
@@ -155,9 +154,29 @@ public class WheelPickerCommands : ApplicationCommandModule {
     }
 
     [SlashCommand("delete", "Deletes an existing wheel picker")]
-    public async Task DeleteWheel(InteractionContext cmd) {
-        // TODO
-        await cmd.CreateResponseAsync("not implemented");
+    public async Task DeleteWheel(InteractionContext cmd,
+        [Option("name", "Name of the wheel to delete")] string name) {
+        var wheel = new WheelPicker(cmd.Guild, name);
+
+        if (!wheel.Exists()) {
+            // error: wheel doesn't exist
+            var error = new DiscordEmbedBuilder()
+                .WithAuthor("Error", "", ImageHelper.Images["Error"])
+                .WithTitle($"`{name}` wheel doesn't exist in {cmd.Guild.Name}")
+                .WithColor(DiscordColor.Red)
+                .WithThumbnail(ImageHelper.Images["Finger"]);
+
+            await cmd.CreateResponseAsync(error, ephemeral:true);
+        } else {
+            // wheel successfully deleted
+            var response = new DiscordEmbedBuilder()
+                .WithAuthor("Success", "", ImageHelper.Images["Success"])
+                .WithTitle($"`{name}` deleted from {cmd.Guild.Name}")
+                .WithThumbnail(ImageHelper.Images["SmilingGus"])
+                .WithColor(DiscordColor.Green);
+            
+            await cmd.CreateResponseAsync(response);
+        }
     }
 
     [SlashCommand("list", "Shows options in a wheel")]
