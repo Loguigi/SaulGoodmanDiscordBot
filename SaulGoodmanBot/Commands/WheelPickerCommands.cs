@@ -9,6 +9,7 @@
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
 using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Source;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -247,26 +248,4 @@ public class WheelPickerCommands : ApplicationCommandModule {
             await cmd.CreateResponseAsync(response);
         }
     }
-
-    [SlashCommand("refresh", "Refreshes the wheels in the server")]
-    public async Task Refresh(InteractionContext cmd) {
-
-    }
 }
-
-// public class WheelChoiceProvider : IChoiceProvider {
-//     public ulong GuildId { get; set; }
-
-//     public WheelChoiceProvider(ulong guildid) {
-//         GuildId = guildid;
-//     }
-
-//     public async Task<IEnumerable<DiscordApplicationCommandOptionChoice>> Provider() {
-//         return new DiscordApplicationCommandOptionChoice[]
-//         {
-//             //You would normally use a database call here
-//             new DiscordApplicationCommandOptionChoice("testing", "testing"),
-//             new DiscordApplicationCommandOptionChoice("testing2", "test option 2")
-//         };
-//     }
-// }

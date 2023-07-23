@@ -9,4 +9,8 @@ public static class ImageHelper {
         {"PS2Jesse", "https://cdn.discordapp.com/attachments/1129734051016740886/1131553238206906368/Jesse-Pinkman-PNG-Picture.png"},
         {"Heisenberg", "https://cdn.discordapp.com/attachments/1129734051016740886/1131562218547318804/Daco_5708712.png"}
     };
+
+    public static Dictionary<string, string> Reactions = new Dictionary<string, string>() {
+        {"wap", "https://cdn.discordapp.com/attachments/270349691147780096/1124955300420648990/20230702_025013.jpg"}
+    };
 }
