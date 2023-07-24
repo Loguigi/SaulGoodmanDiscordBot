@@ -9,7 +9,6 @@
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
 using SaulGoodmanBot.Library;
-using SaulGoodmanBot.Source;
 
 namespace SaulGoodmanBot.Commands;
 
