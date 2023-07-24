@@ -27,6 +27,7 @@ public class MiscCommands : ApplicationCommandModule {
         var response = new DiscordEmbedBuilder()
             .WithAuthor($"{cmd.User.GlobalName}'s Coin Flip", "", cmd.User.AvatarUrl)
             .WithTitle((flip == 1) ? "Heads" : "Tails")
+            .WithThumbnail(ImageHelper.Images["PS2Jesse"])
             .WithColor((flip == 1) ? DiscordColor.Aquamarine : DiscordColor.Rose)
             .WithTimestamp(DateTimeOffset.Now);
 
@@ -40,6 +41,7 @@ public class MiscCommands : ApplicationCommandModule {
             var answer = new DiscordEmbedBuilder()
                 .WithAuthor($"{cmd.User.GlobalName} asked...", "", cmd.User.AvatarUrl)
                 .WithTitle($"\"{question}\"")
+                .WithThumbnail(ImageHelper.Images["Heisenberg"])
                 .WithDescription($"> {Magic8Ball.GetAnswer()}")
                 .WithColor(DiscordColor.Azure)
                 .WithTimestamp(DateTimeOffset.Now);
