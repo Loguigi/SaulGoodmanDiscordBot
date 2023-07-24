@@ -92,9 +92,9 @@ public class WheelPickerCommands : ApplicationCommandModule {
         } else {
             // outputs result
             var response = new DiscordEmbedBuilder()
-                .WithAuthor($"{cmd.User.GlobalName} spins {name}...", "", serverWheels.Wheels[name].Image)
+                .WithAuthor($"{cmd.User.GlobalName} spins {name}...", "", cmd.User.AvatarUrl)
                 .WithTitle(serverWheels.Wheels[name].Spin())
-                .WithThumbnail(ImageHelper.Images["PS2Jesse"])
+                .WithThumbnail(serverWheels.Wheels[name].Image)
                 .WithTimestamp(DateTimeOffset.Now)
                 .WithColor(DiscordColor.Gold);
 
