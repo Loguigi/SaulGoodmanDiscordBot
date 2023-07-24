@@ -138,7 +138,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
             // display all wheels in server
             if (serverWheels.Wheels.Count == 0) {
                 // error: no wheels in server
-                await cmd.CreateResponseAsync(StandardOutput.Error($"There are no wheels in {cmd.Guild.Name}"));
+                await cmd.CreateResponseAsync(StandardOutput.Error($"There are no wheels in {cmd.Guild.Name}"), ephemeral:true);
             } else {
                 // displays all wheels
                 var response = new DiscordEmbedBuilder()
