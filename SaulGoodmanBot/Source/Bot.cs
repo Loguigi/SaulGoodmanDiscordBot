@@ -14,11 +14,13 @@ using DSharpPlus.Entities;
 namespace SaulGoodmanBot.Source;
 
 public class Bot {
-    public DiscordClient? Client { get; private set; }
-    public InteractivityExtension? Interactivity { get; private set; }
-    public CommandsNextExtension? Commands { get; private set; }
+    // Discord Client Properties
+    public static DiscordClient Client { get; private set; }
+    public static InteractivityExtension? Interactivity { get; private set; }
+    public static CommandsNextExtension? Commands { get; private set; }
 
-    public async Task RunAsync() {
+    public async Task Main(string[] args) {
+        // Json Config Reader
         var json = string.Empty;
         using (var fs = File.OpenRead("Config/config.json"))
         using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
@@ -26,7 +28,7 @@ public class Bot {
 
         var configJSON = JsonConvert.DeserializeObject<ConfigJSON>(json);
 
-        // Config for Discord client
+        // Discord Client Config
         var discordConfig = new DiscordConfiguration() {
             Intents = DiscordIntents.All,
             Token = configJSON.Token,
@@ -41,15 +43,15 @@ public class Bot {
             Timeout = TimeSpan.FromMinutes(2)
         });
 
-        // Config for Discord commands
+        // Event Handlers
+
+        // Commands Config
         var commandsConfig = new CommandsNextConfiguration() {
             StringPrefixes = new string[] { configJSON.Prefix },
             EnableMentionPrefix = true,
             EnableDms = true,
             EnableDefaultHelp = false,
         };
-
-        // Client.MessageCreated += UpdateGuildIDHandler;
 
         // Commands registration
         Commands = Client.UseCommandsNext(commandsConfig);
@@ -59,10 +61,9 @@ public class Bot {
         slashCommandsConfig.RegisterCommands<MiscCommands>();
         slashCommandsConfig.RegisterCommands<WheelPickerCommands>();
         slashCommandsConfig.RegisterCommands<ReactionCommands>();
+        // slashCommandsConfig.RegisterCommands<BirthdayCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
     }
-
-    public static void Main() => new Bot().RunAsync().GetAwaiter().GetResult();
 }
