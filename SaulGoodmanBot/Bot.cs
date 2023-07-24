@@ -8,18 +8,16 @@ using Newtonsoft.Json;
 using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
 using Microsoft.Extensions.Logging;
-using DSharpPlus.EventArgs;
-using DSharpPlus.Entities;
 
-namespace SaulGoodmanBot.Source;
+namespace SaulGoodmanBot;
 
 public class Bot {
     // Discord Client Properties
-    public static DiscordClient Client { get; private set; }
+    public static DiscordClient? Client { get; private set; }
     public static InteractivityExtension? Interactivity { get; private set; }
     public static CommandsNextExtension? Commands { get; private set; }
 
-    public async Task Main(string[] args) {
+    public async Task MainAsync() {
         // Json Config Reader
         var json = string.Empty;
         using (var fs = File.OpenRead("Config/config.json"))
@@ -61,9 +59,11 @@ public class Bot {
         slashCommandsConfig.RegisterCommands<MiscCommands>();
         slashCommandsConfig.RegisterCommands<WheelPickerCommands>();
         slashCommandsConfig.RegisterCommands<ReactionCommands>();
-        // slashCommandsConfig.RegisterCommands<BirthdayCommands>();
+        slashCommandsConfig.RegisterCommands<BirthdayCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
     }
+
+    public static void Main() => new Bot().MainAsync().GetAwaiter().GetResult();
 }
