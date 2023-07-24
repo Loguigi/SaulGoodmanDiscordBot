@@ -23,33 +23,16 @@ public class WheelPickerCommands : ApplicationCommandModule {
         [Option("value2", "Second value to add to the wheel")][MaximumLength(100)] string value2,
         [Option("image", "Image for the wheel")] DiscordAttachment? img = null ) {
         
-        WheelPicker wheel;
-        if (img == null) {
-            wheel = new WheelPicker(cmd.Guild, name, null, new List<string>(){value1, value2});
-        } else {
-            wheel = new WheelPicker(cmd.Guild, name, img.Url, new List<string>(){value1, value2});
-        }
+        var serverWheels = new WheelPickers(cmd);
         
-        if (wheel.Exists()) {
+        if (serverWheels.Contains(name)) {
             // error: wheel already exists
-            var error = new DiscordEmbedBuilder()
-                .WithAuthor("Error", "", ImageHelper.Images["Error"])
-                .WithTitle($"'{name}' wheel already exists in {cmd.Guild.Name}")
-                .WithColor(DiscordColor.Red)
-                .WithThumbnail(ImageHelper.Images["Finger"]);
-
-            await cmd.CreateResponseAsync(error, ephemeral:true);
+            await cmd.CreateResponseAsync(StandardOutput.Error($"`{name}` already exists in {cmd.Guild.Name}"), ephemeral:true);
         } else {
             // saves new wheel
-            wheel.SaveWheel();
-            var response = new DiscordEmbedBuilder()
-                .WithAuthor("Success", "", ImageHelper.Images["Success"])
-                .WithTitle($"{name} wheel added")
-                .WithThumbnail(ImageHelper.Images["SmilingGus"])
-                .WithTimestamp(DateTimeOffset.Now)
-                .WithColor(DiscordColor.Green);
+            serverWheels.Add(new Wheel(name, new List<string>(){value1, value2}, img.Url));
 
-            await cmd.CreateResponseAsync(response);
+            await cmd.CreateResponseAsync(StandardOutput.Success($"`{name}` wheel added"));
         }
     }
 
@@ -66,30 +49,28 @@ public class WheelPickerCommands : ApplicationCommandModule {
         [Option("option8", "Option to be added to the wheel")] string option8="",
         [Option("option9", "Option to be added to the wheel")] string option9="",
         [Option("option10", "Option to be added to the wheel")] string option10="") {
-
+        
+        var serverWheels = new WheelPickers(cmd);
         var optionsInput = new List<string>() {option, option2, option3, option4, option5, option6, option7, option8, option9, option10};
         var options = optionsInput.Where(o => o != "").ToList();
 
-        var wheel = new WheelPicker(cmd.Guild, name, null, options);
-
-        if (!wheel.Exists()) {
+        if (!serverWheels.Contains(name)) {
             // error: wheel doesn't exist
-            var error = new DiscordEmbedBuilder()
-                .WithAuthor("Error", "", ImageHelper.Images["Error"])
-                .WithTitle($"`{name}` wheel doesn't exist in {cmd.Guild.Name}")
-                .WithColor(DiscordColor.Red)
-                .WithThumbnail(ImageHelper.Images["Finger"]);
-
-            await cmd.CreateResponseAsync(error, ephemeral:true);
+            await cmd.CreateResponseAsync(StandardOutput.Error($"`{name}` wheel doesn't exist in {cmd.Guild.Name}"), ephemeral:true);
         } else {
-            // saves new wheel option
-            wheel.SaveWheel();
+            // saves new wheel option(s)
+            serverWheels.Add(new Wheel(name, options, serverWheels.Wheels[name].Image));
             var response = new DiscordEmbedBuilder()
                 .WithAuthor("Success", "", ImageHelper.Images["Success"])
                 .WithTitle($"Values added to `{name}`")
                 .WithThumbnail(ImageHelper.Images["SmilingGus"])
+                .WithDescription("")
                 .WithTimestamp(DateTimeOffset.Now)
                 .WithColor(DiscordColor.Green);
+
+            foreach (var o in options) {
+                response.Description += $"{o}\n";
+            }
 
             await cmd.CreateResponseAsync(response, ephemeral:true);
         }
@@ -98,25 +79,17 @@ public class WheelPickerCommands : ApplicationCommandModule {
     [SlashCommand("spin", "Spins the chosen wheel for a value")]
     public async Task SpinWheel(InteractionContext cmd, 
         [Option("name", "Name of the wheel picker")] string name) {
-        var wheel = new WheelPicker(cmd.Guild, name);
         
-        if (!wheel.Exists()) {
+        var serverWheels = new WheelPickers(cmd); 
+        
+        if (!serverWheels.Contains(name)) {
             // error: wheel doesn't exist
-            var error = new DiscordEmbedBuilder()
-                .WithAuthor("Error", "", ImageHelper.Images["Error"])
-                .WithTitle($"`{name}` wheel doesn't exist in {cmd.Guild.Name}")
-                .WithColor(DiscordColor.Red)
-                .WithThumbnail(ImageHelper.Images["Finger"]);
-
-            await cmd.CreateResponseAsync(error, ephemeral:true);
+            await cmd.CreateResponseAsync(StandardOutput.Error($"`{name}` wheel doesn't exist in {cmd.Guild.Name}"), ephemeral:true);
         } else {
-            // spins the wheel for a value
-            var result = wheel.Spin();
-            
             // outputs result
             var response = new DiscordEmbedBuilder()
-                .WithAuthor($"{cmd.User.GlobalName} spins {name}...", "", wheel.GetImgUrl())
-                .WithTitle(result)
+                .WithAuthor($"{cmd.User.GlobalName} spins {name}...", "", serverWheels.Wheels[name].Image)
+                .WithTitle(serverWheels.Wheels[name].Spin())
                 .WithThumbnail(ImageHelper.Images["PS2Jesse"])
                 .WithTimestamp(DateTimeOffset.Now)
                 .WithColor(DiscordColor.Gold);
@@ -125,126 +98,87 @@ public class WheelPickerCommands : ApplicationCommandModule {
         }
     }
 
-    [SlashCommand("deleteopt", "Deletes an existing option from a wheel")]
-    public async Task DeleteWheelOption(InteractionContext cmd,
-        [Option("name", "Name of the wheel to delete from")] string name,
-        [Option("option", "Option to delete from the wheel")] string option) {
-        var wheel = new WheelPicker(cmd.Guild, name);
-
-        if (wheel.DeleteOption(option)) {
-            // option successfully deleted
-            var response = new DiscordEmbedBuilder()
-                .WithAuthor("Success", "", ImageHelper.Images["Success"])
-                .WithTitle($"\"{option}\" deleted from `{name}`")
-                .WithThumbnail(ImageHelper.Images["SmilingGus"])
-                .WithColor(DiscordColor.Green);
-            
-            await cmd.CreateResponseAsync(response, ephemeral:true);
-        } else {
-            // wheel or option doesn't exist
-            var error = new DiscordEmbedBuilder()
-                .WithAuthor("Error", "", ImageHelper.Images["Error"])
-                .WithTitle("Invalid wheel option or invalid wheel")
-                .WithThumbnail(ImageHelper.Images["Finger"])
-                .WithTimestamp(DateTimeOffset.Now)
-                .WithColor(DiscordColor.Red);
-
-            await cmd.CreateResponseAsync(error, ephemeral:true);
-        }
-    }
-
-    [SlashCommand("delete", "Deletes an existing wheel picker")]
+    [SlashCommand("delete", "Deletes a wheel picker or option from a wheel picker")]
     public async Task DeleteWheel(InteractionContext cmd,
-        [Option("name", "Name of the wheel to delete")] string name) {
-        var wheel = new WheelPicker(cmd.Guild, name);
+        [Option("name", "Name of the wheel to delete or delete from")] string name,
+        [Option("option", "Option to delete from the wheel")] string option="") {
+        
+        var serverWheels = new WheelPickers(cmd);
 
-        if (!wheel.Exists()) {
+        if (!serverWheels.Contains(name)) {
             // error: wheel doesn't exist
-            var error = new DiscordEmbedBuilder()
-                .WithAuthor("Error", "", ImageHelper.Images["Error"])
-                .WithTitle($"`{name}` wheel doesn't exist in {cmd.Guild.Name}")
-                .WithColor(DiscordColor.Red)
-                .WithThumbnail(ImageHelper.Images["Finger"]);
-
-            await cmd.CreateResponseAsync(error, ephemeral:true);
+            await cmd.CreateResponseAsync(StandardOutput.Error($"`{name}` wheel doesn't exist in {cmd.Guild.Name}"), ephemeral:true);
         } else {
-            // wheel successfully deleted
-            var response = new DiscordEmbedBuilder()
-                .WithAuthor("Success", "", ImageHelper.Images["Success"])
-                .WithTitle($"`{name}` deleted from {cmd.Guild.Name}")
-                .WithThumbnail(ImageHelper.Images["SmilingGus"])
-                .WithColor(DiscordColor.Green);
-            
-            await cmd.CreateResponseAsync(response);
+            if (option == "") {
+                // delete wheel
+                serverWheels.Delete(serverWheels.Wheels[name]);
+                
+                await cmd.CreateResponseAsync(StandardOutput.Success($"`{name}` deleted from {cmd.Guild.Name}"));
+            } else {
+                if (serverWheels.Wheels[name].Options.Contains(option)) {
+                    // delete option
+                    serverWheels.Delete(serverWheels.Wheels[name], option);
+
+                    await cmd.CreateResponseAsync(StandardOutput.Success($"\"{option}\" deleted from `{name}`"), ephemeral:true);
+                } else {
+                    // error: option doesn't exist in wheel
+                    await cmd.CreateResponseAsync(StandardOutput.Error($"\"{option}\" doesn't exist in `{name}`"), ephemeral:true);
+                }
+            }
         }
     }
 
-    [SlashCommand("list", "Shows options in a wheel")]
+    [SlashCommand("list", "Shows all wheels or options in a specific wheel")]
     public async Task ListWheelOptions(InteractionContext cmd, 
-        [Option("name", "Name of the wheel picker")] string name) {
+        [Option("name", "Name of the wheel picker")] string name="") {
 
-        var wheel = new WheelPicker(cmd.Guild, name);
+        var serverWheels = new WheelPickers(cmd);
 
-        if (!wheel.Exists()) {
-            // error: wheel doesn't exist
-            var error = new DiscordEmbedBuilder()
-                .WithAuthor("Error", "", ImageHelper.Images["Error"])
-                .WithTitle($"`{name}` wheel doesn't exist in {cmd.Guild.Name}")
-                .WithColor(DiscordColor.Red)
-                .WithThumbnail(ImageHelper.Images["Finger"]);
+        if (name == "") {
+            // display all wheels in server
+            if (serverWheels.Wheels.Count == 0) {
+                // error: no wheels in server
+                await cmd.CreateResponseAsync(StandardOutput.Error($"There are no wheels in {cmd.Guild.Name}"));
+            } else {
+                // displays all wheels
+                var response = new DiscordEmbedBuilder()
+                    .WithAuthor(cmd.Guild.Name, "", cmd.Guild.IconUrl)
+                    .WithTitle("Wheel Pickers")
+                    .WithDescription("")
+                    .WithThumbnail(ImageHelper.Images["PS2Jesse"])
+                    .WithTimestamp(DateTimeOffset.Now)
+                    .WithColor(DiscordColor.Blurple);
 
-            await cmd.CreateResponseAsync(error, ephemeral:true);
-        } else {
-            var options = wheel.GetOptions();
-            int optionNum = 1;
-            
-            // outputs wheel options
-            var response = new DiscordEmbedBuilder() {
-                Title = name,
-                Description = "",
-                Color = DiscordColor.MidnightBlue
-            };
+                var wheelNum = 1;
+                foreach (var w in serverWheels.List()) {
+                    response.Description += $"`{wheelNum}.` {w.Key} ({w.Value} options)\n";
+                    wheelNum++;
+                }
 
-            foreach (var option in options) {
-                response.Description += $"{optionNum}: {option}\n";
-                optionNum++;
+                await cmd.CreateResponseAsync(response);
             }
-
-            await cmd.CreateResponseAsync(response);
-        }
-    }
-
-    [SlashCommand("listall", "Shows all available wheel pickers")]
-    public async Task ListWheels(InteractionContext cmd) {
-        var wheels = new WheelPicker(cmd.Guild);
-        var output = wheels.GetAllWheels();
-
-        if (output == null) {
-            // error: no wheels in server
-            var error = new DiscordEmbedBuilder()
-                .WithAuthor("Error", "", ImageHelper.Images["Error"])
-                .WithTitle($"There are no wheels in {cmd.Guild.Name}")
-                .WithColor(DiscordColor.Red)
-                .WithThumbnail(ImageHelper.Images["Finger"]);
-
-            await cmd.CreateResponseAsync(error, ephemeral:true);
         } else {
-            // outputs wheel options
-            var response = new DiscordEmbedBuilder()
-                .WithAuthor(cmd.Guild.Name, "", cmd.Guild.IconUrl)
-                .WithTitle("Wheel Pickers")
-                .WithDescription("")
-                .WithThumbnail(ImageHelper.Images["PS2Jesse"])
-                .WithTimestamp(DateTimeOffset.Now)
-                .WithColor(DiscordColor.Blurple);
+            if (!serverWheels.Contains(name)) {
+                // error: wheel doesn't exist
+                await cmd.CreateResponseAsync(StandardOutput.Error($"`{name}` wheel doesn't exist in {cmd.Guild.Name}"), ephemeral:true);
+            } else {
+                // display wheel options
+                var response = new DiscordEmbedBuilder()
+                    .WithAuthor(cmd.Guild.Name, "", cmd.Guild.IconUrl)
+                    .WithTitle(serverWheels.Wheels[name].Name)
+                    .WithThumbnail(serverWheels.Wheels[name].Image)
+                    .WithDescription("")
+                    .WithTimestamp(DateTimeOffset.Now)
+                    .WithColor(DiscordColor.MidnightBlue);
 
-            var wheelNum = 1;
-            foreach (var wheel in output) {
-                response.Description += $"`{wheelNum}.` {wheel.Key} ({wheel.Value} options)\n";
-                wheelNum++;
+                var optNum = 1;
+                foreach (var o in serverWheels.Wheels[name].Options) {
+                    response.Description += $"`{optNum}`. {o}\n";
+                    optNum++;
+                }
+
+                await cmd.CreateResponseAsync(response);
             }
-
-            await cmd.CreateResponseAsync(response);
         }
     }
 }
