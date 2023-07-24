@@ -10,7 +10,7 @@ public static class WheelPickerProcessor {
     }
 
     public static List<WheelPickerModel> LoadAllWheels(ulong guildid) {
-        string sql = @$"select WheelName, WheelOption from dbo.Wheels where GuildId={guildid};";
+        string sql = @$"select WheelName, WheelOption, ImageUrl from dbo.Wheels where GuildId={guildid};";
         return SqlDataAccess.LoadData<WheelPickerModel>(sql);
     }
 
