@@ -30,7 +30,11 @@ public class WheelPickerCommands : ApplicationCommandModule {
             await cmd.CreateResponseAsync(StandardOutput.Error($"`{name}` already exists in {cmd.Guild.Name}"), ephemeral:true);
         } else {
             // saves new wheel
-            serverWheels.Add(new Wheel(name, new List<string>(){value1, value2}, img.Url));
+            if (img == null) {
+                serverWheels.Add(new Wheel(name, new List<string>(){value1, value2}, null));
+            } else {
+                serverWheels.Add(new Wheel(name, new List<string>(){value1, value2}, img.Url));
+            }
 
             await cmd.CreateResponseAsync(StandardOutput.Success($"`{name}` wheel added"));
         }
