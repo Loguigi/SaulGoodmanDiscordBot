@@ -1,6 +1,3 @@
-using DSharpPlus;
-using DSharpPlus.Entities;
-
 namespace DataLibrary.Models;
 
 public class WheelPickerModel {
