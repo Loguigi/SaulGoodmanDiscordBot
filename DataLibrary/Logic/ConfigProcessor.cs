@@ -9,12 +9,12 @@ public static class ConfigProcessor {
         return SqlDataAccess.LoadData<ConfigModel>(sql);
     }
 
-    public static int SaveConfig(ulong guildid, string? welcome=null, string? leave=null, int bdayNotifs=1, DateTime? pauseBdayNotifs=null) {
+    public static int SaveConfig(ulong guildid, string? welcome, string? leave, int bdayNotifs, DateTime pauseBdayNotifs) {
         string sql = @$"insert into dbo.Config values ({guildid}, '{welcome}', '{leave}', {bdayNotifs}, '{pauseBdayNotifs}');";
         return SqlDataAccess.SaveData<ConfigModel>(sql, new ConfigModel());
     }
 
-    public static int UpdateConfig(ulong guildid, string? welcome=null, string? leave=null, int bdayNotifs=1, DateTime? pauseBdayNotifs=null) {
+    public static int UpdateConfig(ulong guildid, string? welcome, string? leave, int bdayNotifs, DateTime pauseBdayNotifs) {
         string sql = @$"update dbo.Config set 
                 WelcomeMessage='{welcome}', 
                 LeaveMessage='{leave}', 

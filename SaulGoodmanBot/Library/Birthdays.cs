@@ -75,14 +75,19 @@ public class Birthdays {
 
     public async Task CheckBirthdayToday() {
         var Config = new ServerConfig(GuildId);
-        if (Config.BirthdayNotifications && Config.PauseBdayNotifsTimer == null) {
+        if (Config.PauseBdayNotifsTimer == DateTime.Now.AddDays(-1)) {
+            Config.PauseBdayNotifsTimer = DATE_ERROR;
+            Config.UpdateConfig();
+        }
+
+        if (Config.BirthdayNotifications && Config.PauseBdayNotifsTimer == DATE_ERROR) {
             foreach (var birthday in BirthdayList) {
-                if (birthday.BDay == DateTime.Today && Client != null) {
+                if (birthday.IsBirthdayToday() && Client != null) {
                     var server = await Client.GetGuildAsync(GuildId);
                     var bdayMessage = await new DiscordMessageBuilder()
-                        .WithContent("@everyone")
                         .AddEmbed(new DiscordEmbedBuilder()
-                            .WithDescription($"# It's the birthday of {birthday.User.Mention}! ({birthday.GetAge()})"))
+                            .WithDescription($"# {DiscordEmoji.FromName(Client, ":birthday:", false)} It's the birthday of {birthday.User.Mention}! ({birthday.GetAge()})")
+                            .WithColor(DiscordColor.HotPink))
                         .SendAsync(server.GetDefaultChannel());
 
                     Config.PauseBdayNotifsTimer = DateTime.Now;
@@ -125,6 +130,10 @@ public class Birthday {
         }
 
         return age;
+    }
+
+    public bool IsBirthdayToday() {
+        return BDay.Month == DateTime.Now.Month && BDay.Day == DateTime.Now.Day;
     }
 
     public DiscordUser User { get; set; }

@@ -10,6 +10,7 @@ using SaulGoodmanBot.Commands;
 using SaulGoodmanBot.Library;
 using Microsoft.Extensions.Logging;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Entities;
 
 namespace SaulGoodmanBot;
 
@@ -35,7 +36,7 @@ public class Bot {
             TokenType = TokenType.Bot,
             AutoReconnect = true,
             LogTimestampFormat = "MMM dd yyyy - hh:mm:ss tt",
-            MinimumLogLevel = LogLevel.Debug
+            MinimumLogLevel = LogLevel.Debug,
         };
 
         Client = new DiscordClient(discordConfig);
@@ -44,6 +45,7 @@ public class Bot {
         });
 
         // Event Handlers
+        Client.SessionCreated += OnReadyHandler;
         Client.MessageCreated += BirthdayMessageHandler;
 
         // Commands Config
@@ -68,9 +70,15 @@ public class Bot {
         await Task.Delay(-1);
     }
 
+    public async Task OnReadyHandler(DiscordClient s, SessionReadyEventArgs e) {
+        var activity = new DiscordActivity("testing");
+        await s.UpdateStatusAsync(activity, UserStatus.DoNotDisturb);
+    }
+
     public async Task BirthdayMessageHandler(DiscordClient s, MessageCreateEventArgs e) {
         var bdayList = new Birthdays(e.Guild.Id, s);
-        await bdayList.CheckBirthdayToday();
+        if (!e.Author.IsBot)
+            await bdayList.CheckBirthdayToday();
     }
 
     public static void Main() => new Bot().MainAsync().GetAwaiter().GetResult();
