@@ -20,7 +20,7 @@ public class ReactionChoiceProvider : IChoiceProvider {
         foreach (var reaction in ImageHelper.Reactions) {
             choices.Add(new DiscordApplicationCommandOptionChoice(reaction.Key, reaction.Value));
         }
-        
+        await Task.CompletedTask;
         return choices;
     }
 }

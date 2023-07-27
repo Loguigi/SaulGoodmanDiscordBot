@@ -5,5 +5,5 @@ public class ConfigModel {
     public string? WelcomeMessage { get; set; } = null;
     public string? LeaveMessage { get; set; } = null;
     public int BirthdayNotifications { get; set; } = 1;
-    public DateTime? PauseBdayNotifsTimer { get; set; } = null;
+    public DateTime PauseBdayNotifsTimer { get; set; }
 }

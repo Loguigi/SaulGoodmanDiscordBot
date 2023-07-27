@@ -30,5 +30,6 @@ public class ServerConfig {
     public string? WelcomeMessage { get; set; } = null;
     public string? LeaveMessage { get; set; } = null;
     public bool BirthdayNotifications { get; set; } = true;
-    public DateTime? PauseBdayNotifsTimer { get; set; } = null;
+    public DateTime PauseBdayNotifsTimer { get; set; } = DATE_ERROR;
+    public static DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1000");
 }

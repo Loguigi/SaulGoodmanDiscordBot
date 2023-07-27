@@ -8,12 +8,8 @@
     -8ball: asks question to magic 8 ball
 */
 
-using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.Library;
 
 
@@ -25,11 +21,8 @@ public class MiscCommands : ApplicationCommandModule {
         var coin = new Random();
         int flip = coin.Next(1, 3);
         var response = new DiscordEmbedBuilder()
-            .WithAuthor($"{cmd.User.GlobalName}'s Coin Flip", "", cmd.User.AvatarUrl)
-            .WithTitle((flip == 1) ? "Heads" : "Tails")
-            .WithThumbnail(ImageHelper.Images["PS2Jesse"])
-            .WithColor((flip == 1) ? DiscordColor.Aquamarine : DiscordColor.Rose)
-            .WithTimestamp(DateTimeOffset.Now);
+            .WithDescription($"# {((flip == 1) ? "Heads" : "Tails")}")
+            .WithColor((flip == 1) ? DiscordColor.Aquamarine : DiscordColor.Rose);
 
         await cmd.CreateResponseAsync(response);
     }

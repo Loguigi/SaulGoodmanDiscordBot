@@ -33,12 +33,9 @@ public class BirthdayCommands : ApplicationCommandModule {
             var response = new DiscordEmbedBuilder()
                 .WithAuthor($"{user.GlobalName}'s birthday", "", user.AvatarUrl)
                 .WithTitle(bday.ToString("MMMM d, yyyy"))
-                .WithThumbnail(ImageHelper.Images["50"])
-                .WithFooter(ctx.Guild.Name, ctx.Guild.IconUrl)
-                .WithTimestamp(DateTimeOffset.Now)
                 .WithColor(DiscordColor.Lilac);
 
-            await ctx.CreateResponseAsync(response);
+            await ctx.CreateResponseAsync(response, ephemeral:true);
         }
     }
 
@@ -57,12 +54,12 @@ public class BirthdayCommands : ApplicationCommandModule {
             // birthday not saved yet, so save birthday
             bday.Add(new Birthday(user, date));
 
-            await ctx.CreateResponseAsync(StandardOutput.Success($"{user.GlobalName}'s birthday set to {month}/{day}/{year}"));
+            await ctx.CreateResponseAsync(StandardOutput.Success($"{user.Mention}'s birthday set to {month}/{day}/{year}"));
         } else {
             // birthday already exists, so update birthday
             bday.Update(new Birthday(user, date));
 
-            await ctx.CreateResponseAsync(StandardOutput.Success($"{user.GlobalName}'s birthday changed to {month}/{day}/{year}"));
+            await ctx.CreateResponseAsync(StandardOutput.Success($"{user.Mention}'s birthday changed to {month}/{day}/{year}"));
         }
     }
 
@@ -78,12 +75,10 @@ public class BirthdayCommands : ApplicationCommandModule {
             var response = new DiscordEmbedBuilder()
                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
                 .WithTitle("Birthdays")
-                .WithDescription("")
-                .WithTimestamp(DateTimeOffset.Now)
-                .WithColor(DiscordColor.Blurple);
+                .WithDescription("");
 
             foreach (var birthday in bdayList.GetBirthdays()) {
-                response.Description += $"{birthday.User.GlobalName}: {birthday.BDay.ToString("MMMM d")} `({birthday.GetAge() + 1})`\n";
+                response.Description += $"{birthday.User.Mention}: {birthday.BDay.ToString("MMMM d")} `({birthday.GetAge() + 1})`\n";
             }
 
             await ctx.CreateResponseAsync(response);
@@ -101,11 +96,8 @@ public class BirthdayCommands : ApplicationCommandModule {
             var nextBirthday = bdayList.Next();
             var response = new DiscordEmbedBuilder()
                 .WithAuthor("Next Birthday")
-                .WithTitle(nextBirthday.User.GlobalName)
                 .WithThumbnail(nextBirthday.User.AvatarUrl)
-                .WithDescription(nextBirthday.BDay.ToString("MMMM d, yyyy"))
-                .WithFooter(ctx.Guild.Name, ctx.Guild.IconUrl)
-                .WithTimestamp(DateTimeOffset.Now)
+                .WithDescription($"### {nextBirthday.User.Mention}\n{nextBirthday.BDay.ToString("MMMM d, yyyy")}")
                 .WithColor(DiscordColor.SpringGreen);
 
             await ctx.CreateResponseAsync(response);
@@ -117,6 +109,7 @@ public class MonthChoiceProvider : IChoiceProvider
 {
     public async Task<IEnumerable<DiscordApplicationCommandOptionChoice>> Provider()
     {
+        await Task.CompletedTask;
         return new DiscordApplicationCommandOptionChoice[]
         {
             new DiscordApplicationCommandOptionChoice("January", 1),
