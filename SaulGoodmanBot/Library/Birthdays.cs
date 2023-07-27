@@ -1,3 +1,4 @@
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DataLibrary.Logic;
@@ -5,9 +6,25 @@ using DataLibrary.Logic;
 namespace SaulGoodmanBot.Library;
 
 public class Birthdays {
-    public Birthdays(InteractionContext ctx) {
+    // constructor for slash command usage
+    public Birthdays(ulong guildid, InteractionContext ctx) {
+        GuildId = guildid;
         Context = ctx;
-        var data = BirthdayProcessor.LoadBirthdays(Context.Guild.Id);
+        Client = null;
+
+        var data = BirthdayProcessor.LoadBirthdays(GuildId);
+        foreach (var row in data) {
+            var _ = GetUsers(row.UserId, row.Birthday);
+        }
+    }
+
+    // constructor for client handler
+    public Birthdays(ulong guildid, DiscordClient client) {
+        GuildId = guildid;
+        Client = client;
+        Context = null;
+
+        var data = BirthdayProcessor.LoadBirthdays(GuildId);
         foreach (var row in data) {
             var _ = GetUsers(row.UserId, row.Birthday);
         }
@@ -15,17 +32,22 @@ public class Birthdays {
 
     public void Add(Birthday bday) {
         // adds birthday to database
-        BirthdayProcessor.AddBirthday(Context.Guild.Id, bday.User.Id, bday.BDay);
+        BirthdayProcessor.AddBirthday(GuildId, bday.User.Id, bday.BDay);
     }
 
     public void Update(Birthday bday) {
         
-        BirthdayProcessor.UpdateBirthday(Context.Guild.Id, bday.User.Id, bday.BDay);
+        BirthdayProcessor.UpdateBirthday(GuildId, bday.User.Id, bday.BDay);
     }
 
     public async Task GetUsers(ulong userid, DateTime bday) {
-        var user = await Context.Client.GetUserAsync(userid);
-        BirthdayList.Add(new Birthday(user, bday));
+        if (Context != null) {
+            var user = await Context.Client.GetUserAsync(userid);
+            BirthdayList.Add(new Birthday(user, bday));
+        } else if (Client != null) {
+            var user = await Client.GetUserAsync(userid);
+            BirthdayList.Add(new Birthday(user, bday));
+        }
     }
 
     public DateTime Find(DiscordUser user) {
@@ -51,11 +73,32 @@ public class Birthdays {
         return nextBirthdays.First();
     }
 
+    public async Task CheckBirthdayToday() {
+        var Config = new ServerConfig(GuildId);
+        if (Config.BirthdayNotifications && Config.PauseBdayNotifsTimer == null) {
+            foreach (var birthday in BirthdayList) {
+                if (birthday.BDay == DateTime.Today && Client != null) {
+                    var server = await Client.GetGuildAsync(GuildId);
+                    var bdayMessage = await new DiscordMessageBuilder()
+                        .WithContent("@everyone")
+                        .AddEmbed(new DiscordEmbedBuilder()
+                            .WithDescription($"# It's the birthday of {birthday.User.Mention}! ({birthday.GetAge()})"))
+                        .SendAsync(server.GetDefaultChannel());
+
+                    Config.PauseBdayNotifsTimer = DateTime.Now;
+                    Config.UpdateConfig();
+                }
+            }
+        }
+    }
+
     public List<Birthday> GetBirthdays() {
         return BirthdayList;
     }
 
-    private InteractionContext Context { get; set; }
+    private ulong GuildId { get; set; }
+    private DiscordClient? Client { get; set; }
+    private InteractionContext? Context { get; set; }
     private List<Birthday> BirthdayList = new List<Birthday>();
     public DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1000");
 }
