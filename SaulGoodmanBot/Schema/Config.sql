@@ -7,5 +7,5 @@ CREATE TABLE [dbo].[Config] (
 
     -- Birthday Config
     [BirthdayNotifications] BIT NOT NULL,
-    [PauseBdayNotifsTimer] DATETIME NULL
+    [PauseBdayNotifsTimer] DATE NOT NULL
 );
