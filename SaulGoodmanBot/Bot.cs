@@ -7,7 +7,9 @@ using DSharpPlus.Interactivity.Extensions;
 using Newtonsoft.Json;
 using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
+using SaulGoodmanBot.Library;
 using Microsoft.Extensions.Logging;
+using DSharpPlus.EventArgs;
 
 namespace SaulGoodmanBot;
 
@@ -42,6 +44,7 @@ public class Bot {
         });
 
         // Event Handlers
+        Client.MessageCreated += BirthdayMessageHandler;
 
         // Commands Config
         var commandsConfig = new CommandsNextConfiguration() {
@@ -63,6 +66,11 @@ public class Bot {
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
+    }
+
+    public async Task BirthdayMessageHandler(DiscordClient s, MessageCreateEventArgs e) {
+        var bdayList = new Birthdays(e.Guild.Id, s);
+        await bdayList.CheckBirthdayToday();
     }
 
     public static void Main() => new Bot().MainAsync().GetAwaiter().GetResult();

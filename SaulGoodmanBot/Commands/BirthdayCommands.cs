@@ -21,62 +21,62 @@ namespace SaulGoodmanBot.Commands;
 [SlashCommandGroup("birthday", "Commands for friend birthdays")]
 public class BirthdayCommands : ApplicationCommandModule {
     [SlashCommand("check", "Check the birthday of a user")]
-    public async Task CheckBirthday(InteractionContext cmd,
+    public async Task CheckBirthday(InteractionContext ctx,
         [Option("user", "Birthday to check")] DiscordUser user) {
 
-        var bdayList = new Birthdays(cmd);
+        var bdayList = new Birthdays(ctx.Guild.Id, ctx);
         var bday = bdayList.Find(user);
 
         if (bday == bdayList.DATE_ERROR) {
-            await cmd.CreateResponseAsync(StandardOutput.Error($"No birthday found for {user.GlobalName}"), ephemeral:true);
+            await ctx.CreateResponseAsync(StandardOutput.Error($"No birthday found for {user.GlobalName}"), ephemeral:true);
         } else {
             var response = new DiscordEmbedBuilder()
                 .WithAuthor($"{user.GlobalName}'s birthday", "", user.AvatarUrl)
                 .WithTitle(bday.ToString("MMMM d, yyyy"))
                 .WithThumbnail(ImageHelper.Images["50"])
-                .WithFooter(cmd.Guild.Name, cmd.Guild.IconUrl)
+                .WithFooter(ctx.Guild.Name, ctx.Guild.IconUrl)
                 .WithTimestamp(DateTimeOffset.Now)
                 .WithColor(DiscordColor.Lilac);
 
-            await cmd.CreateResponseAsync(response);
+            await ctx.CreateResponseAsync(response);
         }
     }
 
     [SlashCommandPermissions(Permissions.Administrator)]
     [SlashCommand("add", "Add a user's birthday")]
-    public async Task AddBirthday(InteractionContext cmd,
+    public async Task AddBirthday(InteractionContext ctx,
         [Option("user", "User's birthday to add")] DiscordUser user, 
         [ChoiceProvider(typeof(MonthChoiceProvider))][Option("month", "Month of birthday")] long month,
         [Option("day", "Day of birthday")][Minimum(1)][Maximum(31)] long day,
         [Option("year", "Year of birthday")][Minimum(2023-100)][Maximum(2023)] long year) {
         
-        var bday = new Birthdays(cmd);
+        var bday = new Birthdays(ctx.Guild.Id, ctx);
         var date = new DateTime((int)year, (int)month, (int)day);
 
         if (bday.Find(user) == bday.DATE_ERROR) {
             // birthday not saved yet, so save birthday
             bday.Add(new Birthday(user, date));
 
-            await cmd.CreateResponseAsync(StandardOutput.Success($"{user.GlobalName}'s birthday set to {month}/{day}/{year}"));
+            await ctx.CreateResponseAsync(StandardOutput.Success($"{user.GlobalName}'s birthday set to {month}/{day}/{year}"));
         } else {
             // birthday already exists, so update birthday
             bday.Update(new Birthday(user, date));
 
-            await cmd.CreateResponseAsync(StandardOutput.Success($"{user.GlobalName}'s birthday changed to {month}/{day}/{year}"));
+            await ctx.CreateResponseAsync(StandardOutput.Success($"{user.GlobalName}'s birthday changed to {month}/{day}/{year}"));
         }
     }
 
     [SlashCommand("list", "Lists all the birthdays of your friends")]
-    public async Task ListBirthdays(InteractionContext cmd) {
-        var bdayList = new Birthdays(cmd);
+    public async Task ListBirthdays(InteractionContext ctx) {
+        var bdayList = new Birthdays(ctx.Guild.Id, ctx);
 
         if (bdayList.GetBirthdays().Count == 0) {
             // error: no birthdays in server
-            await cmd.CreateResponseAsync(StandardOutput.Error($"There are no birthdays in {cmd.Guild.Name}"), ephemeral:true);
+            await ctx.CreateResponseAsync(StandardOutput.Error($"There are no birthdays in {ctx.Guild.Name}"), ephemeral:true);
         } else {
             // print all birthdays
             var response = new DiscordEmbedBuilder()
-                .WithAuthor(cmd.Guild.Name, "", cmd.Guild.IconUrl)
+                .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
                 .WithTitle("Birthdays")
                 .WithDescription("")
                 .WithTimestamp(DateTimeOffset.Now)
@@ -86,17 +86,17 @@ public class BirthdayCommands : ApplicationCommandModule {
                 response.Description += $"{birthday.User.GlobalName}: {birthday.BDay.ToString("MMMM d")} `({birthday.GetAge() + 1})`\n";
             }
 
-            await cmd.CreateResponseAsync(response);
+            await ctx.CreateResponseAsync(response);
         }
     }
     
     [SlashCommand("next", "Finds the next upcoming birthday")]
-    public async Task NextBirthday(InteractionContext cmd) {
-        var bdayList = new Birthdays(cmd);
+    public async Task NextBirthday(InteractionContext ctx) {
+        var bdayList = new Birthdays(ctx.Guild.Id, ctx);
 
         if (bdayList.GetBirthdays().Count == 0) {
             // error: no birthdays in server
-            await cmd.CreateResponseAsync(StandardOutput.Error($"There are no birthdays in {cmd.Guild.Name}"), ephemeral:true);
+            await ctx.CreateResponseAsync(StandardOutput.Error($"There are no birthdays in {ctx.Guild.Name}"), ephemeral:true);
         } else {
             var nextBirthday = bdayList.Next();
             var response = new DiscordEmbedBuilder()
@@ -104,11 +104,11 @@ public class BirthdayCommands : ApplicationCommandModule {
                 .WithTitle(nextBirthday.User.GlobalName)
                 .WithThumbnail(nextBirthday.User.AvatarUrl)
                 .WithDescription(nextBirthday.BDay.ToString("MMMM d, yyyy"))
-                .WithFooter(cmd.Guild.Name, cmd.Guild.IconUrl)
+                .WithFooter(ctx.Guild.Name, ctx.Guild.IconUrl)
                 .WithTimestamp(DateTimeOffset.Now)
                 .WithColor(DiscordColor.SpringGreen);
 
-            await cmd.CreateResponseAsync(response);
+            await ctx.CreateResponseAsync(response);
         }
     }
 }
