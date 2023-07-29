@@ -49,6 +49,7 @@ public class Bot {
         Client.GuildMemberAdded += MemberJoin;
         Client.GuildMemberRemoved += MemberLeave;
         Client.MessageCreated += BirthdayMessageHandler;
+        Client.ComponentInteractionCreated += new MiscCommands().CoinFlipHandler;
 
         // Commands Config
         var commandsConfig = new CommandsNextConfiguration() {

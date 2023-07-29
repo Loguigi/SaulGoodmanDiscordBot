@@ -9,6 +9,8 @@ public static class ImageHelper {
         {"PS2Jesse", "https://cdn.discordapp.com/attachments/1129734051016740886/1131553238206906368/Jesse-Pinkman-PNG-Picture.png"},
         {"Heisenberg", "https://cdn.discordapp.com/attachments/1129734051016740886/1131562218547318804/Daco_5708712.png"},
         {"50", "https://cdn.discordapp.com/attachments/1129734051016740886/1132916675159793695/image.png"},
+        {"8ball", "https://cdn.discordapp.com/attachments/1129734051016740886/1134747272874299422/8ball.png"},
+        {"Coin", "https://cdn.discordapp.com/attachments/1129734051016740886/1134748171751391324/pngwing.com.png"},
     };
 
     public static Dictionary<string, string> Reactions = new Dictionary<string, string>() {
