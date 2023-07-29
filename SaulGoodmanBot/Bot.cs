@@ -46,8 +46,9 @@ public class Bot {
 
         // Event Handlers
         Client.SessionCreated += OnReadyHandler;
-        Client.MessageCreated += BirthdayMessageHandler;
         Client.GuildMemberAdded += MemberJoin;
+        Client.GuildMemberRemoved += MemberLeave;
+        Client.MessageCreated += BirthdayMessageHandler;
 
         // Commands Config
         var commandsConfig = new CommandsNextConfiguration() {
@@ -84,6 +85,17 @@ public class Bot {
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithDescription($"## {config.WelcomeMessage} {e.Member.Mention}")
                     .WithColor(DiscordColor.Gold))
+                .SendAsync(e.Guild.GetDefaultChannel());
+        }
+    }
+
+    public async Task MemberLeave(DiscordClient s, GuildMemberRemoveEventArgs e) {
+        var config = new ServerConfig(e.Guild.Id);
+        if (config.LeaveMessage != null) {
+            var message = await new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
+                    .WithDescription($"## {e.Member.Mention} {config.LeaveMessage}")
+                    .WithColor(DiscordColor.Orange))
                 .SendAsync(e.Guild.GetDefaultChannel());
         }
     }
