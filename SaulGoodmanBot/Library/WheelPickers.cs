@@ -37,16 +37,13 @@ public class WheelPickers {
         }
     }
 
-    public Dictionary<string, int> List() {
-        var wheels = new Dictionary<string, int>();
-        foreach (var wheel in Wheels) {
-            wheels[wheel.Key] = wheel.Value.Options.Count;
-        }
-        return wheels;
+    public bool IsFull() {
+        return Wheels.Count == WHEEL_LIMIT;
     }
 
     private ulong GuildId { get; set; }
     public Dictionary<string, Wheel> Wheels { get; set; } = new Dictionary<string, Wheel>();
+    private const int WHEEL_LIMIT = 20;
 }
 
 public class Wheel {
