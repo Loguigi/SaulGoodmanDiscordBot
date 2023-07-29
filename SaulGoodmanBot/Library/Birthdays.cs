@@ -73,30 +73,6 @@ public class Birthdays {
         return nextBirthdays.First();
     }
 
-    public async Task CheckBirthdayToday() {
-        var Config = new ServerConfig(GuildId);
-        if (Config.PauseBdayNotifsTimer == DateTime.Now.AddDays(-1)) {
-            Config.PauseBdayNotifsTimer = DATE_ERROR;
-            Config.UpdateConfig();
-        }
-
-        if (Config.BirthdayNotifications && Config.PauseBdayNotifsTimer == DATE_ERROR) {
-            foreach (var birthday in BirthdayList) {
-                if (birthday.IsBirthdayToday() && Client != null) {
-                    var server = await Client.GetGuildAsync(GuildId);
-                    var bdayMessage = await new DiscordMessageBuilder()
-                        .AddEmbed(new DiscordEmbedBuilder()
-                            .WithDescription($"# {DiscordEmoji.FromName(Client, ":birthday:", false)} It's the birthday of {birthday.User.Mention}! ({birthday.GetAge()})")
-                            .WithColor(DiscordColor.HotPink))
-                        .SendAsync(server.GetDefaultChannel());
-
-                    Config.PauseBdayNotifsTimer = DateTime.Now;
-                    Config.UpdateConfig();
-                }
-            }
-        }
-    }
-
     public List<Birthday> GetBirthdays() {
         return BirthdayList;
     }

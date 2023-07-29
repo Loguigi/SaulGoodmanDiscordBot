@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
 using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Handlers;
 using Microsoft.Extensions.Logging;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
@@ -45,8 +46,10 @@ public class Bot {
         });
 
         // Event Handlers
-        Client.SessionCreated += OnReadyHandler;
-        Client.MessageCreated += BirthdayMessageHandler;
+        Client.SessionCreated += GeneralHandlers.HandleOnReady;
+        Client.GuildMemberAdded += GeneralHandlers.HandleMemberJoin;
+        Client.GuildMemberRemoved += GeneralHandlers.HandleMemberLeave;
+        Client.MessageCreated += BirthdayHandler.HandleBirthdayMessage;
 
         // Commands Config
         var commandsConfig = new CommandsNextConfiguration() {
@@ -56,7 +59,7 @@ public class Bot {
             EnableDefaultHelp = false,
         };
 
-        // Commands registration
+        // Prefix commands registration
         Commands = Client.UseCommandsNext(commandsConfig);
 
         // Slash commands registration
@@ -65,20 +68,10 @@ public class Bot {
         slashCommandsConfig.RegisterCommands<WheelPickerCommands>();
         slashCommandsConfig.RegisterCommands<ReactionCommands>();
         slashCommandsConfig.RegisterCommands<BirthdayCommands>();
+        slashCommandsConfig.RegisterCommands<ServerConfigCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
-    }
-
-    public async Task OnReadyHandler(DiscordClient s, SessionReadyEventArgs e) {
-        var activity = new DiscordActivity("testing");
-        await s.UpdateStatusAsync(activity, UserStatus.DoNotDisturb);
-    }
-
-    public async Task BirthdayMessageHandler(DiscordClient s, MessageCreateEventArgs e) {
-        var bdayList = new Birthdays(e.Guild.Id, s);
-        if (!e.Author.IsBot)
-            await bdayList.CheckBirthdayToday();
     }
 
     public static void Main() => new Bot().MainAsync().GetAwaiter().GetResult();
