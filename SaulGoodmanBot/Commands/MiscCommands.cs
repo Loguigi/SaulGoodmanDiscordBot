@@ -36,6 +36,22 @@ public class MiscCommands : ApplicationCommandModule {
         await ctx.CreateResponseAsync(answer);
     }
 
+    [SlashCommand("dicksize", "Finds the penis size of the specified user")]
+    public async Task SchlongSize(InteractionContext ctx,
+        [Option("user", "User to find the size of")] DiscordUser user) {
+        
+        // calculate size
+        var random = new Random();
+        var inches = random.NextDouble() * (10 - 1) + 1;
+
+        // display result
+        var response = new DiscordMessageBuilder()
+            .AddEmbed(new DiscordEmbedBuilder()
+                .WithDescription($"## {user.Mention}'s penis is {String.Format("{0:0.##}", inches)} in. long")
+                .WithColor(DiscordColor.IndianRed));
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(response));
+    }
+
     public DiscordMessageBuilder CoinFlip() {
         var flipButton = new DiscordButtonComponent(ButtonStyle.Success, "flipagain", "Flip Again");
         var coin = new Random();
