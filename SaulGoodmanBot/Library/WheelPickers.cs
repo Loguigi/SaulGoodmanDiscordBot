@@ -64,10 +64,19 @@ public class Wheel {
         Options.Add(option);
     }
 
-    public string Spin() {
+    public DiscordMessageBuilder Spin() {
         var random = new Random();
         var i = random.Next(Options.Count);
-        return Options[i];
+
+        var response = new DiscordMessageBuilder()
+            .AddEmbed(new DiscordEmbedBuilder()
+                .WithTitle($"Spinning {Name}...")
+                .WithDescription($"## {Options[i]}")
+                .WithThumbnail(Image)
+                .WithColor(DiscordColor.Gold));
+
+        return response;
+            
     }
 
     public string Name { get; private set; }

@@ -6,12 +6,14 @@
     *Slash Commands:
 */
 
+using DSharpPlus;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.EventArgs;
 using SaulGoodmanBot.Library;
-using DSharpPlus;
+using SaulGoodmanBot.Handlers;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -51,7 +53,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
         foreach (var wheel in serverWheels.Wheels) {
             wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
         }
-        var wheelDropdown = new DiscordSelectComponent("wheeldropdown", "Select a wheel", wheelOptions, false);
+        var wheelDropdown = new DiscordSelectComponent("adddropdown", "Select a wheel", wheelOptions, false);
 
         var prompt = new DiscordMessageBuilder()
             .AddEmbed(new DiscordEmbedBuilder()
@@ -59,61 +61,30 @@ public class WheelPickerCommands : ApplicationCommandModule {
             .AddComponents(wheelDropdown);
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
         
-        ctx.Client.ComponentInteractionCreated += async (s, e) => {
-            var intr = s.GetInteractivity();
-            var wheelSelected = e.Values.First();
-            var optionsAdded = new List<string>();
-            var description = "Enter `stop` to stop adding options\n";
-            var optionCount = 1;
-
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, 
-                new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(new DiscordEmbedBuilder()
-                    .WithTitle($"Adding to {wheelSelected}...")
-                    .WithDescription(description))));
-
-            var response = await intr.WaitForMessageAsync(u => u.Channel == e.Channel && u.Author == e.User, TimeSpan.FromSeconds(60));
-
-            while (!response.Result.Content.ToLower().Contains("stop") && optionCount <= 10) {
-                optionsAdded.Add(response.Result.Content);
-                description += $"`{optionCount}.` {response.Result.Content}\n";
-
-                await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder()
-                    .AddEmbed(new DiscordEmbedBuilder()
-                        .WithTitle($"Adding to {wheelSelected}...")
-                        .WithDescription(description)));
-                await e.Channel.DeleteMessageAsync(response.Result);
-                response = await intr.WaitForMessageAsync(u => u.Channel == e.Channel && u.Author == e.User, TimeSpan.FromSeconds(60));
-                optionCount++;
-            }
-            serverWheels.Add(new Wheel(wheelSelected, optionsAdded, serverWheels.Wheels[wheelSelected].Image));
-
-            await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder()
-                .AddEmbed(new DiscordEmbedBuilder()
-                    .WithTitle($"Added to {wheelSelected}")
-                    .WithDescription(description.Replace("Enter `stop` to stop adding options\n", String.Empty))
-                    .WithColor(DiscordColor.Green)));
-        };
+        ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleAdd;
     }
 
     [SlashCommand("spin", "Spins the chosen wheel for a value")]
-    public async Task SpinWheel(InteractionContext ctx, 
-        [Option("name", "Name of the wheel picker")] string name) {
+    public async Task SpinWheel(InteractionContext ctx) {
         
         var serverWheels = new WheelPickers(ctx.Guild.Id); 
-        
-        if (!serverWheels.Contains(name)) {
-            // error: wheel doesn't exist
-            await ctx.CreateResponseAsync(StandardOutput.Error($"`{name}` wheel doesn't exist in {ctx.Guild.Name}"), ephemeral:true);
+        if (serverWheels.Wheels.Count == 0) {
+            await ctx.CreateResponseAsync(StandardOutput.Error($"There are no wheels to spin in {ctx.Guild.Name}"), ephemeral:true);
         } else {
-            // outputs result
-            var response = new DiscordEmbedBuilder()
-                .WithAuthor($"{ctx.User.GlobalName} spins {name}...", "", ctx.User.AvatarUrl)
-                .WithTitle(serverWheels.Wheels[name].Spin())
-                .WithThumbnail(serverWheels.Wheels[name].Image)
-                .WithTimestamp(DateTimeOffset.Now)
-                .WithColor(DiscordColor.Gold);
+            var wheelOptions = new List<DiscordSelectComponentOption>();
+            foreach (var wheel in serverWheels.Wheels) {
+                wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
+            }
+            var wheelDropdown = new DiscordSelectComponent("spindropdown", "Select a wheel", wheelOptions, false);
 
-            await ctx.CreateResponseAsync(response);
+            var prompt = new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
+                    .WithTitle("Spinning...")
+                    .WithColor(DiscordColor.Gold))
+                .AddComponents(wheelDropdown);
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
+
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleSpin;
         }
     }
 

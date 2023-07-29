@@ -10,9 +10,9 @@
 
 using DSharpPlus;
 using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
 using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Handlers;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -21,9 +21,7 @@ public class MiscCommands : ApplicationCommandModule {
     public async Task CoinFlipCommand(InteractionContext ctx) {
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(CoinFlip()));
 
-        ctx.Client.ComponentInteractionCreated += async (s, e) => {
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(CoinFlip()));
-        };
+        ctx.Client.ComponentInteractionCreated += MiscHandlers.HandleFlip;
     }
 
     [SlashCommand("8ball", "Ask the magic 8 ball a question")]
