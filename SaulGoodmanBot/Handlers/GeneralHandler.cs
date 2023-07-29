@@ -7,8 +7,8 @@ namespace SaulGoodmanBot.Handlers;
 
 public static class GeneralHandlers {
     public static async Task HandleOnReady(DiscordClient s, SessionReadyEventArgs e) {
-        var activity = new DiscordActivity("testing");
-        await s.UpdateStatusAsync(activity, UserStatus.DoNotDisturb);
+        var activity = new DiscordActivity("you're not a real lawyer");
+        await s.UpdateStatusAsync(activity);
     }
 
     public static async Task HandleMemberJoin(DiscordClient s, GuildMemberAddEventArgs e) {
