@@ -1,7 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.Entities;
 using DataLibrary.Logic;
 
 namespace SaulGoodmanBot.Library;
@@ -64,19 +60,10 @@ public class Wheel {
         Options.Add(option);
     }
 
-    public DiscordMessageBuilder Spin() {
+    public string Spin() {
         var random = new Random();
         var i = random.Next(Options.Count);
-
-        var response = new DiscordMessageBuilder()
-            .AddEmbed(new DiscordEmbedBuilder()
-                .WithTitle($"Spinning {Name}...")
-                .WithDescription($"## {Options[i]}")
-                .WithThumbnail(Image)
-                .WithColor(DiscordColor.Gold));
-
-        return response;
-            
+        return Options[i];
     }
 
     public string Name { get; private set; }

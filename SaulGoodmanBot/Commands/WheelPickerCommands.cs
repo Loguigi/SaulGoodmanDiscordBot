@@ -49,19 +49,26 @@ public class WheelPickerCommands : ApplicationCommandModule {
     public async Task AddWheelOption(InteractionContext ctx) {
         var serverWheels = new WheelPickers(ctx.Guild.Id);
 
-        var wheelOptions = new List<DiscordSelectComponentOption>();
-        foreach (var wheel in serverWheels.Wheels) {
-            wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
-        }
-        var wheelDropdown = new DiscordSelectComponent("adddropdown", "Select a wheel", wheelOptions, false);
+        if (serverWheels.Wheels.Count == 0) {
+            // error: no wheels in server
+            await ctx.CreateResponseAsync(StandardOutput.Error($"There are no wheels to add to in {ctx.Guild.Name}"), ephemeral:true);
+        } else {
+            // add server wheels to dropdown
+            var wheelOptions = new List<DiscordSelectComponentOption>();
+            foreach (var wheel in serverWheels.Wheels) {
+                wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
+            }
+            var wheelDropdown = new DiscordSelectComponent("adddropdown", "Select a wheel", wheelOptions, false);
 
-        var prompt = new DiscordMessageBuilder()
-            .AddEmbed(new DiscordEmbedBuilder()
-                .WithTitle("Add Wheel Options"))
-            .AddComponents(wheelDropdown);
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
-        
-        ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleAdd;
+            // display prompt
+            var prompt = new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
+                    .WithTitle("Add Wheel Options"))
+                .AddComponents(wheelDropdown);
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
+            
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleAdd;
+        }
     }
 
     [SlashCommand("spin", "Spins the chosen wheel for a value")]
@@ -69,14 +76,17 @@ public class WheelPickerCommands : ApplicationCommandModule {
         
         var serverWheels = new WheelPickers(ctx.Guild.Id); 
         if (serverWheels.Wheels.Count == 0) {
+            // error: no wheels in server
             await ctx.CreateResponseAsync(StandardOutput.Error($"There are no wheels to spin in {ctx.Guild.Name}"), ephemeral:true);
         } else {
+            // add server wheels to dropdown
             var wheelOptions = new List<DiscordSelectComponentOption>();
             foreach (var wheel in serverWheels.Wheels) {
                 wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
             }
             var wheelDropdown = new DiscordSelectComponent("spindropdown", "Select a wheel", wheelOptions, false);
 
+            // display prompt
             var prompt = new DiscordMessageBuilder()
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithTitle("Spinning...")
@@ -118,57 +128,31 @@ public class WheelPickerCommands : ApplicationCommandModule {
         }
     }
 
-    [SlashCommand("list", "Shows all wheels or options in a specific wheel")]
-    public async Task ListWheelOptions(InteractionContext ctx, 
-        [Option("name", "Name of the wheel picker")] string name="") {
-
+    [SlashCommand("list", "Shows list of options in a wheel")]
+    public async Task ListWheelOptions(InteractionContext ctx) {
         var serverWheels = new WheelPickers(ctx.Guild.Id);
-
-        if (name == "") {
-            // display all wheels in server
-            if (serverWheels.Wheels.Count == 0) {
-                // error: no wheels in server
-                await ctx.CreateResponseAsync(StandardOutput.Error($"There are no wheels in {ctx.Guild.Name}"), ephemeral:true);
-            } else {
-                // displays all wheels
-                var response = new DiscordEmbedBuilder()
-                    .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
-                    .WithTitle("Wheel Pickers")
-                    .WithDescription("")
-                    .WithThumbnail(ImageHelper.Images["PS2Jesse"])
-                    .WithTimestamp(DateTimeOffset.Now)
-                    .WithColor(DiscordColor.Blurple);
-
-                var wheelNum = 1;
-                foreach (var w in serverWheels.List()) {
-                    response.Description += $"`{wheelNum}.` {w.Key} ({w.Value} options)\n";
-                    wheelNum++;
-                }
-
-                await ctx.CreateResponseAsync(response);
-            }
+        
+        if (serverWheels.Wheels.Count == 0) {
+            // error: no wheels in server
+            await ctx.CreateResponseAsync(StandardOutput.Error($"There are no wheels to display in {ctx.Guild.Name}"), ephemeral:true);
         } else {
-            if (!serverWheels.Contains(name)) {
-                // error: wheel doesn't exist
-                await ctx.CreateResponseAsync(StandardOutput.Error($"`{name}` wheel doesn't exist in {ctx.Guild.Name}"), ephemeral:true);
-            } else {
-                // display wheel options
-                var response = new DiscordEmbedBuilder()
-                    .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
-                    .WithTitle(serverWheels.Wheels[name].Name)
-                    .WithThumbnail(serverWheels.Wheels[name].Image)
-                    .WithDescription("")
-                    .WithTimestamp(DateTimeOffset.Now)
-                    .WithColor(DiscordColor.MidnightBlue);
-
-                var optNum = 1;
-                foreach (var o in serverWheels.Wheels[name].Options) {
-                    response.Description += $"`{optNum}`. {o}\n";
-                    optNum++;
-                }
-
-                await ctx.CreateResponseAsync(response);
+            // add server wheels to dropdown
+            var wheelOptions = new List<DiscordSelectComponentOption>();
+            foreach (var wheel in serverWheels.Wheels) {
+                wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
             }
+            var wheelDropdown = new DiscordSelectComponent("listdropdown", "Select a wheel", wheelOptions, false);
+
+            // display prompt
+            var prompt = new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
+                    .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
+                    .WithTitle("List Wheel Options")
+                    .WithColor(DiscordColor.MidnightBlue))
+                .AddComponents(wheelDropdown);
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
+
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleList;
         }
     }
 }
