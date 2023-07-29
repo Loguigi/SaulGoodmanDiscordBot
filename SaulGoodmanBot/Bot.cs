@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
 using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Handlers;
 using Microsoft.Extensions.Logging;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
@@ -45,10 +46,10 @@ public class Bot {
         });
 
         // Event Handlers
-        Client.SessionCreated += OnReadyHandler;
-        Client.GuildMemberAdded += MemberJoin;
-        Client.GuildMemberRemoved += MemberLeave;
-        Client.MessageCreated += BirthdayMessageHandler;
+        Client.SessionCreated += GeneralHandlers.HandleOnReady;
+        Client.GuildMemberAdded += GeneralHandlers.HandleMemberJoin;
+        Client.GuildMemberRemoved += GeneralHandlers.HandleMemberLeave;
+        Client.MessageCreated += BirthdayHandler.HandleBirthdayMessage;
 
         // Commands Config
         var commandsConfig = new CommandsNextConfiguration() {
@@ -58,7 +59,7 @@ public class Bot {
             EnableDefaultHelp = false,
         };
 
-        // Commands registration
+        // Prefix commands registration
         Commands = Client.UseCommandsNext(commandsConfig);
 
         // Slash commands registration
@@ -71,39 +72,6 @@ public class Bot {
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
-    }
-
-    public async Task OnReadyHandler(DiscordClient s, SessionReadyEventArgs e) {
-        var activity = new DiscordActivity("testing");
-        await s.UpdateStatusAsync(activity, UserStatus.DoNotDisturb);
-    }
-
-    public async Task MemberJoin(DiscordClient s, GuildMemberAddEventArgs e) {
-        var config = new ServerConfig(e.Guild.Id);
-        if (config.WelcomeMessage != null) {
-            var message = await new DiscordMessageBuilder()
-                .AddEmbed(new DiscordEmbedBuilder()
-                    .WithDescription($"## {config.WelcomeMessage} {e.Member.Mention}")
-                    .WithColor(DiscordColor.Gold))
-                .SendAsync(e.Guild.GetDefaultChannel());
-        }
-    }
-
-    public async Task MemberLeave(DiscordClient s, GuildMemberRemoveEventArgs e) {
-        var config = new ServerConfig(e.Guild.Id);
-        if (config.LeaveMessage != null) {
-            var message = await new DiscordMessageBuilder()
-                .AddEmbed(new DiscordEmbedBuilder()
-                    .WithDescription($"## {e.Member.Mention} {config.LeaveMessage}")
-                    .WithColor(DiscordColor.Orange))
-                .SendAsync(e.Guild.GetDefaultChannel());
-        }
-    }
-
-    public async Task BirthdayMessageHandler(DiscordClient s, MessageCreateEventArgs e) {
-        var bdayList = new Birthdays(e.Guild.Id, s);
-        if (!e.Author.IsBot)
-            await bdayList.CheckBirthdayToday();
     }
 
     public static void Main() => new Bot().MainAsync().GetAwaiter().GetResult();
