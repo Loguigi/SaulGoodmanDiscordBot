@@ -20,6 +20,10 @@ public class MiscCommands : ApplicationCommandModule {
     [SlashCommand("flip", "Flips a coin")]
     public async Task CoinFlipCommand(InteractionContext ctx) {
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(CoinFlip()));
+
+        ctx.Client.ComponentInteractionCreated += async (s, e) => {
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(CoinFlip()));
+        };
     }
 
     [SlashCommand("8ball", "Ask the magic 8 ball a question")]
@@ -46,9 +50,5 @@ public class MiscCommands : ApplicationCommandModule {
                 .WithColor((flip == 1) ? DiscordColor.Aquamarine : DiscordColor.Rose))
             .AddComponents(flipButton);
         return response;
-    }
-
-    public async Task CoinFlipHandler(DiscordClient s, ComponentInteractionCreateEventArgs e) {
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(CoinFlip()));
     }
 }
