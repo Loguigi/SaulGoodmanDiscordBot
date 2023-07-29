@@ -1,15 +1,11 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using DSharpPlus.SlashCommands;
-using DSharpPlus.Entities;
 using DataLibrary.Logic;
 
 namespace SaulGoodmanBot.Library;
 
 public class WheelPickers {
-    public WheelPickers(InteractionContext ctx) {
-        Context = ctx;
-        var data = WheelPickerProcessor.LoadAllWheels(Context.Guild.Id);
+    public WheelPickers(ulong guildid) {
+        GuildId = guildid;
+        var data = WheelPickerProcessor.LoadAllWheels(GuildId);
 
         foreach (var row in data) {
             if (Wheels.ContainsKey(row.WheelName)) {
@@ -27,30 +23,27 @@ public class WheelPickers {
 
     public void Add(Wheel wheel) {
         foreach (var option in wheel.Options) {
-            WheelPickerProcessor.AddWheelOption(Context.Guild.Id, wheel.Name, option, wheel.Image);
+            WheelPickerProcessor.AddWheelOption(GuildId, wheel.Name, option, wheel.Image);
         }
     }
 
     public void Delete(Wheel wheel, string option="") {
         if (option != "") {
             // delete wheel option
-            WheelPickerProcessor.DeleteWheelOption(Context.Guild.Id, wheel.Name, option);
+            WheelPickerProcessor.DeleteWheelOption(GuildId, wheel.Name, option);
         } else {
             // delete entire wheel
-            WheelPickerProcessor.DeleteWheel(Context.Guild.Id, wheel.Name);
+            WheelPickerProcessor.DeleteWheel(GuildId, wheel.Name);
         }
     }
 
-    public Dictionary<string, int> List() {
-        var wheels = new Dictionary<string, int>();
-        foreach (var wheel in Wheels) {
-            wheels[wheel.Key] = wheel.Value.Options.Count;
-        }
-        return wheels;
+    public bool IsFull() {
+        return Wheels.Count == WHEEL_LIMIT;
     }
 
-    private InteractionContext Context { get; set; }
+    private ulong GuildId { get; set; }
     public Dictionary<string, Wheel> Wheels { get; set; } = new Dictionary<string, Wheel>();
+    private const int WHEEL_LIMIT = 20;
 }
 
 public class Wheel {
