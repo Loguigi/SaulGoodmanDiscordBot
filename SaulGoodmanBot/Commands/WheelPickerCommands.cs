@@ -33,6 +33,9 @@ public class WheelPickerCommands : ApplicationCommandModule {
         if (serverWheels.Contains(name)) {
             // error: wheel already exists
             await ctx.CreateResponseAsync(StandardOutput.Error($"`{name}` already exists in {ctx.Guild.Name}"), ephemeral:true);
+        } else if (serverWheels.IsFull()) {
+            // error: no more wheels can be added
+            await ctx.CreateResponseAsync(StandardOutput.Error($"Too many wheels in {ctx.Guild.Name}"), ephemeral:true);
         } else {
             // saves new wheel
             if (img == null) {
@@ -41,7 +44,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 serverWheels.Add(new Wheel(name, new List<string>(){value1, value2}, img.Url));
             }
 
-            await ctx.CreateResponseAsync(StandardOutput.Success($"`{name}` wheel added"));
+            await ctx.CreateResponseAsync(StandardOutput.Success($"`{name}` wheel added"), ephemeral:true);
         }
     }
 
@@ -73,8 +76,8 @@ public class WheelPickerCommands : ApplicationCommandModule {
 
     [SlashCommand("spin", "Spins the chosen wheel for a value")]
     public async Task SpinWheel(InteractionContext ctx) {
-        
-        var serverWheels = new WheelPickers(ctx.Guild.Id); 
+        var serverWheels = new WheelPickers(ctx.Guild.Id);
+
         if (serverWheels.Wheels.Count == 0) {
             // error: no wheels in server
             await ctx.CreateResponseAsync(StandardOutput.Error($"There are no wheels to spin in {ctx.Guild.Name}"), ephemeral:true);
@@ -99,32 +102,29 @@ public class WheelPickerCommands : ApplicationCommandModule {
     }
 
     [SlashCommand("delete", "Deletes a wheel picker or option from a wheel picker")]
-    public async Task DeleteWheel(InteractionContext ctx,
-        [Option("name", "Name of the wheel to delete or delete from")] string name,
-        [Option("option", "Option to delete from the wheel")] string option="") {
-        
+    public async Task DeleteWheel(InteractionContext ctx) {
         var serverWheels = new WheelPickers(ctx.Guild.Id);
 
-        if (!serverWheels.Contains(name)) {
-            // error: wheel doesn't exist
-            await ctx.CreateResponseAsync(StandardOutput.Error($"`{name}` wheel doesn't exist in {ctx.Guild.Name}"), ephemeral:true);
+        if (serverWheels.Wheels.Count == 0) {
+            // error: no wheels in server
+            await ctx.CreateResponseAsync(StandardOutput.Error($"There are no wheels to delete in {ctx.Guild.Name}"), ephemeral:true);
         } else {
-            if (option == "") {
-                // delete wheel
-                serverWheels.Delete(serverWheels.Wheels[name]);
-                
-                await ctx.CreateResponseAsync(StandardOutput.Success($"`{name}` deleted from {ctx.Guild.Name}"));
-            } else {
-                if (serverWheels.Wheels[name].Options.Contains(option)) {
-                    // delete option
-                    serverWheels.Delete(serverWheels.Wheels[name], option);
-
-                    await ctx.CreateResponseAsync(StandardOutput.Success($"\"{option}\" deleted from `{name}`"), ephemeral:true);
-                } else {
-                    // error: option doesn't exist in wheel
-                    await ctx.CreateResponseAsync(StandardOutput.Error($"\"{option}\" doesn't exist in `{name}`"), ephemeral:true);
-                }
+            // add server wheels to dropdown
+            var wheelOptions = new List<DiscordSelectComponentOption>();
+            foreach (var wheel in serverWheels.Wheels) {
+                wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
             }
+            var wheelDropdown = new DiscordSelectComponent("deletewheeldropdown", "Select a wheel", wheelOptions, false);
+
+            // display prompt
+            var prompt = new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
+                    .WithTitle("Delete Wheel")
+                    .WithColor(DiscordColor.DarkRed))
+                .AddComponents(wheelDropdown);
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
+
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleDelete;
         }
     }
 

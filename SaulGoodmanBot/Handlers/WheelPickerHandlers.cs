@@ -75,6 +75,75 @@ public static class WheelPickerHandlers {
         }
     }
 
+    public static async Task HandleDelete(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (e.Id == "deletewheeldropdown") {
+            var serverWheels = new WheelPickers(e.Guild.Id);
+            var wheelName = e.Values.First();
+
+            // add wheel options to dropdown
+            var optionsList = new List<DiscordSelectComponentOption>();
+            foreach (var option in serverWheels.Wheels[wheelName].Options) {
+                optionsList.Add(new DiscordSelectComponentOption(option, $"{wheelName}/{option}"));
+            }
+            optionsList.Add(new DiscordSelectComponentOption($"Delete {wheelName} from {e.Guild.Name}", $"{wheelName}/deletetheentirewheel", "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":x:", false))));
+            optionsList.Add(new DiscordSelectComponentOption("Cancel", "cancel", "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":arrow_backward:", false))));
+            var wheelDropdown = new DiscordSelectComponent("deleteoptiondropdown", "Select an option", optionsList, false);
+
+            // display next prompt for wheel option
+            var prompt = new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
+                    .WithTitle("Delete Wheel Option")
+                    .WithDescription($"Deleting from `{wheelName}` wheel...")
+                    .WithColor(DiscordColor.DarkRed))
+                .AddComponents(wheelDropdown);
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(prompt));
+        } else if (e.Id == "deleteoptiondropdown") {
+            var serverWheels = new WheelPickers(e.Guild.Id);
+            var select = e.Values.First();
+
+            if (select == "cancel") {
+                // cancel operation
+                var prompt = new DiscordMessageBuilder()
+                    .AddEmbed(new DiscordEmbedBuilder()
+                        .WithTitle("Delete Wheel Option")
+                        .WithDescription($"Cancelled")
+                        .WithColor(DiscordColor.DarkRed));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(prompt));
+            } else if (select.Contains("deletetheentirewheel")) {
+                // delete wheel
+                var wheelName = select.Substring(0, select.IndexOf('/'));
+
+                // update message
+                var prompt = new DiscordMessageBuilder()
+                    .AddEmbed(new DiscordEmbedBuilder()
+                        .WithTitle("Delete Wheel")
+                        .WithDescription($"Deleted `{wheelName}` from {e.Guild.Name}")
+                        .WithColor(DiscordColor.DarkRed));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(prompt));
+
+                // delete wheel from database
+                serverWheels.Delete(serverWheels.Wheels[wheelName]);
+            } else {
+                // delete wheel option
+                var wheelName = select.Substring(0, select.IndexOf('/'));
+                var wheelOption = select.Replace(wheelName + "/", String.Empty);
+
+                // update message
+                var prompt = new DiscordMessageBuilder()
+                    .AddEmbed(new DiscordEmbedBuilder()
+                        .WithTitle("Delete Wheel Option")
+                        .WithDescription($"Deleted {wheelOption} from `{wheelName}`")
+                        .WithColor(DiscordColor.DarkRed));
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(prompt));
+            
+                // delete wheel option from database
+                serverWheels.Delete(serverWheels.Wheels[wheelName], wheelOption);
+            }
+
+            s.ComponentInteractionCreated -= HandleDelete;
+        }
+    }
+
     public static async Task HandleList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
         if (e.Id == "listdropdown") {
             var wheelName = e.Values.First();
