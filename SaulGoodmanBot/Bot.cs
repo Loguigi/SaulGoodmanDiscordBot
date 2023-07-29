@@ -47,6 +47,7 @@ public class Bot {
         // Event Handlers
         Client.SessionCreated += OnReadyHandler;
         Client.MessageCreated += BirthdayMessageHandler;
+        Client.GuildMemberAdded += MemberJoin;
 
         // Commands Config
         var commandsConfig = new CommandsNextConfiguration() {
@@ -65,6 +66,7 @@ public class Bot {
         slashCommandsConfig.RegisterCommands<WheelPickerCommands>();
         slashCommandsConfig.RegisterCommands<ReactionCommands>();
         slashCommandsConfig.RegisterCommands<BirthdayCommands>();
+        slashCommandsConfig.RegisterCommands<ServerConfigCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
@@ -73,6 +75,17 @@ public class Bot {
     public async Task OnReadyHandler(DiscordClient s, SessionReadyEventArgs e) {
         var activity = new DiscordActivity("testing");
         await s.UpdateStatusAsync(activity, UserStatus.DoNotDisturb);
+    }
+
+    public async Task MemberJoin(DiscordClient s, GuildMemberAddEventArgs e) {
+        var config = new ServerConfig(e.Guild.Id);
+        if (config.WelcomeMessage != null) {
+            var message = await new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
+                    .WithDescription($"## {config.WelcomeMessage} {e.Member.Mention}")
+                    .WithColor(DiscordColor.Gold))
+                .SendAsync(e.Guild.GetDefaultChannel());
+        }
     }
 
     public async Task BirthdayMessageHandler(DiscordClient s, MessageCreateEventArgs e) {

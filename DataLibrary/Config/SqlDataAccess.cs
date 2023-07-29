@@ -6,11 +6,7 @@ namespace DataLibrary.Config;
 
 public static class SqlDataAccess
 {
-    public static string ConnectionString { get; } = "Server=LOGIESURFACE\\SQLEXPRESS;Database=SaulGoodmanDB;Trusted_Connection=True;";
-    // public static string GetConnectionString(string name)
-    // {
-    //     return ConfigurationManager.ConnectionStrings[name].ConnectionString;
-    // }
+    public static string ConnectionString { get; } = "Server=.;Database=SaulGoodmanDB;Trusted_Connection=True;";
 
     public static List<T> LoadData<T>(string sql)
     {
