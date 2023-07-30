@@ -6,7 +6,7 @@ using SaulGoodmanBot.Library;
 
 namespace SaulGoodmanBot.Handlers;
 
-public static class WheelPickerHandlers {
+public static class WheelPickerHandler {
     public static async Task HandleAdd(DiscordClient s, ComponentInteractionCreateEventArgs e) {
         if (e.Id == "adddropdown") {
             var intr = s.GetInteractivity();

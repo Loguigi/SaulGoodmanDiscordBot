@@ -70,7 +70,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 .AddComponents(wheelDropdown);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
             
-            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleAdd;
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandler.HandleAdd;
         }
     }
 
@@ -97,7 +97,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 .AddComponents(wheelDropdown);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
 
-            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleSpin;
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandler.HandleSpin;
         }
     }
 
@@ -124,7 +124,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 .AddComponents(wheelDropdown);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
 
-            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleDelete;
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandler.HandleDelete;
         }
     }
 
@@ -152,7 +152,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 .AddComponents(wheelDropdown);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
 
-            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleList;
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandler.HandleList;
         }
     }
 }
