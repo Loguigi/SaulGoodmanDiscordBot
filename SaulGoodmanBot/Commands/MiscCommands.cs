@@ -21,7 +21,7 @@ public class MiscCommands : ApplicationCommandModule {
     public async Task CoinFlipCommand(InteractionContext ctx) {
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(CoinFlip()));
 
-        ctx.Client.ComponentInteractionCreated += MiscHandlers.HandleFlip;
+        ctx.Client.ComponentInteractionCreated += MiscHandler.HandleFlip;
     }
 
     [SlashCommand("8ball", "Ask the magic 8 ball a question")]
