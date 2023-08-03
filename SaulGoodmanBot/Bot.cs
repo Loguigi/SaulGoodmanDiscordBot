@@ -7,11 +7,8 @@ using DSharpPlus.Interactivity.Extensions;
 using Newtonsoft.Json;
 using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
-using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Handlers;
 using Microsoft.Extensions.Logging;
-using DSharpPlus.EventArgs;
-using DSharpPlus.Entities;
 
 namespace SaulGoodmanBot;
 

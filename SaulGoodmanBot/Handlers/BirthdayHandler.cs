@@ -7,25 +7,25 @@ namespace SaulGoodmanBot.Handlers;
 
 public static class BirthdayHandler {
     public static async Task HandleBirthdayMessage(DiscordClient s, MessageCreateEventArgs e) {
-        var bdayList = new Birthdays(e.Guild.Id, s);
+        var bdayList = new Birthdays(e.Guild, s);
         if (!e.Author.IsBot) {
-            var Config = new ServerConfig(e.Guild.Id);
-            if (Config.PauseBdayNotifsTimer == DateTime.Now.AddDays(-1)) {
-                Config.PauseBdayNotifsTimer = bdayList.DATE_ERROR;
-                Config.UpdateConfig();
+            var config = new ServerConfig(e.Guild);
+            if (config.PauseBdayNotifsTimer == DateTime.Now.AddDays(-1)) {
+                config.PauseBdayNotifsTimer = bdayList.DATE_ERROR;
+                config.UpdateConfig();
             }
 
-            if (Config.BirthdayNotifications && Config.PauseBdayNotifsTimer == bdayList.DATE_ERROR) {
-                foreach (var birthday in bdayList.GetBirthdays()) {
+            if (config.BirthdayNotifications && config.PauseBdayNotifsTimer == bdayList.DATE_ERROR) {
+                foreach (var birthday in bdayList.BirthdayList) {
                     if (birthday.IsBirthdayToday()) {
-                        var bdayMessage = await new DiscordMessageBuilder()
+                        _ = await new DiscordMessageBuilder()
                             .AddEmbed(new DiscordEmbedBuilder()
                                 .WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} It's the birthday of {birthday.User.Mention}! ({birthday.GetAge()})")
                                 .WithColor(DiscordColor.HotPink))
-                            .SendAsync(e.Guild.GetDefaultChannel());
+                            .SendAsync(config.DefaultChannel);
 
-                        Config.PauseBdayNotifsTimer = DateTime.Now;
-                        Config.UpdateConfig();
+                        config.PauseBdayNotifsTimer = DateTime.Now;
+                        config.UpdateConfig();
                     }
                 }
             }

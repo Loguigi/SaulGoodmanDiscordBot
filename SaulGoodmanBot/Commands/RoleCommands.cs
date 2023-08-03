@@ -7,31 +7,50 @@ using SaulGoodmanBot.Handlers;
 namespace SaulGoodmanBot.Commands;
 
 [GuildOnly]
-[SlashCommandGroup("role", "temp description")]
+[SlashCommandGroup("role", "Manage self-assigning roles in server")]
 public class RoleCommands : ApplicationCommandModule {
-    [SlashCommand("setup", "temp description")]
+    [SlashCommand("setup", "Setup how roles are assigned in your server")]
     [SlashCommandPermissions(Permissions.Administrator)]
-    public async Task Setup(InteractionContext ctx) {
-        // var roleList = new ServerRoles(ctx.Guild);
-        try {
-            var botPosition = ctx.Guild.Roles.Values
-                .Where(x => x.Name == "Saul Goodman").First().Position;
-            var sortedRoles = ctx.Guild.Roles.Values
-                .Where(x => x.Position < botPosition && x.Position != 0 && x.Name != "Nitro Booster")
-                .OrderByDescending(x => x.Position).ToList();
-            var roleOptions = new List<DiscordSelectComponentOption>();
-            foreach (var role in sortedRoles) {
-                roleOptions.Add(new DiscordSelectComponentOption(role.Name, role.Id.ToString(), "", false));
+    public async Task Setup(InteractionContext ctx,
+        [Option("name", "Name for the category of roles")] string name,
+        [Option("description", "Description for the role category")] string description,
+        [Option("allowmultipleroles", "Allows multiple roles to be assigned")] bool allowmultipleroles) {
+        
+        var config = new ServerConfig(ctx.Guild) {
+            ServerRolesName = name,
+            ServerRolesDescription = description,
+            AllowMultipleRoles = allowmultipleroles
+        };
+        config.UpdateConfig();
+
+        await ctx.CreateResponseAsync(StandardOutput.Success("Role setup complete. Add roles to finish using /role add"), ephemeral:true);
+    }
+
+    [SlashCommand("add", "Add roles to the list of self-assignable roles")]
+    [SlashCommandPermissions(Permissions.Administrator)]
+    public async Task AddRole(InteractionContext ctx,
+        [Option("role", "Role to add")] DiscordRole role,
+        [Option("description", "Description to add to the role")] string? description=null,
+        [Option("emoji", "Emoji to represent the role")] string? emoji=null) {
+        
+        var roles = new ServerRoles(ctx.Guild, ctx.Client);
+
+        if (roles.IsNotSetup()) {
+            // error: roles not setup in server
+            // TODO: handle not setup error
+        } else {
+            if (emoji != null) {
+                if (DiscordEmoji.TryFromName(ctx.Client, emoji, true, out DiscordEmoji validEmoji)) {
+                    roles.Add(new RoleComponent(role, description, validEmoji));
+                    await ctx.CreateResponseAsync(StandardOutput.Success($"Added {role.Mention} to {roles.CategoryName}"), ephemeral:true);
+                } else {
+                    // error: emoji error
+                    await ctx.CreateResponseAsync(StandardOutput.Error("Invalid emoji"), ephemeral:true);
+                }
+            } else {
+                roles.Add(new RoleComponent(role, description, null));
+                await ctx.CreateResponseAsync(StandardOutput.Success($"Added {role.Mention} to {roles.CategoryName}"), ephemeral:true);
             }
-            var dropdown = new DiscordRoleSelectComponent("rolesetup", "Select a role");
-
-            var message = new DiscordMessageBuilder()
-                .WithContent("test")
-                .AddComponents(dropdown);
-
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(message));
-        } catch (DSharpPlus.Exceptions.BadRequestException e) {
-            Console.WriteLine(e.Message);
         }
     }
 }

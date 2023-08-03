@@ -16,9 +16,10 @@ public class ServerConfigCommands : ApplicationCommandModule {
         [Choice("Welcome message", "welcome")]
         [Choice("Leave message", "leave")]
         [Option("option", "General config option")] string option) {
-        var config = new ServerConfig(ctx.Guild.Id);
+            
+        var config = new ServerConfig(ctx.Guild);
         var intr = ctx.Client.GetInteractivity();
-        var description = String.Empty;
+        var description = string.Empty;
 
         if (option == "welcome") {
             description = "Enter a welcome message for your server\nFormat is `[message] @user`\nEnter `cancel` to cancel or `disable` to disable welcome messages";
@@ -75,5 +76,15 @@ public class ServerConfigCommands : ApplicationCommandModule {
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(new DiscordEmbedBuilder().WithTitle("Set Leave Message").WithDescription(description)));
             await ctx.Channel.DeleteMessageAsync(response.Result);
         }
+    }
+
+    [SlashCommand("defaultchannel", "Chooses a default channel to send messages in")]
+    public async Task DefaultChannel(InteractionContext ctx,
+        [Option("channel", "Channel to select as default")] DiscordChannel channel) {
+
+        var config = new ServerConfig(ctx.Guild) {DefaultChannel = channel};
+        config.UpdateConfig();
+
+        await ctx.CreateResponseAsync(StandardOutput.Success($"Default channel set to {channel.Mention}"), ephemeral:true);
     } 
 }
