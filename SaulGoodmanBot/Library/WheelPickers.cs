@@ -1,11 +1,12 @@
+using DSharpPlus.Entities;
 using DataLibrary.Logic;
 
 namespace SaulGoodmanBot.Library;
 
 public class WheelPickers {
-    public WheelPickers(ulong guildid) {
-        GuildId = guildid;
-        var data = WheelPickerProcessor.LoadAllWheels(GuildId);
+    public WheelPickers(DiscordGuild guild) {
+        Guild = guild;
+        var data = WheelPickerProcessor.LoadAllWheels(Guild.Id);
 
         foreach (var row in data) {
             if (Wheels.ContainsKey(row.WheelName)) {
@@ -23,17 +24,17 @@ public class WheelPickers {
 
     public void Add(Wheel wheel) {
         foreach (var option in wheel.Options) {
-            WheelPickerProcessor.AddWheelOption(GuildId, wheel.Name, option, wheel.Image);
+            WheelPickerProcessor.AddWheelOption(Guild.Id, wheel.Name, option, wheel.Image);
         }
     }
 
     public void Delete(Wheel wheel, string option="") {
         if (option != "") {
             // delete wheel option
-            WheelPickerProcessor.DeleteWheelOption(GuildId, wheel.Name, option);
+            WheelPickerProcessor.DeleteWheelOption(Guild.Id, wheel.Name, option);
         } else {
             // delete entire wheel
-            WheelPickerProcessor.DeleteWheel(GuildId, wheel.Name);
+            WheelPickerProcessor.DeleteWheel(Guild.Id, wheel.Name);
         }
     }
 
@@ -41,7 +42,7 @@ public class WheelPickers {
         return Wheels.Count == WHEEL_LIMIT;
     }
 
-    private ulong GuildId { get; set; }
+    private DiscordGuild Guild { get; set; }
     public Dictionary<string, Wheel> Wheels { get; set; } = new Dictionary<string, Wheel>();
     private const int WHEEL_LIMIT = 20;
 }
