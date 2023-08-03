@@ -14,6 +14,16 @@ public class ServerRoles {
         }
     }
 
+    public void AddRoles(List<DiscordUser> roles) {
+        foreach (var role in roles) {
+            RoleProcessor.SaveRole(Guild.Id, role.Id);
+        }
+    }
+
+    public bool IsNotSetup() {
+        return Roles.Count == 0;
+    }
+
     private DiscordGuild Guild { get; set; }
     public List<DiscordRole> Roles { get; private set; } = new List<DiscordRole>();
 }

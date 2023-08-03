@@ -9,9 +9,6 @@
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
-using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.EventArgs;
 using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Handlers;
 
