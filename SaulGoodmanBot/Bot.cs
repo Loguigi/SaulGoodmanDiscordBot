@@ -69,6 +69,7 @@ public class Bot {
         slashCommandsConfig.RegisterCommands<ReactionCommands>();
         slashCommandsConfig.RegisterCommands<BirthdayCommands>();
         slashCommandsConfig.RegisterCommands<ServerConfigCommands>();
+        slashCommandsConfig.RegisterCommands<RoleCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
