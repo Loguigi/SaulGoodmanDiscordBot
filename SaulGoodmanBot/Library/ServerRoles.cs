@@ -26,6 +26,10 @@ public class ServerRoles {
         RoleProcessor.SaveRole(Guild.Id, role.Role.Id, role.Description, role.Emoji?.ToString());
     }
 
+    public void Remove(ulong roleid) {
+        RoleProcessor.DeleteRole(Guild.Id, roleid);
+    }
+
     public bool IsNotSetup() {
         return Roles.Count == 0;
     }
