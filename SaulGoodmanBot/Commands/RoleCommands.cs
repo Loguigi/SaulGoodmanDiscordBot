@@ -53,4 +53,32 @@ public class RoleCommands : ApplicationCommandModule {
             }
         }
     }
+
+    [SlashCommand("remove", "Remove a role from the list of self-assignable roles")]
+    [SlashCommandPermissions(Permissions.Administrator)]
+    public async Task RemoveRole(InteractionContext ctx) {
+        var roles = new ServerRoles(ctx.Guild, ctx.Client);
+
+        if (roles.IsNotSetup()) {
+            // error: rles not setup in server
+            // TODO: handle not setup error
+        } else {
+            var roleOptions = new List<DiscordSelectComponentOption>() {
+                new DiscordSelectComponentOption("Cancel", "cancel", "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":x:", false)))
+            };
+            foreach (var role in roles.Roles) {
+                roleOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), "", false));
+            }
+            var roleDropdown = new DiscordSelectComponent("removeroledropdown", "Select a role", roleOptions);
+
+            var prompt = new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
+                    .WithTitle("Remove Role")
+                    .WithColor(DiscordColor.DarkRed))
+                .AddComponents(roleDropdown);
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
+
+            ctx.Client.ComponentInteractionCreated += RoleHandler.HandleRemoveRole;
+        }
+    }
 }
