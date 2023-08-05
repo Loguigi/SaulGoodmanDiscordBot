@@ -81,4 +81,39 @@ public class RoleCommands : ApplicationCommandModule {
             ctx.Client.ComponentInteractionCreated += RoleHandler.HandleRemoveRole;
         }
     }
+
+    [SlashCommand("menu", "Creates a menu for assigning and unassigning roles")]
+    public async Task RoleMenu(InteractionContext ctx) {
+        var roles = new ServerRoles(ctx.Guild, ctx.Client);
+
+        if (roles.IsNotSetup()) {
+            // error
+        } else {
+            var rolesOptions = new List<DiscordSelectComponentOption>();
+            foreach (var role in roles.Roles) {
+                if (role.Emoji != null) {
+                    rolesOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), role.Description ?? string.Empty, false, new DiscordComponentEmoji(role.Emoji)));
+                } else {
+                    rolesOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), role.Description ?? string.Empty, false));
+                }
+            }
+
+            DiscordSelectComponent roleDropdown;
+            if (roles.AllowMultipleRoles) {
+                roleDropdown = new("rolemenudropdown", "Select roles", rolesOptions, false, 1, rolesOptions.Count - 1);
+            } else {
+                roleDropdown = new("rolemenudropdown", "Select a role", rolesOptions, false);
+            }
+
+            var prompt = new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
+                    .WithTitle(roles.CategoryName)
+                    .WithDescription(roles.CategoryDescription)
+                    .WithColor(DiscordColor.Turquoise))
+                .AddComponents(roleDropdown);
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
+
+            // TODO: handler
+        }
+    }
 }

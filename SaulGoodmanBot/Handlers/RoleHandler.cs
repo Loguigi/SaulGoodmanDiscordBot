@@ -6,6 +6,19 @@ using SaulGoodmanBot.Library;
 namespace SaulGoodmanBot.Handlers;
 
 public static class RoleHandler {
+    public static async Task HandleMenu(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (e.Id == "rolemenudropdown") {
+            var roles = new ServerRoles(e.Guild, s);
+            foreach (var roleid in e.Values) {
+                if (roles.AllowMultipleRoles) {
+                    
+                } else {
+
+                }
+            }
+        }
+    }
+
     public static async Task HandleRemoveRole(DiscordClient s, ComponentInteractionCreateEventArgs e) {
         if (e.Id == "removeroledropdown") {
             var roles = new ServerRoles(e.Guild, s);
