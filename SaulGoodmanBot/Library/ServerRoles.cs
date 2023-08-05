@@ -30,6 +30,10 @@ public class ServerRoles {
         RoleProcessor.DeleteRole(Guild.Id, roleid);
     }
 
+    public DiscordRole GetRole(ulong roleid) {
+        return Roles.Where(x => x.Role.Id == roleid).First().Role;
+    }
+
     public bool IsNotSetup() {
         return Roles.Count == 0;
     }
