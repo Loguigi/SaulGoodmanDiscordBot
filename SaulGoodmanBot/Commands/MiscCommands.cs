@@ -21,6 +21,7 @@ public class MiscCommands : ApplicationCommandModule {
     public async Task CoinFlipCommand(InteractionContext ctx) {
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(CoinFlip()));
 
+        ctx.Client.ComponentInteractionCreated -= MiscHandler.HandleFlip;
         ctx.Client.ComponentInteractionCreated += MiscHandler.HandleFlip;
     }
 
@@ -47,7 +48,7 @@ public class MiscCommands : ApplicationCommandModule {
         // display result
         var response = new DiscordMessageBuilder()
             .AddEmbed(new DiscordEmbedBuilder()
-                .WithDescription($"## {user.Mention}'s penis is {String.Format("{0:0.##}", inches)} in. long")
+                .WithDescription($"## {user.Mention}'s penis is {string.Format("{0:0.##}", inches)} in. long")
                 .WithColor(DiscordColor.IndianRed));
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(response));
     }

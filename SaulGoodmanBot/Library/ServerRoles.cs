@@ -12,7 +12,7 @@ public class ServerRoles {
         // assign from roles
         var data = RoleProcessor.LoadRoles(Guild.Id);
         foreach (var row in data) {
-            Roles.Add(new RoleComponent(Guild.GetRole(row.RoleId), row.Description, row.Emoji != null ? DiscordEmoji.FromName(Client, row.Emoji, true) : null));
+            Roles.Add(new RoleComponent(Guild.GetRole(row.RoleId), row.Description, row.RoleEmoji != null ? DiscordEmoji.FromName(Client, row.RoleEmoji, true) : null));
         }
 
         // assign from config
@@ -23,19 +23,27 @@ public class ServerRoles {
     }
 
     public void Add(RoleComponent role) {
-        RoleProcessor.SaveRole(Guild.Id, role.Role.Id, role.Description, role.Emoji?.ToString());
+        RoleProcessor.SaveRole(Guild.Id, role.Role.Id, role.Description, role.Emoji?.GetDiscordName());
     }
 
     public void Remove(ulong roleid) {
         RoleProcessor.DeleteRole(Guild.Id, roleid);
     }
 
-    public DiscordRole GetRole(ulong roleid) {
-        return Roles.Where(x => x.Role.Id == roleid).First().Role;
+    public RoleComponent GetRole(ulong roleid) {
+        return Roles.Where(x => x.Role.Id == roleid).First();
     }
 
     public bool IsNotSetup() {
+        return CategoryName == string.Empty;
+    }
+
+    public bool IsEmpty() {
         return Roles.Count == 0;
+    }
+
+    public bool AlreadyExists(DiscordRole role) {
+        return Roles.Contains(new RoleComponent(role));
     }
 
     private DiscordGuild Guild { get; set; }
@@ -47,7 +55,8 @@ public class ServerRoles {
 }
 
 public class RoleComponent {
-    public RoleComponent(DiscordRole role, string? desc, DiscordEmoji? emoji) {
+
+    public RoleComponent(DiscordRole role, string? desc=null, DiscordEmoji? emoji=null) {
         Role = role;
         Description = desc;
         Emoji = emoji;

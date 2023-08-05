@@ -5,7 +5,7 @@ namespace DataLibrary.Logic;
 
 public static class RoleProcessor {
     public static List<RoleModel> LoadRoles(ulong guildid) {
-        string sql = @$"select RoleId, Description, Emoji from dbo.Roles where GuildId={guildid};";
+        string sql = @$"select RoleId, Description, RoleEmoji from dbo.Roles where GuildId={guildid};";
         return SqlDataAccess.LoadData<RoleModel>(sql);
     }
 
