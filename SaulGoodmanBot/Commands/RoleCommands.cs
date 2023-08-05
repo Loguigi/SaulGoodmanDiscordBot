@@ -35,18 +35,37 @@ public class RoleCommands : ApplicationCommandModule {
         
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
 
-        if (roles.IsNotSetup()) {
-            // error: roles not setup in server
-            // TODO: handle not setup error
-        } else {
-            if (emoji != null) {
-                if (DiscordEmoji.TryFromName(ctx.Client, emoji, true, out DiscordEmoji validEmoji)) {
-                    roles.Add(new RoleComponent(role, description, validEmoji));
+        // ERROR: roles not setup
+        if (roles.IsNotSetup()) 
+            await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use /role setup"), ephemeral:true); 
+
+        // Add role
+        else {
+            if (roles.AlreadyExists(role)) {
+                // ERROR: role already added
+                await ctx.CreateResponseAsync(StandardOutput.Error($"{role.Mention} already added to {roles.CategoryName}"), ephemeral:true);
+            } else if (emoji != null) {
+
+                // Standard unicode emoji
+                if (DiscordEmoji.TryFromUnicode(ctx.Client, emoji, out DiscordEmoji normalEmoji)) {
+                    roles.Add(new RoleComponent(role, description, normalEmoji));
                     await ctx.CreateResponseAsync(StandardOutput.Success($"Added {role.Mention} to {roles.CategoryName}"), ephemeral:true);
-                } else {
-                    // error: emoji error
+
+                // Not standard unicode emoji; possible guild emoji
+                } else if (emoji.Contains(':')) {
+                    var tryEmoji = string.Join("", emoji.SkipWhile(x => x != ':').TakeWhile(x => !char.IsNumber(x)));
+
+                    if (DiscordEmoji.TryFromName(ctx.Client, tryEmoji, true, out DiscordEmoji guildEmoji)) {
+                        roles.Add(new RoleComponent(role, description, guildEmoji));
+                        await ctx.CreateResponseAsync(StandardOutput.Success($"Added {role.Mention} to {roles.CategoryName}"), ephemeral:true);
+
+                    // ERROR: emoji error
+                    } else
+                        await ctx.CreateResponseAsync(StandardOutput.Error("Invalid emoji"), ephemeral:true);
+
+                // ERROR: emoji error
+                } else 
                     await ctx.CreateResponseAsync(StandardOutput.Error("Invalid emoji"), ephemeral:true);
-                }
             } else {
                 roles.Add(new RoleComponent(role, description, null));
                 await ctx.CreateResponseAsync(StandardOutput.Success($"Added {role.Mention} to {roles.CategoryName}"), ephemeral:true);
@@ -86,9 +105,17 @@ public class RoleCommands : ApplicationCommandModule {
     public async Task RoleMenu(InteractionContext ctx) {
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
 
-        if (roles.IsNotSetup()) {
-            // error
-        } else {
+        // ERROR: not setup
+        if (roles.IsNotSetup()) 
+            await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use /role setup"), ephemeral:true);
+
+        // ERROR: no roles added
+        else if (roles.IsEmpty())
+            await ctx.CreateResponseAsync(StandardOutput.Error("No roles added. Use /role add"), ephemeral:true);
+
+        // Display menu
+        else {
+            // Create role options
             var rolesOptions = new List<DiscordSelectComponentOption>();
             foreach (var role in roles.Roles) {
                 if (role.Emoji != null) {
@@ -98,22 +125,31 @@ public class RoleCommands : ApplicationCommandModule {
                 }
             }
 
+            // Create dropdown
             DiscordSelectComponent roleDropdown;
-            if (roles.AllowMultipleRoles) {
-                roleDropdown = new("rolemenudropdown", "Select roles", rolesOptions, false, 1, rolesOptions.Count - 1);
-            } else {
+            if (roles.AllowMultipleRoles)
+                roleDropdown = new("rolemenudropdown", "Select roles", rolesOptions, false, 1, rolesOptions.Count);
+            else
                 roleDropdown = new("rolemenudropdown", "Select a role", rolesOptions, false);
+
+            // Send prompt
+            var prompt = new DiscordEmbedBuilder()
+                .WithAuthor(ctx.Guild.Name, "https://youtu.be/dQw4w9WgXcQ", ctx.Guild.IconUrl)
+                .WithTitle(roles.CategoryName)
+                .WithDescription(roles.CategoryDescription)
+                .WithFooter(roles.AllowMultipleRoles ? "Can have multiple" : "Can only have one")
+                .WithColor(DiscordColor.Turquoise);
+            foreach (var r in roles.Roles) {
+                if (r == roles.Roles.First())
+                    prompt.AddField("Available Roles", r.Role.Mention);
+                else
+                    prompt.Fields.Where(x => x.Name == "Available Roles").First().Value += $", {r.Role.Mention}";
             }
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(prompt).AddComponents(roleDropdown)));
 
-            var prompt = new DiscordMessageBuilder()
-                .AddEmbed(new DiscordEmbedBuilder()
-                    .WithTitle(roles.CategoryName)
-                    .WithDescription(roles.CategoryDescription)
-                    .WithColor(DiscordColor.Turquoise))
-                .AddComponents(roleDropdown);
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
-
-            // TODO: handler
+            // Add handler
+            ctx.Client.ComponentInteractionCreated -= RoleHandler.HandleMenu;
+            ctx.Client.ComponentInteractionCreated += RoleHandler.HandleMenu;
         }
     }
 }

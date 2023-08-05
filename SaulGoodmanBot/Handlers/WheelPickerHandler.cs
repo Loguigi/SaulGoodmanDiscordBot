@@ -24,7 +24,7 @@ public static class WheelPickerHandler {
             var response = await intr.WaitForMessageAsync(u => u.Channel == e.Channel && u.Author == e.User, TimeSpan.FromSeconds(60));
 
             // continue to add options to wheel
-            while (!response.Result.Content.ToLower().Contains("stop") && optionCount <= 10) {
+            while (!response.Result.Content.ToLower().Contains("stop") && optionCount <= 30) {
                 // add option and update messages
                 optionsAdded.Add(response.Result.Content);
                 description += $"`{optionCount}.` {response.Result.Content}\n";

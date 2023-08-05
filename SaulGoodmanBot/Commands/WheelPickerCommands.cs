@@ -94,6 +94,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 .AddComponents(wheelDropdown);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
 
+            ctx.Client.ComponentInteractionCreated -= WheelPickerHandler.HandleSpin;
             ctx.Client.ComponentInteractionCreated += WheelPickerHandler.HandleSpin;
         }
     }
