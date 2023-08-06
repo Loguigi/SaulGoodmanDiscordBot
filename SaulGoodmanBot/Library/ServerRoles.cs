@@ -12,7 +12,7 @@ public class ServerRoles {
         // assign from roles
         var data = RoleProcessor.LoadRoles(Guild.Id);
         foreach (var row in data) {
-            Roles.Add(new RoleComponent(Guild.GetRole(row.RoleId), row.Description, row.RoleEmoji != null ? DiscordEmoji.FromName(Client, row.RoleEmoji, true) : null));
+            Roles.Add(new RoleComponent(Guild.GetRole((ulong)row.RoleId), row.Description, row.RoleEmoji != null ? DiscordEmoji.FromName(Client, row.RoleEmoji, true) : null));
         }
 
         // assign from config

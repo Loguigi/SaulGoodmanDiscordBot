@@ -10,8 +10,14 @@ public static class RoleProcessor {
     }
 
     public static int SaveRole(ulong guildid, ulong roleid, string? desc, string? emoji) {
-        string sql = @$"insert into dbo.Roles values ({guildid}, {roleid}, '{desc}', '{emoji}');";
-        return SqlDataAccess.SaveData(sql, new RoleModel());
+        var role = new RoleModel() {
+            GuildId = (long)guildid,
+            RoleId = (long)roleid,
+            Description = desc,
+            RoleEmoji = emoji
+        };
+        string sql = @"insert into dbo.Roles values (@GuildId, @RoleId, @Description, @RoleEmoji);";
+        return SqlDataAccess.SaveData(sql, role);
     }
 
     public static int DeleteRole(ulong guildid, ulong roleid) {

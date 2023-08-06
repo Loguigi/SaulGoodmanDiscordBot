@@ -67,6 +67,46 @@ public static class RoleHandler {
         }
     }
 
+    public static async Task HandleAssign(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (e.Id == "roleassigndropdown") {
+            var roles = new ServerRoles(e.Guild, s);
+            var user = await e.Guild.GetMemberAsync(e.User.Id);
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle(roles.CategoryName)
+                .WithColor(DiscordColor.Turquoise);
+
+            if (e.Values.First() == "cancel")
+                await e.Interaction.DeleteOriginalResponseAsync();
+            else {
+                var role = roles.GetRole(ulong.Parse(e.Values.First())).Role;
+
+                if (user.Roles.Contains(role)) {
+                    await user.RevokeRoleAsync(role);
+                    embed.AddField("Removed Role", role.Mention);
+                } else if (roles.AllowMultipleRoles) {
+                    await user.GrantRoleAsync(role);
+                    embed.AddField("Added Role", role.Mention);
+                } else {
+                    // Remove any other role that isn't the selected role
+                    foreach (var savedRoles in roles.Roles) {
+                        if (user.Roles.Contains(savedRoles.Role)) {
+                            await user.RevokeRoleAsync(savedRoles.Role);
+                            embed.AddField("Removed Role", savedRoles.Role.Mention);
+                        }
+                    }
+
+                    // Add role
+                    await user.GrantRoleAsync(role);
+                    embed.AddField("Added Role", role.Mention);
+                }
+            }
+
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
+
+            s.ComponentInteractionCreated -= HandleAssign;
+        }
+    }
+
     public static async Task HandleRemoveRole(DiscordClient s, ComponentInteractionCreateEventArgs e) {
         if (e.Id == "removeroledropdown") {
             var roles = new ServerRoles(e.Guild, s);
