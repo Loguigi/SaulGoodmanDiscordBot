@@ -15,7 +15,7 @@ public class ServerConfig {
             foreach (var row in data) {
                 WelcomeMessage = row.WelcomeMessage;
                 LeaveMessage = row.LeaveMessage;
-                DefaultChannel = Guild.GetChannel(row.DefaultChannel);
+                DefaultChannel = Guild.GetChannel((ulong)row.DefaultChannel);
                 BirthdayNotifications = row.BirthdayNotifications == 1;
                 PauseBdayNotifsTimer = row.PauseBdayNotifsTimer;
                 ServerRolesName = row.ServerRolesName;

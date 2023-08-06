@@ -116,21 +116,21 @@ public class RoleCommands : ApplicationCommandModule {
         // Display menu
         else {
             // Create role options
-            var rolesOptions = new List<DiscordSelectComponentOption>();
+            var roleOptions = new List<DiscordSelectComponentOption>();
             foreach (var role in roles.Roles) {
                 if (role.Emoji != null) {
-                    rolesOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), role.Description ?? string.Empty, false, new DiscordComponentEmoji(role.Emoji)));
+                    roleOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), role.Description ?? string.Empty, false, new DiscordComponentEmoji(role.Emoji)));
                 } else {
-                    rolesOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), role.Description ?? string.Empty, false));
+                    roleOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), role.Description ?? string.Empty, false));
                 }
             }
 
             // Create dropdown
             DiscordSelectComponent roleDropdown;
             if (roles.AllowMultipleRoles)
-                roleDropdown = new("rolemenudropdown", "Select roles", rolesOptions, false, 1, rolesOptions.Count);
+                roleDropdown = new("rolemenudropdown", "Select roles", roleOptions, false, 1, roleOptions.Count);
             else
-                roleDropdown = new("rolemenudropdown", "Select a role", rolesOptions, false);
+                roleDropdown = new("rolemenudropdown", "Select a role", roleOptions, false);
 
             // Send prompt
             var prompt = new DiscordEmbedBuilder()
@@ -151,5 +151,44 @@ public class RoleCommands : ApplicationCommandModule {
             ctx.Client.ComponentInteractionCreated -= RoleHandler.HandleMenu;
             ctx.Client.ComponentInteractionCreated += RoleHandler.HandleMenu;
         }
+    }
+
+    [SlashCommand("assign", "Assign or unassign a role")]
+    public async Task AssignRole(InteractionContext ctx) {
+        var roles = new ServerRoles(ctx.Guild, ctx.Client);
+
+        // ERROR: not setup
+        if (roles.IsNotSetup()) 
+            await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use /role setup"), ephemeral:true);
+
+        // ERROR: no roles added
+        else if (roles.IsEmpty())
+            await ctx.CreateResponseAsync(StandardOutput.Error("No roles added. Use /role add"), ephemeral:true);
+
+        else {
+            // Create role options and dropdowns
+            var roleOptions = new List<DiscordSelectComponentOption>() {new DiscordSelectComponentOption("Cancel", "cancel", "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":x:")))};
+            foreach (var role in roles.Roles) {
+                if (role.Emoji != null) {
+                    roleOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), role.Description ?? string.Empty, false, new DiscordComponentEmoji(role.Emoji)));
+                } else {
+                    roleOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), role.Description ?? string.Empty, false));
+                }
+            }
+            var roleDropdown = new DiscordSelectComponent("roleassigndropdown", "Select a role", roleOptions);
+        
+            // Display prompt
+            var prompt = new DiscordMessageBuilder()
+                .AddEmbed(new DiscordEmbedBuilder()
+                    .WithTitle(roles.CategoryName)
+                    .WithDescription(roles.CategoryDescription)
+                    .WithColor(DiscordColor.Turquoise))
+                .AddComponents(roleDropdown);
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
+
+            // Add handler
+            // TODO make handler
+        }
+
     }
 }

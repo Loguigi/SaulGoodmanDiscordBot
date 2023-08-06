@@ -11,7 +11,7 @@ public class Birthdays {
 
         var data = BirthdayProcessor.LoadBirthdays(Guild.Id);
         foreach (var row in data) {
-            _ = GetUsers(row.UserId, row.Birthday);
+            _ = GetUsers((ulong)row.UserId, row.Birthday);
         }
     }
 
