@@ -12,24 +12,24 @@ public static class GeneralHandlers {
     }
 
     public static async Task HandleMemberJoin(DiscordClient s, GuildMemberAddEventArgs e) {
-        var config = new ServerConfig(e.Guild.Id);
+        var config = new ServerConfig(e.Guild);
         if (config.WelcomeMessage != null) {
-            var message = await new DiscordMessageBuilder()
+            _ = await new DiscordMessageBuilder()
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithDescription($"## {config.WelcomeMessage} {e.Member.Mention}")
                     .WithColor(DiscordColor.Gold))
-                .SendAsync(e.Guild.GetDefaultChannel());
+                .SendAsync(config.DefaultChannel);
         }
     }
 
     public static async Task HandleMemberLeave(DiscordClient s, GuildMemberRemoveEventArgs e) {
-        var config = new ServerConfig(e.Guild.Id);
+        var config = new ServerConfig(e.Guild);
         if (config.LeaveMessage != null) {
-            var message = await new DiscordMessageBuilder()
+            _ = await new DiscordMessageBuilder()
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithDescription($"## {e.Member.Mention} {config.LeaveMessage}")
                     .WithColor(DiscordColor.Orange))
-                .SendAsync(e.Guild.GetDefaultChannel());
+                .SendAsync(config.DefaultChannel);
         }
     }
 }
