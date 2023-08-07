@@ -72,11 +72,12 @@ public static class RoleHandler {
             var roles = new ServerRoles(e.Guild, s);
             var user = await e.Guild.GetMemberAsync(e.User.Id);
             var embed = new DiscordEmbedBuilder()
+                .WithAuthor(e.User.GlobalName, "https://youtu.be/TQzBlxwoDpc", e.User.AvatarUrl)
                 .WithTitle(roles.CategoryName)
                 .WithColor(DiscordColor.Turquoise);
 
             if (e.Values.First() == "cancel")
-                await e.Interaction.DeleteOriginalResponseAsync();
+                embed.WithDescription("Cancelled");
             else {
                 var role = roles.GetRole(ulong.Parse(e.Values.First())).Role;
 
@@ -114,16 +115,15 @@ public static class RoleHandler {
                 .WithTitle("Remove Role")
                 .WithColor(DiscordColor.DarkRed);
 
-            if (e.Values.First() == "cancel") {
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder()
-                    .AddEmbed(embed.WithDescription("Cancelled"))));
-            } else {
+            if (e.Values.First() == "cancel")
+                embed.WithDescription("Cancelled");
+            else {
                 var roleid = ulong.Parse(e.Values.First());
                 roles.Remove(roleid);
-
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder()
-                    .AddEmbed(embed.WithDescription($"{e.Guild.GetRole(roleid).Mention} has been removed from {roles.CategoryName}"))));
+                embed.WithDescription($"{e.Guild.GetRole(roleid).Mention} has been removed from {roles.CategoryName}");
             }
+
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
 
             s.ComponentInteractionCreated -= HandleRemoveRole;
         }

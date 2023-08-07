@@ -41,10 +41,10 @@ public class RoleCommands : ApplicationCommandModule {
 
         // Add role
         else {
-            if (roles.AlreadyExists(role)) {
-                // ERROR: role already added
+            // ERROR: role already added
+            if (roles.AlreadyExists(role))
                 await ctx.CreateResponseAsync(StandardOutput.Error($"{role.Mention} already added to {roles.CategoryName}"), ephemeral:true);
-            } else if (emoji != null) {
+            else if (emoji != null) {
 
                 // Standard unicode emoji
                 if (DiscordEmoji.TryFromUnicode(ctx.Client, emoji, out DiscordEmoji normalEmoji)) {
@@ -53,7 +53,7 @@ public class RoleCommands : ApplicationCommandModule {
 
                 // Not standard unicode emoji; possible guild emoji
                 } else if (emoji.Contains(':')) {
-                    var tryEmoji = string.Join("", emoji.SkipWhile(x => x != ':').TakeWhile(x => !char.IsNumber(x)));
+                    var tryEmoji = ":" + string.Join("", emoji.SkipWhile(x => x != ':').Skip(1).TakeWhile(x => x != ':')) + ":";
 
                     if (DiscordEmoji.TryFromName(ctx.Client, tryEmoji, true, out DiscordEmoji guildEmoji)) {
                         roles.Add(new RoleComponent(role, description, guildEmoji));
@@ -78,10 +78,11 @@ public class RoleCommands : ApplicationCommandModule {
     public async Task RemoveRole(InteractionContext ctx) {
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
 
-        if (roles.IsNotSetup()) {
-            // error: rles not setup in server
-            // TODO: handle not setup error
-        } else {
+        // ERROR: roles not setup
+        if (roles.IsNotSetup())
+            await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use /role setup"), ephemeral:true);
+        else {
+            // Create dropdown
             var roleOptions = new List<DiscordSelectComponentOption>() {
                 new DiscordSelectComponentOption("Cancel", "cancel", "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":x:", false)))
             };
@@ -90,6 +91,7 @@ public class RoleCommands : ApplicationCommandModule {
             }
             var roleDropdown = new DiscordSelectComponent("removeroledropdown", "Select a role", roleOptions);
 
+            // Send prompt
             var prompt = new DiscordMessageBuilder()
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithTitle("Remove Role")
@@ -97,6 +99,7 @@ public class RoleCommands : ApplicationCommandModule {
                 .AddComponents(roleDropdown);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
 
+            // Add handler
             ctx.Client.ComponentInteractionCreated += RoleHandler.HandleRemoveRole;
         }
     }
@@ -106,7 +109,7 @@ public class RoleCommands : ApplicationCommandModule {
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
 
         // ERROR: not setup
-        if (roles.IsNotSetup()) 
+        if (roles.IsNotSetup())
             await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use /role setup"), ephemeral:true);
 
         // ERROR: no roles added
@@ -118,7 +121,7 @@ public class RoleCommands : ApplicationCommandModule {
             // Create role options
             var roleOptions = new List<DiscordSelectComponentOption>();
             foreach (var role in roles.Roles) {
-                if (role.Emoji != null) {
+                if (!role.Emoji.Equals(null)) {
                     roleOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), role.Description ?? string.Empty, false, new DiscordComponentEmoji(role.Emoji)));
                 } else {
                     roleOptions.Add(new DiscordSelectComponentOption(role.Role.Name, role.Role.Id.ToString(), role.Description ?? string.Empty, false));
@@ -187,7 +190,7 @@ public class RoleCommands : ApplicationCommandModule {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
 
             // Add handler
-            // TODO make handler
+            ctx.Client.ComponentInteractionCreated += RoleHandler.HandleAssign;
         }
 
     }

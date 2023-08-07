@@ -58,7 +58,7 @@ public class Birthdays {
     private DiscordGuild Guild { get; set; }
     private DiscordClient Client { get; set; }
     public List<Birthday> BirthdayList { get; private set; } = new();
-    public DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1000");
+    public DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1800");
 }
 
 public class Birthday {
