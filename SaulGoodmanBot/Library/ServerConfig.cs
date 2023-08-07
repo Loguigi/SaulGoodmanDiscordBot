@@ -42,7 +42,7 @@ public class ServerConfig {
     public DiscordChannel DefaultChannel { get; set; }
 
     // Birthday Config
-    public static DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1000");
+    public static DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1800");
     public bool BirthdayNotifications { get; set; } = true;
     public DateTime PauseBdayNotifsTimer { get; set; } = DATE_ERROR;
 

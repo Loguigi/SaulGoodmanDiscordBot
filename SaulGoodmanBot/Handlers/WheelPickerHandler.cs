@@ -68,7 +68,7 @@ public static class WheelPickerHandler {
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithTitle($"Spinning {wheelName}...")
                     .WithDescription($"## {serverWheels.Wheels[wheelName].Spin()}")
-                    .WithThumbnail(serverWheels.Wheels[wheelName].Image)
+                    .WithThumbnail(serverWheels.Wheels[wheelName].Image ?? "")
                     .WithColor(DiscordColor.Gold))
                 .AddComponents(wheelDropdown);
             await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(response));
@@ -169,7 +169,7 @@ public static class WheelPickerHandler {
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
                     .WithTitle(serverWheels.Wheels[wheelName].Name)
-                    .WithThumbnail(serverWheels.Wheels[wheelName].Image)
+                    .WithThumbnail(serverWheels.Wheels[wheelName].Image ?? "")
                     .WithDescription(description)
                     .WithColor(DiscordColor.MidnightBlue))
                 .AddComponents(wheelDropdown);

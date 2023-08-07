@@ -21,7 +21,11 @@ public static class RoleProcessor {
     }
 
     public static int DeleteRole(ulong guildid, ulong roleid) {
-        string sql = @$"delete from dbo.Roles where GuildId={guildid} and RoleId={roleid};";
-        return SqlDataAccess.SaveData(sql, new RoleModel());
+        var role = new RoleModel() {
+            GuildId = (long)guildid,
+            RoleId = (long)roleid
+        };
+        string sql = @"delete from dbo.Roles where GuildId=@GuildId and RoleId=@RoleId;";
+        return SqlDataAccess.SaveData(sql, role);
     }
 }
