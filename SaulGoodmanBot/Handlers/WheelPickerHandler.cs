@@ -6,12 +6,12 @@ using SaulGoodmanBot.Library;
 
 namespace SaulGoodmanBot.Handlers;
 
-public static class WheelPickerHandlers {
+public static class WheelPickerHandler {
     public static async Task HandleAdd(DiscordClient s, ComponentInteractionCreateEventArgs e) {
         if (e.Id == "adddropdown") {
             var intr = s.GetInteractivity();
             var wheelName = e.Values.First();
-            var serverWheels = new WheelPickers(e.Guild.Id);
+            var serverWheels = new WheelPickers(e.Guild);
             var optionsAdded = new List<string>();
             var description = "Enter `stop` to stop adding options\n";
             var optionCount = 1;
@@ -24,7 +24,7 @@ public static class WheelPickerHandlers {
             var response = await intr.WaitForMessageAsync(u => u.Channel == e.Channel && u.Author == e.User, TimeSpan.FromSeconds(60));
 
             // continue to add options to wheel
-            while (!response.Result.Content.ToLower().Contains("stop") && optionCount <= 10) {
+            while (!response.Result.Content.ToLower().Contains("stop") && optionCount <= 30) {
                 // add option and update messages
                 optionsAdded.Add(response.Result.Content);
                 description += $"`{optionCount}.` {response.Result.Content}\n";
@@ -54,7 +54,7 @@ public static class WheelPickerHandlers {
     public static async Task HandleSpin(DiscordClient s, ComponentInteractionCreateEventArgs e) {
         if (e.Id == "spindropdown") {
             var wheelName = e.Values.First();
-            var serverWheels = new WheelPickers(e.Guild.Id);
+            var serverWheels = new WheelPickers(e.Guild);
 
             // add server wheels to dropdown
             var wheelOptions = new List<DiscordSelectComponentOption>();
@@ -68,7 +68,7 @@ public static class WheelPickerHandlers {
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithTitle($"Spinning {wheelName}...")
                     .WithDescription($"## {serverWheels.Wheels[wheelName].Spin()}")
-                    .WithThumbnail(serverWheels.Wheels[wheelName].Image)
+                    .WithThumbnail(serverWheels.Wheels[wheelName].Image ?? "")
                     .WithColor(DiscordColor.Gold))
                 .AddComponents(wheelDropdown);
             await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(response));
@@ -77,7 +77,7 @@ public static class WheelPickerHandlers {
 
     public static async Task HandleDelete(DiscordClient s, ComponentInteractionCreateEventArgs e) {
         if (e.Id == "deletewheeldropdown") {
-            var serverWheels = new WheelPickers(e.Guild.Id);
+            var serverWheels = new WheelPickers(e.Guild);
             var wheelName = e.Values.First();
 
             // add wheel options to dropdown
@@ -98,7 +98,7 @@ public static class WheelPickerHandlers {
                 .AddComponents(wheelDropdown);
             await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(prompt));
         } else if (e.Id == "deleteoptiondropdown") {
-            var serverWheels = new WheelPickers(e.Guild.Id);
+            var serverWheels = new WheelPickers(e.Guild);
             var select = e.Values.First();
 
             if (select == "cancel") {
@@ -111,7 +111,7 @@ public static class WheelPickerHandlers {
                 await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(prompt));
             } else if (select.Contains("deletetheentirewheel")) {
                 // delete wheel
-                var wheelName = select.Substring(0, select.IndexOf('/'));
+                var wheelName = select[..select.IndexOf('/')];
 
                 // update message
                 var prompt = new DiscordMessageBuilder()
@@ -125,8 +125,8 @@ public static class WheelPickerHandlers {
                 serverWheels.Delete(serverWheels.Wheels[wheelName]);
             } else {
                 // delete wheel option
-                var wheelName = select.Substring(0, select.IndexOf('/'));
-                var wheelOption = select.Replace(wheelName + "/", String.Empty);
+                var wheelName = select[..select.IndexOf('/')];
+                var wheelOption = select.Replace(wheelName + "/", string.Empty);
 
                 // update message
                 var prompt = new DiscordMessageBuilder()
@@ -147,7 +147,7 @@ public static class WheelPickerHandlers {
     public static async Task HandleList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
         if (e.Id == "listdropdown") {
             var wheelName = e.Values.First();
-            var serverWheels = new WheelPickers(e.Guild.Id);
+            var serverWheels = new WheelPickers(e.Guild);
 
             // add server wheels to dropdown
             var wheelOptions = new List<DiscordSelectComponentOption>();
@@ -157,7 +157,7 @@ public static class WheelPickerHandlers {
             var wheelDropdown = new DiscordSelectComponent("listdropdown", "Select a wheel", wheelOptions, false);
 
             // add wheel options to description
-            var description = String.Empty;
+            var description = string.Empty;
             var optNum = 1;
             foreach (var o in serverWheels.Wheels[wheelName].Options) {
                 description += $"`{optNum}`. {o}\n";
@@ -169,7 +169,7 @@ public static class WheelPickerHandlers {
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
                     .WithTitle(serverWheels.Wheels[wheelName].Name)
-                    .WithThumbnail(serverWheels.Wheels[wheelName].Image)
+                    .WithThumbnail(serverWheels.Wheels[wheelName].Image ?? "")
                     .WithDescription(description)
                     .WithColor(DiscordColor.MidnightBlue))
                 .AddComponents(wheelDropdown);

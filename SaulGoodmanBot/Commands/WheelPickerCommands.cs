@@ -9,9 +9,6 @@
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
-using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.EventArgs;
 using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Handlers;
 
@@ -28,7 +25,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
         [Option("value2", "Second value to add to the wheel")][MaximumLength(100)] string value2,
         [Option("image", "Image for the wheel")] DiscordAttachment? img = null ) {
         
-        var serverWheels = new WheelPickers(ctx.Guild.Id);
+        var serverWheels = new WheelPickers(ctx.Guild);
         
         if (serverWheels.Contains(name)) {
             // error: wheel already exists
@@ -50,7 +47,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
 
     [SlashCommand("add", "Adds new options to the wheel")]
     public async Task AddWheelOption(InteractionContext ctx) {
-        var serverWheels = new WheelPickers(ctx.Guild.Id);
+        var serverWheels = new WheelPickers(ctx.Guild);
 
         if (serverWheels.Wheels.Count == 0) {
             // error: no wheels in server
@@ -70,13 +67,13 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 .AddComponents(wheelDropdown);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
             
-            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleAdd;
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandler.HandleAdd;
         }
     }
 
     [SlashCommand("spin", "Spins the chosen wheel for a value")]
     public async Task SpinWheel(InteractionContext ctx) {
-        var serverWheels = new WheelPickers(ctx.Guild.Id);
+        var serverWheels = new WheelPickers(ctx.Guild);
 
         if (serverWheels.Wheels.Count == 0) {
             // error: no wheels in server
@@ -97,13 +94,14 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 .AddComponents(wheelDropdown);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
 
-            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleSpin;
+            ctx.Client.ComponentInteractionCreated -= WheelPickerHandler.HandleSpin;
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandler.HandleSpin;
         }
     }
 
     [SlashCommand("delete", "Deletes a wheel picker or option from a wheel picker")]
     public async Task DeleteWheel(InteractionContext ctx) {
-        var serverWheels = new WheelPickers(ctx.Guild.Id);
+        var serverWheels = new WheelPickers(ctx.Guild);
 
         if (serverWheels.Wheels.Count == 0) {
             // error: no wheels in server
@@ -124,13 +122,13 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 .AddComponents(wheelDropdown);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
 
-            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleDelete;
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandler.HandleDelete;
         }
     }
 
     [SlashCommand("list", "Shows list of options in a wheel")]
     public async Task ListWheelOptions(InteractionContext ctx) {
-        var serverWheels = new WheelPickers(ctx.Guild.Id);
+        var serverWheels = new WheelPickers(ctx.Guild);
         
         if (serverWheels.Wheels.Count == 0) {
             // error: no wheels in server
@@ -152,7 +150,7 @@ public class WheelPickerCommands : ApplicationCommandModule {
                 .AddComponents(wheelDropdown);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
 
-            ctx.Client.ComponentInteractionCreated += WheelPickerHandlers.HandleList;
+            ctx.Client.ComponentInteractionCreated += WheelPickerHandler.HandleList;
         }
     }
 }

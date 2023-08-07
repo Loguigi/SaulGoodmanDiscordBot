@@ -1,7 +1,7 @@
 namespace SaulGoodmanBot.Library;
 
 public static class ImageHelper {
-    public static Dictionary<string, string> Images = new Dictionary<string, string>() {
+    public static Dictionary<string, string> Images = new() {
         {"Success", "https://cdn.discordapp.com/attachments/1129734051016740886/1131566408531193976/success-icon-10.png"},
         {"Error", "https://cdn.discordapp.com/attachments/1129734051016740886/1131559685527437402/error-icon-4.png"},
         {"SmilingGus", "https://cdn.discordapp.com/attachments/1129734051016740886/1131550803065307156/gus-2875652416.png"},
@@ -13,7 +13,7 @@ public static class ImageHelper {
         {"Coin", "https://cdn.discordapp.com/attachments/1129734051016740886/1134748171751391324/pngwing.com.png"},
     };
 
-    public static Dictionary<string, string> Reactions = new Dictionary<string, string>() {
+    public static Dictionary<string, string> Reactions = new() {
         {"wap", "https://cdn.discordapp.com/attachments/270349691147780096/1124955300420648990/20230702_025013.jpg"},
         {"quagmeere", "https://cdn.discordapp.com/attachments/270349691147780096/1132507110626820206/cover10.png"},
         {"sprite", "https://cdn.discordapp.com/attachments/1129734051016740886/1132509015809740820/sprite.png"},

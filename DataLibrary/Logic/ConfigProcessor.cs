@@ -9,18 +9,44 @@ public static class ConfigProcessor {
         return SqlDataAccess.LoadData<ConfigModel>(sql);
     }
 
-    public static int SaveConfig(ulong guildid, string? welcome, string? leave, int bdayNotifs, DateTime pauseBdayNotifs) {
-        string sql = @$"insert into dbo.Config values ({guildid}, '{welcome}', '{leave}', {bdayNotifs}, '{pauseBdayNotifs}');";
-        return SqlDataAccess.SaveData<ConfigModel>(sql, new ConfigModel());
+    public static int SaveConfig(ulong guildid, string? welcome, string? leave, ulong defaultChannel, int bdayNotifs, DateTime pauseBdayNotifs, string? roleName, string? roleDesc, int allowMultiple) {
+        var config = new ConfigModel() {
+            GuildId = (long)guildid,
+            WelcomeMessage = welcome,
+            LeaveMessage = leave,
+            DefaultChannel = (long)defaultChannel,
+            BirthdayNotifications = bdayNotifs,
+            PauseBdayNotifsTimer = pauseBdayNotifs,
+            ServerRolesName = roleName,
+            ServerRolesDescription = roleDesc,
+            AllowMultipleRoles = allowMultiple
+        };
+        string sql = @"insert into dbo.Config values (@GuildId, @WelcomeMessage, @LeaveMessage, @DefaultChannel, @BirthdayNotifications, @PauseBdayNotifsTimer, @ServerRolesName, @ServerRolesDescription, @AllowMultipleRoles);";
+        return SqlDataAccess.SaveData(sql, config);
     }
 
-    public static int UpdateConfig(ulong guildid, string? welcome, string? leave, int bdayNotifs, DateTime pauseBdayNotifs) {
-        string sql = @$"update dbo.Config set 
-                WelcomeMessage='{welcome}', 
-                LeaveMessage='{leave}', 
-                BirthdayNotifications={bdayNotifs}, 
-                PauseBdayNotifsTimer='{pauseBdayNotifs}'
-            where GuildId={guildid};";
-        return SqlDataAccess.SaveData<ConfigModel>(sql, new ConfigModel());
+    public static int UpdateConfig(ulong guildid, string? welcome, string? leave, ulong defaultChannel, int bdayNotifs, DateTime pauseBdayNotifs, string? roleName, string? roleDesc, int allowMultiple) {
+        var config = new ConfigModel() {
+            GuildId = (long)guildid,
+            WelcomeMessage = welcome,
+            LeaveMessage = leave,
+            DefaultChannel = (long)defaultChannel,
+            BirthdayNotifications = bdayNotifs,
+            PauseBdayNotifsTimer = pauseBdayNotifs,
+            ServerRolesName = roleName,
+            ServerRolesDescription = roleDesc,
+            AllowMultipleRoles = allowMultiple
+        };
+        string sql = @"update dbo.Config set 
+                WelcomeMessage=@WelcomeMessage, 
+                LeaveMessage=@LeaveMessage,
+                DefaultChannel=@DefaultChannel, 
+                BirthdayNotifications=@BirthdayNotifications, 
+                PauseBdayNotifsTimer=@PauseBdayNotifsTimer,
+                ServerRolesName=@ServerRolesName,
+                ServerRolesDescription=@ServerRolesDescription,
+                AllowMultipleRoles=@AllowMultipleRoles
+            where GuildId=@GuildId;";
+        return SqlDataAccess.SaveData(sql, config);
     }
 }

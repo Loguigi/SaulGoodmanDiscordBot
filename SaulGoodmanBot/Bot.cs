@@ -7,11 +7,8 @@ using DSharpPlus.Interactivity.Extensions;
 using Newtonsoft.Json;
 using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
-using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Handlers;
 using Microsoft.Extensions.Logging;
-using DSharpPlus.EventArgs;
-using DSharpPlus.Entities;
 
 namespace SaulGoodmanBot;
 
@@ -69,6 +66,7 @@ public class Bot {
         slashCommandsConfig.RegisterCommands<ReactionCommands>();
         slashCommandsConfig.RegisterCommands<BirthdayCommands>();
         slashCommandsConfig.RegisterCommands<ServerConfigCommands>();
+        slashCommandsConfig.RegisterCommands<RoleCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
