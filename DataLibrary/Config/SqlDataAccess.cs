@@ -11,10 +11,8 @@ public static class SqlDataAccess
     public static List<T> LoadData<T>(string sql)
     {
         try {
-            using (IDbConnection cnn = new SqlConnection(ConnectionString))
-            {
-                return cnn.Query<T>(sql).ToList();
-            }
+            using IDbConnection cnn = new SqlConnection(ConnectionString);
+            return cnn.Query<T>(sql).ToList();
         } catch (Exception e) {
             Console.WriteLine(e.Message);
             return new List<T>();
@@ -24,10 +22,8 @@ public static class SqlDataAccess
     public static int SaveData<T>(string sql, T data)
     {
         try {
-            using (IDbConnection cnn = new SqlConnection(ConnectionString))
-            {
-                return cnn.Execute(sql, data);
-            }
+            using IDbConnection cnn = new SqlConnection(ConnectionString);
+            return cnn.Execute(sql, data);
         } catch (Exception e) {
             Console.WriteLine(e.Message);
             return 0;
