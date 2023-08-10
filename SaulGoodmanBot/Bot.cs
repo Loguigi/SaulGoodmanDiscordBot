@@ -47,6 +47,7 @@ public class Bot {
         Client.GuildMemberAdded += GeneralHandlers.HandleMemberJoin;
         Client.GuildMemberRemoved += GeneralHandlers.HandleMemberLeave;
         Client.MessageCreated += BirthdayHandler.HandleBirthdayMessage;
+        Client.MessageCreated += LevelHandler.HandleExpGain;
 
         // Commands Config
         var commandsConfig = new CommandsNextConfiguration() {

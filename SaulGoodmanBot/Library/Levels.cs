@@ -4,13 +4,15 @@ using DataLibrary.Logic;
 namespace SaulGoodmanBot.Library;
 
 public class Levels {
-    public Levels(DiscordGuild guild, DiscordUser user) {
+    public Levels(DiscordGuild guild, DiscordUser user, DateTime newmsgsent) {
         Guild = guild;
         User = user;
+        NewMsgSent = newmsgsent;
 
         var data = LevelProcessor.LoadUser(Guild.Id, User.Id);
         if (data.Count() == 0) {
-            LevelProcessor.SaveNewUser(Guild.Id, User.Id, DateTime.Now);
+            LevelProcessor.SaveNewUser(Guild.Id, User.Id, NewMsgSent);
+            MsgLastSent = NewMsgSent.AddDays(-1);
         } else {
             Level = data.First().Level;
             Experience = data.First().Experience;
@@ -26,7 +28,7 @@ public class Levels {
             LevelledUp = true;
         }
 
-        LevelProcessor.UpdateExp(Guild.Id, User.Id, Level, Experience, MsgLastSent);
+        LevelProcessor.UpdateExp(Guild.Id, User.Id, Level, Experience, NewMsgSent);
     }
 
     private DiscordGuild Guild { get; set; }
@@ -34,6 +36,7 @@ public class Levels {
     public int Level { get; set; }
     public int Experience { get; set; }
     public DateTime MsgLastSent { get; set; }
+    public DateTime NewMsgSent { get; set; }
     public bool LevelledUp { get; set; } = false;
     private const int EXP_GAIN = 1;
 }
