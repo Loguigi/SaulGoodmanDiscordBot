@@ -31,12 +31,20 @@ public class Levels {
         LevelProcessor.UpdateExp(Guild.Id, User.Id, Level, Experience, NewMsgSent);
     }
 
+    public int ExpNeededForNextLevel() {
+        return 2 * (int)Math.Pow(Level + 1, 2) - 2;
+    }
+
+    public int GetRank() {
+        return LevelProcessor.GetRank(Guild.Id, User.Id);
+    }
+
     private DiscordGuild Guild { get; set; }
-    private DiscordUser User { get; set; }
-    public int Level { get; set; }
-    public int Experience { get; set; }
-    public DateTime MsgLastSent { get; set; }
-    public DateTime NewMsgSent { get; set; }
+    public DiscordUser User { get; private set; }
+    public int Level { get; private set; }
+    public int Experience { get; private set; }
+    public DateTime MsgLastSent { get; private set; }
+    public DateTime NewMsgSent { get; private set; }
     public bool LevelledUp { get; set; } = false;
     private const int EXP_GAIN = 1;
 }
