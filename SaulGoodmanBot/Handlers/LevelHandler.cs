@@ -7,17 +7,19 @@ namespace SaulGoodmanBot.Handlers;
 
 public static class LevelHandler {
     public static async Task HandleExpGain(DiscordClient s, MessageCreateEventArgs e) {
-        var user = new Levels(e.Guild, e.Author);
+        if (!e.Author.IsBot) {
+            var user = new Levels(e.Guild, e.Author, e.Message.CreationTimestamp.LocalDateTime);
 
-        if (e.Message.CreationTimestamp >= user.MsgLastSent.AddMinutes(1)) {
-            user.MsgLastSent = e.Message.CreationTimestamp.DateTime;
-            user.GrantExp();
+            if (user.NewMsgSent >= user.MsgLastSent.AddMinutes(1)) {
+                user.GrantExp();
 
-            if (user.LevelledUp) {
-                var message = new DiscordEmbedBuilder()
-                    .WithDescription($"## {DiscordEmoji.FromName(s, ":arrow_up")} {e.Author.Mention} has levelled up! ({user.Level})")
-                    .WithColor(DiscordColor.Cyan);
-                await e.Channel.SendMessageAsync(message);
+                if (user.LevelledUp) {
+                    var message = new DiscordEmbedBuilder()
+                        .WithDescription($"### {DiscordEmoji.FromName(s, ":arrow_up:")} {e.Author.Mention} has levelled up!")
+                        .WithFooter($"Level {user.Level - 1} {DiscordEmoji.FromName(s, ":arrow_right:")} Level {user.Level}", e.Author.AvatarUrl)
+                        .WithColor(DiscordColor.Cyan);
+                    await e.Channel.SendMessageAsync(message);
+                }
             }
         }
     }

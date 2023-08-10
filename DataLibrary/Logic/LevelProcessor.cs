@@ -9,23 +9,23 @@ public static class LevelProcessor {
         return SqlDataAccess.LoadData<LevelModel>(sql);
     }
 
-    public static int SaveNewUser(ulong guildid, ulong userid, DateTime msglastsent) {
+    public static int SaveNewUser(ulong guildid, ulong userid, DateTimeOffset msglastsent) {
         var user = new LevelModel() {
             GuildId = (long)guildid,
             UserId = (long)userid,
-            MsgLastSent = msglastsent
+            MsgLastSent = msglastsent.DateTime
         };
         string sql = @"insert into dbo.Levels values (@GuildId, @UserId, @Level, @Experience, @MsgLastSent);";
         return SqlDataAccess.SaveData(sql, user);
     }
 
-    public static int UpdateExp(ulong guildid, ulong userid, int level, int experience, DateTime msglastsent) {
+    public static int UpdateExp(ulong guildid, ulong userid, int level, int experience, DateTimeOffset msglastsent) {
         var user = new LevelModel() {
             GuildId = (long)guildid,
             UserId = (long)userid,
             Level = level,
             Experience = experience,
-            MsgLastSent = msglastsent
+            MsgLastSent = msglastsent.DateTime
         };
         string sql = @"update dbo.Levels set Level=@Level, Experience=@Experience, MsgLastSent=@MsgLastSent where GuildId=@GuildId and UserId=@UserId;";
         return SqlDataAccess.SaveData(sql, user);
