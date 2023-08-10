@@ -30,4 +30,10 @@ public static class LevelProcessor {
         string sql = @"update dbo.Levels set Level=@Level, Experience=@Experience, MsgLastSent=@MsgLastSent where GuildId=@GuildId and UserId=@UserId;";
         return SqlDataAccess.SaveData(sql, user);
     }
+
+    public static int GetRank(ulong guildid, ulong userid) {
+        string sql = $"select * from dbo.Levels where GuildId={guildid} order by Level desc, Experience desc;";
+        var rankList = SqlDataAccess.LoadData<LevelModel>(sql);
+        return rankList.FindIndex(x => x.UserId == (long)userid) + 1;
+    }
 }
