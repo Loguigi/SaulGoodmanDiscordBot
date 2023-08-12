@@ -9,7 +9,7 @@ public static class ConfigProcessor {
         return SqlDataAccess.LoadData<ConfigModel>(sql);
     }
 
-    public static int SaveConfig(ulong guildid, string? welcome, string? leave, ulong defaultChannel, int bdayNotifs, DateTime pauseBdayNotifs, string? roleName, string? roleDesc, int allowMultiple) {
+    public static int SaveConfig(ulong guildid, string? welcome, string? leave, ulong defaultChannel, int bdayNotifs, DateTime pauseBdayNotifs, string? roleName, string? roleDesc, int allowMultiple, int enablelevels) {
         var config = new ConfigModel() {
             GuildId = (long)guildid,
             WelcomeMessage = welcome,
@@ -19,13 +19,14 @@ public static class ConfigProcessor {
             PauseBdayNotifsTimer = pauseBdayNotifs,
             ServerRolesName = roleName,
             ServerRolesDescription = roleDesc,
-            AllowMultipleRoles = allowMultiple
+            AllowMultipleRoles = allowMultiple,
+            EnableLevels = enablelevels
         };
-        string sql = @"insert into dbo.Config values (@GuildId, @WelcomeMessage, @LeaveMessage, @DefaultChannel, @BirthdayNotifications, @PauseBdayNotifsTimer, @ServerRolesName, @ServerRolesDescription, @AllowMultipleRoles);";
+        string sql = @"insert into dbo.Config values (@GuildId, @WelcomeMessage, @LeaveMessage, @DefaultChannel, @BirthdayNotifications, @PauseBdayNotifsTimer, @ServerRolesName, @ServerRolesDescription, @AllowMultipleRoles, @EnableLevels);";
         return SqlDataAccess.SaveData(sql, config);
     }
 
-    public static int UpdateConfig(ulong guildid, string? welcome, string? leave, ulong defaultChannel, int bdayNotifs, DateTime pauseBdayNotifs, string? roleName, string? roleDesc, int allowMultiple) {
+    public static int UpdateConfig(ulong guildid, string? welcome, string? leave, ulong defaultChannel, int bdayNotifs, DateTime pauseBdayNotifs, string? roleName, string? roleDesc, int allowMultiple, int enablelevels) {
         var config = new ConfigModel() {
             GuildId = (long)guildid,
             WelcomeMessage = welcome,
@@ -35,7 +36,8 @@ public static class ConfigProcessor {
             PauseBdayNotifsTimer = pauseBdayNotifs,
             ServerRolesName = roleName,
             ServerRolesDescription = roleDesc,
-            AllowMultipleRoles = allowMultiple
+            AllowMultipleRoles = allowMultiple,
+            EnableLevels = enablelevels
         };
         string sql = @"update dbo.Config set 
                 WelcomeMessage=@WelcomeMessage, 
@@ -45,7 +47,8 @@ public static class ConfigProcessor {
                 PauseBdayNotifsTimer=@PauseBdayNotifsTimer,
                 ServerRolesName=@ServerRolesName,
                 ServerRolesDescription=@ServerRolesDescription,
-                AllowMultipleRoles=@AllowMultipleRoles
+                AllowMultipleRoles=@AllowMultipleRoles,
+                EnableLevels=@EnableLevels
             where GuildId=@GuildId;";
         return SqlDataAccess.SaveData(sql, config);
     }
