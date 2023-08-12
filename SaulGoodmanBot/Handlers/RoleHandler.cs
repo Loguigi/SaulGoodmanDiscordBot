@@ -128,4 +128,13 @@ public static class RoleHandler {
             s.ComponentInteractionCreated -= HandleRemoveRole;
         }
     }
+
+    public static async Task HandleServerRemoveRole(DiscordClient s, GuildRoleDeleteEventArgs e) {
+        var roles = new ServerRoles(e.Guild, s);
+        if (roles.AlreadyExists(e.Role)) {
+            roles.Remove(e.Role.Id);
+        }
+
+        await Task.CompletedTask;
+    }
 }
