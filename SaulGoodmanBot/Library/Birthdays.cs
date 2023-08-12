@@ -22,6 +22,10 @@ public class Birthdays {
         BirthdayProcessor.UpdateBirthday(Guild.Id, bday.User.Id, bday.BDay);
     }
 
+    public void Remove(Birthday bday) {
+        BirthdayProcessor.RemoveBirthday(Guild.Id, bday.User.Id);
+    }
+
     public async Task GetUsers(ulong userid, DateTime bday) {
         var user = await Guild.GetMemberAsync(userid);
         BirthdayList.Add(new Birthday(user, bday));

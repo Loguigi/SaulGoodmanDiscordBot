@@ -28,4 +28,14 @@ public static class BirthdayProcessor {
         string sql = @"update dbo.Birthdays set Birthday=@Birthday where GuildId=@GuildId and UserId=@UserId;";
         return SqlDataAccess.SaveData(sql, bday);
     }
+
+    public static int RemoveBirthday(ulong guildid, ulong userid) {
+        var bday = new BirthdayModel() {
+            GuildId = (long)guildid,
+            UserId = (long)userid,
+            Birthday = DateTime.Now
+        };
+        string sql = @"delete from dbo.Birthdays where GuildId=@GuildId and UserId=@UserId;";
+        return SqlDataAccess.SaveData(sql, bday);
+    }
 }

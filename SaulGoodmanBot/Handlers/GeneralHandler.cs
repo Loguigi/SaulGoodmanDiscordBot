@@ -24,6 +24,10 @@ public static class GeneralHandlers {
 
     public static async Task HandleMemberLeave(DiscordClient s, GuildMemberRemoveEventArgs e) {
         var config = new ServerConfig(e.Guild);
+        var birthdays = new Birthdays(e.Guild);
+
+        birthdays.Remove(new Birthday(e.Member, DateTime.Now));
+        
         if (config.LeaveMessage != null) {
             _ = await new DiscordMessageBuilder()
                 .AddEmbed(new DiscordEmbedBuilder()

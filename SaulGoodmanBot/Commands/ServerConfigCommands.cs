@@ -69,7 +69,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
             } else {
                 // save new leave message
                 description = "Leave message set";
-                config.WelcomeMessage = response.Result.Content;
+                config.LeaveMessage = response.Result.Content;
                 config.UpdateConfig();
             }
 
