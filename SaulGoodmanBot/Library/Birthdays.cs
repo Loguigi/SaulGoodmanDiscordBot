@@ -5,9 +5,8 @@ using DataLibrary.Logic;
 namespace SaulGoodmanBot.Library;
 
 public class Birthdays {
-    public Birthdays(DiscordGuild guild, DiscordClient client) {
+    public Birthdays(DiscordGuild guild) {
         Guild = guild;
-        Client = client;
 
         var data = BirthdayProcessor.LoadBirthdays(Guild.Id);
         foreach (var row in data) {
@@ -24,7 +23,7 @@ public class Birthdays {
     }
 
     public async Task GetUsers(ulong userid, DateTime bday) {
-        var user = await Client.GetUserAsync(userid);
+        var user = await Guild.GetMemberAsync(userid);
         BirthdayList.Add(new Birthday(user, bday));
     }
 
@@ -56,7 +55,6 @@ public class Birthdays {
     }
 
     private DiscordGuild Guild { get; set; }
-    private DiscordClient Client { get; set; }
     public List<Birthday> BirthdayList { get; private set; } = new();
     public DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1800");
 }

@@ -21,16 +21,17 @@ public class ServerConfig {
                 ServerRolesName = row.ServerRolesName;
                 ServerRolesDescription = row.ServerRolesDescription;
                 AllowMultipleRoles = row.AllowMultipleRoles == 1;
+                EnableLevels = row.EnableLevels == 1;
             }
         }
     }
 
     private void SaveNewServerConfig() {
-        ConfigProcessor.SaveConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0);
+        ConfigProcessor.SaveConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0, EnableLevels ? 1 : 0);
     }
 
     public void UpdateConfig() {
-        ConfigProcessor.UpdateConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0);
+        ConfigProcessor.UpdateConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0, EnableLevels ? 1 : 0);
     }
 
     // Config Properties
@@ -50,4 +51,7 @@ public class ServerConfig {
     public string? ServerRolesName { get; set; } = null;
     public string? ServerRolesDescription { get; set; } = null;
     public bool AllowMultipleRoles { get; set; } = false;
+
+    // Levels Config
+    public bool EnableLevels { get; set; } = false;
 }
