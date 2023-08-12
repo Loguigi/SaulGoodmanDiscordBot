@@ -24,7 +24,7 @@ public static class ConfigProcessor {
             EnableLevels = enablelevels,
             LevelUpMessage = lvlUpMsg
         };
-        string sql = @"insert into dbo.Config values (@GuildId, @WelcomeMessage, @LeaveMessage, @DefaultChannel, @BirthdayNotifications, @PauseBdayNotifsTimer, @ServerRolesName, @ServerRolesDescription, @AllowMultipleRoles, @EnableLevels, @BirthdayMessage, @LevelUpMessage);";
+        string sql = @"insert into dbo.Config values (@GuildId, @WelcomeMessage, @LeaveMessage, @DefaultChannel, @BirthdayNotifications, @PauseBdayNotifsTimer, @BirthdayMessage, @ServerRolesName, @ServerRolesDescription, @AllowMultipleRoles, @EnableLevels, @LevelUpMessage);";
         return SqlDataAccess.SaveData(sql, config);
     }
 
