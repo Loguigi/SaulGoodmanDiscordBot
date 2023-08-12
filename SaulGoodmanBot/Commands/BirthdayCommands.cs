@@ -24,7 +24,7 @@ public class BirthdayCommands : ApplicationCommandModule {
     public async Task CheckBirthday(InteractionContext ctx,
         [Option("user", "Birthday to check")] DiscordUser user) {
 
-        var bdayList = new Birthdays(ctx.Guild, ctx.Client);
+        var bdayList = new Birthdays(ctx.Guild);
         var bday = bdayList.Find(user);
 
         if (bday == bdayList.DATE_ERROR) {
@@ -47,7 +47,7 @@ public class BirthdayCommands : ApplicationCommandModule {
         [Option("day", "Day of birthday")][Minimum(1)][Maximum(31)] long day,
         [Option("year", "Year of birthday")][Minimum(2023-100)][Maximum(2023)] long year) {
         
-        var bday = new Birthdays(ctx.Guild, ctx.Client);
+        var bday = new Birthdays(ctx.Guild);
         var date = new DateTime((int)year, (int)month, (int)day);
 
         if (bday.Find(user) == bday.DATE_ERROR) {
@@ -65,7 +65,7 @@ public class BirthdayCommands : ApplicationCommandModule {
 
     [SlashCommand("list", "Lists all the birthdays of your friends")]
     public async Task ListBirthdays(InteractionContext ctx) {
-        var bdayList = new Birthdays(ctx.Guild, ctx.Client);
+        var bdayList = new Birthdays(ctx.Guild);
 
         if (bdayList.IsEmpty()) {
             // error: no birthdays in server
@@ -87,7 +87,7 @@ public class BirthdayCommands : ApplicationCommandModule {
     
     [SlashCommand("next", "Finds the next upcoming birthday")]
     public async Task NextBirthday(InteractionContext ctx) {
-        var bdayList = new Birthdays(ctx.Guild, ctx.Client);
+        var bdayList = new Birthdays(ctx.Guild);
 
         if (bdayList.IsEmpty()) {
             // error: no birthdays in server

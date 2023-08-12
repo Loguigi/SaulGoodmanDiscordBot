@@ -10,4 +10,5 @@ public class ConfigModel {
     public string? ServerRolesName { get; set; } = null;
     public string? ServerRolesDescription { get; set; } = null;
     public int AllowMultipleRoles { get; set; } = 0;
+    public int EnableLevels { get; set; } = 0;
 }
