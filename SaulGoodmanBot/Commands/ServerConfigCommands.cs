@@ -86,5 +86,22 @@ public class ServerConfigCommands : ApplicationCommandModule {
         config.UpdateConfig();
 
         await ctx.CreateResponseAsync(StandardOutput.Success($"Default channel set to {channel.Mention}"), ephemeral:true);
-    } 
+    }
+
+    [SlashCommand("levels", "Enable or disable levels")]
+    public async Task LevelsConfig (InteractionContext ctx,
+        [Choice("Enable", "enable")]
+        [Choice("Disable", "disable")]
+        [Option("option", "Option")] string option) {
+        
+        var config = new ServerConfig(ctx.Guild);
+        if (option == "enable") {
+            config.EnableLevels = true;
+        } else if (option == "disable") {
+            config.EnableLevels = false;
+        }
+        config.UpdateConfig();
+
+        await ctx.CreateResponseAsync(StandardOutput.Success($"Levels {(config.EnableLevels ? "enabled" : "disabled")} in {ctx.Guild.Name}"));
+    }
 }
