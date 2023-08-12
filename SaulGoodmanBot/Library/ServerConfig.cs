@@ -18,20 +18,22 @@ public class ServerConfig {
                 DefaultChannel = Guild.GetChannel((ulong)row.DefaultChannel);
                 BirthdayNotifications = row.BirthdayNotifications == 1;
                 PauseBdayNotifsTimer = row.PauseBdayNotifsTimer;
+                BirthdayMessage = row.BirthdayMessage;
                 ServerRolesName = row.ServerRolesName;
                 ServerRolesDescription = row.ServerRolesDescription;
                 AllowMultipleRoles = row.AllowMultipleRoles == 1;
                 EnableLevels = row.EnableLevels == 1;
+                LevelUpMessage = row.LevelUpMessage;
             }
         }
     }
 
     private void SaveNewServerConfig() {
-        ConfigProcessor.SaveConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0, EnableLevels ? 1 : 0);
+        ConfigProcessor.SaveConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, BirthdayMessage, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0, EnableLevels ? 1 : 0, LevelUpMessage);
     }
 
     public void UpdateConfig() {
-        ConfigProcessor.UpdateConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0, EnableLevels ? 1 : 0);
+        ConfigProcessor.UpdateConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, BirthdayMessage, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0, EnableLevels ? 1 : 0, LevelUpMessage);
     }
 
     // Config Properties
@@ -45,6 +47,7 @@ public class ServerConfig {
     // Birthday Config
     public static DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1800");
     public bool BirthdayNotifications { get; set; } = true;
+    public string BirthdayMessage { get; set; } = "Happy Birthday!";
     public DateTime PauseBdayNotifsTimer { get; set; } = DATE_ERROR;
 
     // Role Config
@@ -54,4 +57,5 @@ public class ServerConfig {
 
     // Levels Config
     public bool EnableLevels { get; set; } = false;
+    public string LevelUpMessage { get; set; } = "has levelled up!";
 }
