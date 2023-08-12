@@ -9,6 +9,7 @@ CREATE TABLE [dbo].[Config] (
     -- Birthday Config
     [BirthdayNotifications] BIT NOT NULL,
     [PauseBdayNotifsTimer] DATE NOT NULL,
+    [BirthdayMessage] NVARCHAR(200) NOT NULL,
 
     -- Role Config
     [ServerRolesName] NVARCHAR(100) NULL,
@@ -17,4 +18,5 @@ CREATE TABLE [dbo].[Config] (
 
     -- Level Config
     [EnableLevels] BIT NOT NULL,
+    [LevelUpMessage] NVARCHAR(200) NOT NULL,
 );
