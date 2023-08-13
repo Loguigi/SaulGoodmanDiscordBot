@@ -18,7 +18,7 @@ public static class BirthdayHandler {
                 if (birthday.IsBirthdayToday()) {
                     _ = await new DiscordMessageBuilder()
                         .AddEmbed(new DiscordEmbedBuilder()
-                            .WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} Happy Birthday {birthday.User.Mention}! ({birthday.GetAge()})")
+                            .WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} {config.BirthdayMessage} {birthday.User.Mention} ({birthday.GetAge()})")
                             .WithColor(DiscordColor.HotPink))
                         .SendAsync(config.DefaultChannel);
 

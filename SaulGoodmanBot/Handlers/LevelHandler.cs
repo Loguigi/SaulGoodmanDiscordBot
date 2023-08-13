@@ -16,7 +16,7 @@ public static class LevelHandler {
 
                 if (user.LevelledUp) {
                     var message = new DiscordEmbedBuilder()
-                        .WithDescription($"### {DiscordEmoji.FromName(s, ":arrow_up:")} {e.Author.Mention} has levelled up!")
+                        .WithDescription($"### {DiscordEmoji.FromName(s, ":arrow_up:")} {e.Author.Mention} {config.LevelUpMessage}")
                         .WithFooter($"Level {user.Level - 1} {DiscordEmoji.FromName(s, ":arrow_right:")} Level {user.Level}", e.Author.AvatarUrl)
                         .WithColor(DiscordColor.Cyan);
                     await config.DefaultChannel.SendMessageAsync(message);
