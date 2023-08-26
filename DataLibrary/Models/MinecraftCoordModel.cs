@@ -1,6 +1,6 @@
 namespace DataLibrary.Models;
 
-public class MinecraftCoordModel {
+public class MinecraftWaypointModel {
     public long GuildId { get; set; }
     public string Dimension { get; set; } = "overworld";
     public string Name { get; set; } = string.Empty;

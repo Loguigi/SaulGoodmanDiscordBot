@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[MinecraftCoords] (
+CREATE TABLE [dbo].[MinecraftWaypoint] (
     [GuildId] BIGINT NOT NULL,
     [Dimension] NVARCHAR(30) NOT NULL,
     [Name] NVARCHAR(100) NOT NULL,

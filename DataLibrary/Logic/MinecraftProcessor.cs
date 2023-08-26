@@ -14,13 +14,13 @@ public static class MinecraftProcessor {
         return SqlDataAccess.SaveData(sql, info);
     }
 
-    public static List<MinecraftCoordModel> LoadAllCoords(ulong guildid) {
-        string sql = @$"select * from dbo.MinecraftCoords where GuildId={guildid};";
-        return SqlDataAccess.LoadData<MinecraftCoordModel>(sql);
+    public static List<MinecraftWaypointModel> LoadAllWaypoints(ulong guildid) {
+        string sql = @$"select * from dbo.MinecraftWaypoint where GuildId={guildid};";
+        return SqlDataAccess.LoadData<MinecraftWaypointModel>(sql);
     }
 
-    public static int SaveCoord(MinecraftCoordModel coord) {
-        string sql = @"insert into dbo.MinecraftCoords values (@GuildId, @Dimension, @Name, @XCord, @YCord, @ZCord)";
+    public static int SaveWaypoint(MinecraftWaypointModel coord) {
+        string sql = @"insert into dbo.MinecraftWaypoint values (@GuildId, @Dimension, @Name, @XCord, @YCord, @ZCord)";
         return SqlDataAccess.SaveData(sql, coord);
     }
 }
