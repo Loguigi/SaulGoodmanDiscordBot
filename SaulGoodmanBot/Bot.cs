@@ -70,6 +70,7 @@ public class Bot {
         slashCommandsConfig.RegisterCommands<ServerConfigCommands>();
         slashCommandsConfig.RegisterCommands<RoleCommands>();
         slashCommandsConfig.RegisterCommands<LevelCommands>();
+        slashCommandsConfig.RegisterCommands<MinecraftCommands>(1129734050094010382);
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
