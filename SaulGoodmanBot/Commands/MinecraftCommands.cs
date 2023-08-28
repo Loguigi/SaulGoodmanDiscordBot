@@ -6,24 +6,24 @@ using DSharpPlus.Entities;
 
 namespace SaulGoodmanBot.Commands;
 
-[SlashCommandGroup("minecraft", "Commands for working with Minecraft waypoints")]
+[SlashCommandGroup("mc", "Commands for working with Minecraft waypoints")]
 public class MinecraftCommands : ApplicationCommandModule {
     [SlashCommand("save", "Saves information for a Minecraft server")]
     public async Task SaveInfo(InteractionContext ctx,
         [Option("name", "Name of the world/server")] string name,
         [Option("description", "Short description of the server")] string? description=null,
         [Option("ipaddress", "IP address of the server")] string? ip=null,
-        [Option("maxplayers", "Maximum amount of players on a server")][Minimum(1)][Maximum(999999)] int? max=null,
+        [Option("maxplayers", "Maximum amount of players on a server")][Minimum(1)][Maximum(999999)] long? max=null,
         [Option("whitelist", "Specifies if the server has a whitelist")] bool whitelist=false) {
         
         var minecraft = new Minecraft(ctx.Guild) {
             WorldName = name,
             WorldDescription = description,
             IPAddress = ip,
-            MaxPlayers = max,
+            MaxPlayers = (int?)max,
             Whitelist = whitelist
         };
-        minecraft.SaveServerInfo();
+        minecraft.UpdateServerInfo();
 
         // TODO success message
     }
@@ -49,19 +49,22 @@ public class MinecraftCommands : ApplicationCommandModule {
             .WithAuthor("Minecraft", "", ImageHelper.Images["Minecraft"])
             .WithTitle(minecraft.WorldName)
             .WithDescription(minecraft.WorldDescription ?? string.Empty)
-            .WithColor(DiscordColor.Green);
+            .WithColor(DiscordColor.SapGreen);
         
         if (minecraft.IPAddress != null) embed.AddField("IP Address", minecraft.IPAddress, true);
         if (minecraft.MaxPlayers != null) embed.AddField("Max Players", $"{minecraft.MaxPlayers}", true);
         embed.AddField("Whitelist", minecraft.Whitelist ? "Yes" : "No", true);
 
         // Add waypoints
-        embed.AddField("Waypoints", "");
-        if (minecraft.Waypoints.Count == 0) {
-            embed.Fields.Where(x => x.Name == "Waypoints").First().Value += "No waypoints in overworld";
+        if (minecraft.GetDimensionWaypoints("overworld").Count == 0) {
+            embed.AddField("Waypoints", "No waypoints in overworld");
         } else {
             foreach (var waypoint in minecraft.Waypoints) {
-               embed.Fields.Where(x => x.Name == "Waypoints").First().Value += $"*{waypoint.Name}* - `{waypoint.PrintCoords()}`";
+                if (embed.Fields.Where(x => x.Name == "Waypoints").FirstOrDefault() == null) {
+                    embed.AddField("Waypoints", $"* *{waypoint.Name}* - `{waypoint.PrintCoords()}`\n");
+                } else {
+                    embed.Fields.Where(x => x.Name == "Waypoints").First().Value += $"* *{waypoint.Name}* - `{waypoint.PrintCoords()}`\n";
+                }
             }
         }
 
@@ -80,14 +83,12 @@ public class MinecraftCommands : ApplicationCommandModule {
         ctx.Client.ComponentInteractionCreated += MinecraftHandler.HandleDimensionChange;
     }
 
-    [SlashCommandGroup("waypoint", "Commands for dealing with waypoints")]
-    public class WaypointCommands : ApplicationCommandModule {
-        [SlashCommand("add", "Add a new waypoint")]
+    [SlashCommand("add_waypoint", "Add a new waypoint")]
         public async Task AddWaypoint(InteractionContext ctx,
             [Option("name", "Name of the waypoint")] string name,
-            [Option("x", "X coordinate")] ulong x,
-            [Option("y", "Y coordinate")] ulong y,
-            [Option("z", "Z coordinate")] ulong z,
+            [Option("x", "X coordinate")] long x,
+            [Option("y", "Y coordinate")] long y,
+            [Option("z", "Z coordinate")] long z,
             [Choice("Overworld", "overworld")]
             [Choice("Nether", "nether")]
             [Choice("The End", "end")]
@@ -109,15 +110,38 @@ public class MinecraftCommands : ApplicationCommandModule {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
         }
 
-        [SlashCommand("delete", "Deletes an available waypoint")]
+        [SlashCommand("delete_waypoint", "Deletes an available waypoint")]
         public async Task DeleteWaypoint(InteractionContext ctx) {
             // TODO setup delete handler
         }
 
-        [SlashCommand("list", "Lists all waypoints created")]
+        [SlashCommand("list_waypoints", "Lists all waypoints created")]
         public async Task ListWaypoints(InteractionContext ctx,
+            [Choice("Overworld", "overworld")]
+            [Choice("Nether", "nether")]
+            [Choice("The End", "end")]
             [Option("dimension", "Sort waypoints by dimension")] string dimension="overworld") {
-            // TODO list command
+
+            var minecraft = new Minecraft(ctx.Guild);
+
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle($"{minecraft.WorldName} {dimension} waypoints")
+                .WithDescription("");
+            embed.WithColor(dimension switch {
+                "overworld" => DiscordColor.SapGreen,
+                "nether" => DiscordColor.DarkRed,
+                "end" => DiscordColor.Purple,
+                _ => DiscordColor.Black
+            });
+
+            if (minecraft.GetDimensionWaypoints(dimension).Count == 0) {
+                embed.Description += $"No waypoints in {dimension}";
+            } else {
+                foreach (var waypoint in minecraft.GetDimensionWaypoints(dimension)) {
+                    embed.Description += $"* *{waypoint.Name}* - `{waypoint.PrintCoords()}`\n";
+                }
+            }
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
         }
-    }
 }

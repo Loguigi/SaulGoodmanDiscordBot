@@ -22,17 +22,20 @@ public static class MinecraftHandler {
             embed.AddField("Whitelist", minecraft.Whitelist ? "Yes" : "No", true);
 
             // Add waypoints
-            embed.AddField("Waypoints", "");
-            if (minecraft.Waypoints.Where(x => x.Dimension == dimension).Count() == 0) {
-                embed.Fields.Where(x => x.Name == "Waypoints").First().Value += $"No waypoints in {dimension}";
+            if (minecraft.GetDimensionWaypoints(dimension).Count == 0) {
+                embed.AddField("Waypoints", $"No waypoints in {dimension}");
             } else {
-                foreach (var waypoint in minecraft.Waypoints.Where(x => x.Dimension == dimension)) {
-                    embed.Fields.Where(x => x.Name == "Waypoints").First().Value += $"*{waypoint.Name}* - `{waypoint.PrintCoords()}`";
+                foreach (var waypoint in minecraft.GetDimensionWaypoints(dimension)) {
+                    if (embed.Fields.Where(x => x.Name == "Waypoints").FirstOrDefault() == null) {
+                        embed.AddField("Waypoints", $"* *{waypoint.Name}* - `{waypoint.PrintCoords()}`\n");
+                    } else {
+                        embed.Fields.Where(x => x.Name == "Waypoints").First().Value += $"* *{waypoint.Name}* - `{waypoint.PrintCoords()}`\n";
+                    }
                 }
             }
 
             embed.WithColor(dimension switch {
-                "overworld" => DiscordColor.Green,
+                "overworld" => DiscordColor.SapGreen,
                 "nether" => DiscordColor.DarkRed,
                 "end" => DiscordColor.Purple,
                 _ => DiscordColor.Black

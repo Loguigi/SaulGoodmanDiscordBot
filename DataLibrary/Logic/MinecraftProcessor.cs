@@ -14,6 +14,11 @@ public static class MinecraftProcessor {
         return SqlDataAccess.SaveData(sql, info);
     }
 
+    public static int UpdateMcInfo(MinecraftInfoModel info) {
+        string sql = @"update dbo.MinecraftInfo set WorldName=@WorldName, WorldDescription=@WorldDescription, IPAddress=@IPAddress, MaxPlayers=@MaxPlayers, @WhiteList=Whitelist where GuildId=@GuildId;";
+        return SqlDataAccess.SaveData(sql, info);
+    }
+
     public static List<MinecraftWaypointModel> LoadAllWaypoints(ulong guildid) {
         string sql = @$"select * from dbo.MinecraftWaypoint where GuildId={guildid};";
         return SqlDataAccess.LoadData<MinecraftWaypointModel>(sql);
