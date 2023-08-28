@@ -8,7 +8,7 @@ public class Minecraft {
     public Minecraft(DiscordGuild guild) {
         Guild = guild;
         var wps = MinecraftProcessor.LoadAllWaypoints(Guild.Id);
-        var info = MinecraftProcessor.LoadMcInfo(Guild.Id).First();
+        var info = MinecraftProcessor.LoadMcInfo(Guild.Id).FirstOrDefault();
 
         if (info != null) {
             WorldName = info.WorldName;
@@ -48,6 +48,17 @@ public class Minecraft {
         });
     }
 
+    public void UpdateServerInfo() {
+        MinecraftProcessor.UpdateMcInfo(new MinecraftInfoModel {
+            GuildId = (long)Guild.Id,
+            WorldName = WorldName,
+            WorldDescription = WorldDescription,
+            IPAddress = IPAddress,
+            MaxPlayers = MaxPlayers,
+            Whitelist = Whitelist ? 1 : 0
+        });
+    }
+
     public List<Waypoint> GetDimensionWaypoints(string dimension) {
         return Waypoints.Where(x => x.Dimension == dimension).ToList();
     }
@@ -59,7 +70,7 @@ public class Minecraft {
     public string? IPAddress { get; set; } = null;
     public int? MaxPlayers { get; set; } = null;
     public bool Whitelist { get; set; } = false;
-    public const int MAX_WAYPOINTS = 20;
+    public const int MAX_WAYPOINTS = 25;
 
     public class Waypoint {
         public Waypoint(string dimension, string name, int x, int y, int z) {
