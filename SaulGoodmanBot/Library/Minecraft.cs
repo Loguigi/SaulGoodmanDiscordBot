@@ -63,6 +63,10 @@ public class Minecraft {
         return Waypoints.Where(x => x.Dimension == dimension).ToList();
     }
 
+    public bool WaypointsFull(string dimension) {
+        return GetDimensionWaypoints(dimension).Count == MAX_WAYPOINTS;
+    }
+
     public DiscordGuild Guild { get; private set; }
     public string WorldName { get; set; }
     public List<Waypoint> Waypoints { get; set; } = new();
