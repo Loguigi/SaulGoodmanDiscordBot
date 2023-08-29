@@ -96,18 +96,21 @@ public class MinecraftCommands : ApplicationCommandModule {
             
             var minecraft = new Minecraft(ctx.Guild);
             var waypoint = new Minecraft.Waypoint(dimension, name, (int)x, (int)y, (int)z);
-            minecraft.SaveNewWaypoint(waypoint);
 
-            // TODO too many waypoints error
+            if (minecraft.WaypointsFull(dimension)) {
+                await ctx.CreateResponseAsync(StandardOutput.Error($"Too many waypoints in {dimension}"));
+            } else {
+                minecraft.SaveNewWaypoint(waypoint);
 
-            var embed = new DiscordEmbedBuilder()
-                .WithDescription($"### Waypoint Added")
-                .AddField("Name", waypoint.Name, true)
-                .AddField("Dimension", waypoint.Dimension, true)
-                .AddField("Coords", waypoint.PrintCoords(), true)
-                .WithColor(DiscordColor.Green);
-            
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+                var embed = new DiscordEmbedBuilder()
+                    .WithDescription($"### Waypoint Added")
+                    .AddField("Name", waypoint.Name, true)
+                    .AddField("Dimension", waypoint.Dimension, true)
+                    .AddField("Coords", waypoint.PrintCoords(), true)
+                    .WithColor(DiscordColor.Green);
+                
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+            }
         }
 
         [SlashCommand("delete_waypoint", "Deletes an available waypoint")]
