@@ -135,9 +135,9 @@ public class MinecraftCommands : ApplicationCommandModule {
                 waypointOptions.Add(new DiscordSelectComponentOption(waypoint.Name, waypoint.Name, waypoint.PrintCoords()));
             }
             var waypointDropdown = new DiscordSelectComponent("wpdeletedropdown", "Select a waypoint", waypointOptions, false, 1, minecraft.GetDimensionWaypoints(dimension).Count);
-            var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, "wpdeletedropdown\\cancel", "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":x:", false)));
+            var cancelButton = new DiscordButtonComponent(ButtonStyle.Primary, "wpdeletedropdown\\cancel", "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":x:", false)));
 
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(waypointDropdown, cancelButton)));
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(waypointDropdown).AddComponents(cancelButton)));
 
             ctx.Client.ComponentInteractionCreated -= MinecraftHandler.HandleWaypointDelete;
             ctx.Client.ComponentInteractionCreated += MinecraftHandler.HandleWaypointDelete;
