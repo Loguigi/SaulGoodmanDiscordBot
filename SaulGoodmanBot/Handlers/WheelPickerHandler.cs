@@ -40,7 +40,7 @@ public static class WheelPickerHandler {
             }
 
             // add options to database and display result message
-            serverWheels.Add(new Wheel(wheelName, optionsAdded, serverWheels.Wheels[wheelName].Image));
+            serverWheels.Add(new WheelPickers.Wheel(wheelName, optionsAdded, serverWheels.Wheels[wheelName].Image));
             await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder()
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithTitle($"Added to {wheelName}")
