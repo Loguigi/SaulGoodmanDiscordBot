@@ -9,6 +9,7 @@ namespace SaulGoodmanBot.Commands;
 [SlashCommandGroup("mc", "Commands for working with Minecraft waypoints")]
 public class MinecraftCommands : ApplicationCommandModule {
     [SlashCommand("save", "Saves information for a Minecraft server")]
+    [SlashCommandPermissions(Permissions.Administrator)]
     public async Task SaveInfo(InteractionContext ctx,
         [Option("name", "Name of the world/server")] string name,
         [Option("description", "Short description of the server")] string? description=null,
@@ -25,7 +26,7 @@ public class MinecraftCommands : ApplicationCommandModule {
         };
         minecraft.UpdateServerInfo();
 
-        // TODO success message
+        await ctx.CreateResponseAsync(StandardOutput.Success("Updated Minecraft server data"), ephemeral:true);
     }
 
     [SlashCommand("ip", "View server IP if set")]
@@ -84,67 +85,92 @@ public class MinecraftCommands : ApplicationCommandModule {
     }
 
     [SlashCommand("add_waypoint", "Add a new waypoint")]
-        public async Task AddWaypoint(InteractionContext ctx,
-            [Option("name", "Name of the waypoint")] string name,
-            [Option("x", "X coordinate")] long x,
-            [Option("y", "Y coordinate")] long y,
-            [Option("z", "Z coordinate")] long z,
-            [Choice("Overworld", "overworld")]
-            [Choice("Nether", "nether")]
-            [Choice("The End", "end")]
-            [Option("dimension", "Dimension the waypoint is located in")] string dimension="overworld") {
-            
-            var minecraft = new Minecraft(ctx.Guild);
-            var waypoint = new Minecraft.Waypoint(dimension, name, (int)x, (int)y, (int)z);
+    public async Task AddWaypoint(InteractionContext ctx,
+        [Option("name", "Name of the waypoint")] string name,
+        [Option("x", "X coordinate")] long x,
+        [Option("y", "Y coordinate")] long y,
+        [Option("z", "Z coordinate")] long z,
+        [Choice("Overworld", "overworld")]
+        [Choice("Nether", "nether")]
+        [Choice("The End", "end")]
+        [Option("dimension", "Dimension the waypoint is located in")] string dimension="overworld") {
+        
+        var minecraft = new Minecraft(ctx.Guild);
+        var waypoint = new Minecraft.Waypoint(dimension, name, (int)x, (int)y, (int)z);
 
-            if (minecraft.WaypointsFull(dimension)) {
-                await ctx.CreateResponseAsync(StandardOutput.Error($"Too many waypoints in {dimension}"));
-            } else {
-                minecraft.SaveNewWaypoint(waypoint);
-
-                var embed = new DiscordEmbedBuilder()
-                    .WithDescription($"### Waypoint Added")
-                    .AddField("Name", waypoint.Name, true)
-                    .AddField("Dimension", waypoint.Dimension, true)
-                    .AddField("Coords", waypoint.PrintCoords(), true)
-                    .WithColor(DiscordColor.Green);
-                
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
-            }
-        }
-
-        [SlashCommand("delete_waypoint", "Deletes an available waypoint")]
-        public async Task DeleteWaypoint(InteractionContext ctx) {
-            // TODO setup delete handler
-        }
-
-        [SlashCommand("list_waypoints", "Lists all waypoints created")]
-        public async Task ListWaypoints(InteractionContext ctx,
-            [Choice("Overworld", "overworld")]
-            [Choice("Nether", "nether")]
-            [Choice("The End", "end")]
-            [Option("dimension", "Sort waypoints by dimension")] string dimension="overworld") {
-
-            var minecraft = new Minecraft(ctx.Guild);
+        if (minecraft.WaypointsFull(dimension)) {
+            await ctx.CreateResponseAsync(StandardOutput.Error($"Too many waypoints in {dimension}"));
+        } else {
+            minecraft.SaveNewWaypoint(waypoint);
 
             var embed = new DiscordEmbedBuilder()
-                .WithTitle($"{minecraft.WorldName} {dimension} waypoints")
-                .WithDescription("");
-            embed.WithColor(dimension switch {
-                "overworld" => DiscordColor.SapGreen,
-                "nether" => DiscordColor.DarkRed,
-                "end" => DiscordColor.Purple,
-                _ => DiscordColor.Black
-            });
-
-            if (minecraft.GetDimensionWaypoints(dimension).Count == 0) {
-                embed.Description += $"No waypoints in {dimension}";
-            } else {
-                foreach (var waypoint in minecraft.GetDimensionWaypoints(dimension)) {
-                    embed.Description += $"* *{waypoint.Name}* - `{waypoint.PrintCoords()}`\n";
-                }
-            }
-
+                .WithDescription($"### Waypoint Added")
+                .AddField("Name", waypoint.Name, true)
+                .AddField("Dimension", waypoint.Dimension, true)
+                .AddField("Coords", waypoint.PrintCoords(), true)
+                .WithColor(DiscordColor.Green);
+            
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
         }
+    }
+
+    [SlashCommand("delete_waypoint", "Deletes an available waypoint")]
+    public async Task DeleteWaypoint(InteractionContext ctx,
+        [Choice("Overworld", "overworld")]
+        [Choice("Nether", "nether")]
+        [Choice("The End", "end")]
+        [Option("dimension", "Dimension the waypoint is located in")] string dimension="overworld") {
+
+        var minecraft = new Minecraft(ctx.Guild);
+        
+        if (minecraft.GetDimensionWaypoints(dimension).Count == 0) {
+            await ctx.CreateResponseAsync(StandardOutput.Error($"There are no waypoints in {dimension}"), ephemeral:true);
+        } else {
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle($"Delete {dimension} waypoint")
+                .WithColor(DiscordColor.DarkRed);
+
+            var waypointOptions = new List<DiscordSelectComponentOption>();
+            foreach (var waypoint in minecraft.GetDimensionWaypoints(dimension)) {
+                waypointOptions.Add(new DiscordSelectComponentOption(waypoint.Name, waypoint.Name, waypoint.PrintCoords()));
+            }
+            var waypointDropdown = new DiscordSelectComponent("wpdeletedropdown", "Select a waypoint", waypointOptions, false, 1, minecraft.GetDimensionWaypoints(dimension).Count);
+            var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, "wpdeletedropdown\\cancel", "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":x:", false)));
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(waypointDropdown, cancelButton)));
+
+            ctx.Client.ComponentInteractionCreated -= MinecraftHandler.HandleWaypointDelete;
+            ctx.Client.ComponentInteractionCreated += MinecraftHandler.HandleWaypointDelete;
+        }
+    }
+
+    [SlashCommand("list_waypoints", "Lists all waypoints created")]
+    public async Task ListWaypoints(InteractionContext ctx,
+        [Choice("Overworld", "overworld")]
+        [Choice("Nether", "nether")]
+        [Choice("The End", "end")]
+        [Option("dimension", "Sort waypoints by dimension")] string dimension="overworld") {
+
+        var minecraft = new Minecraft(ctx.Guild);
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"{minecraft.WorldName} {dimension} waypoints")
+            .WithDescription("");
+        embed.WithColor(dimension switch {
+            "overworld" => DiscordColor.SapGreen,
+            "nether" => DiscordColor.DarkRed,
+            "end" => DiscordColor.Purple,
+            _ => DiscordColor.Black
+        });
+
+        if (minecraft.GetDimensionWaypoints(dimension).Count == 0) {
+            embed.Description += $"No waypoints in {dimension}";
+        } else {
+            foreach (var waypoint in minecraft.GetDimensionWaypoints(dimension)) {
+                embed.Description += $"* *{waypoint.Name}* - `{waypoint.PrintCoords()}`\n";
+            }
+        }
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+    }
 }
