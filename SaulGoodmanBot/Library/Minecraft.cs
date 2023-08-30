@@ -37,6 +37,14 @@ public class Minecraft {
         });
     }
 
+    public void DeleteWaypoint(Waypoint wp) {
+        MinecraftProcessor.DeleteWaypoint(new MinecraftWaypointModel {
+            GuildId = (long)Guild.Id,
+            Dimension = wp.Dimension,
+            Name = wp.Name
+        });
+    }
+
     public void SaveServerInfo() {
         MinecraftProcessor.SaveMcInfo(new MinecraftInfoModel {
             GuildId = (long)Guild.Id,

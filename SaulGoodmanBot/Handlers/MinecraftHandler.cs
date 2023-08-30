@@ -1,6 +1,7 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.VoiceNext.EventArgs;
 using SaulGoodmanBot.Library;
 
 namespace SaulGoodmanBot.Handlers;
@@ -50,6 +51,32 @@ public static class MinecraftHandler {
             var dimensionDropdown = new DiscordSelectComponent("mcviewdropdown", "Select a dimension", dimensionOptions);
 
             await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dimensionDropdown)));
+        }
+    }
+
+    public static async Task HandleWaypointDelete(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (e.Id == "wpdeletedropdown") {
+            var minecraft = new Minecraft(e.Guild);
+            var waypoint = minecraft.Waypoints.Where(x => x.Name == e.Values.First()).First();
+            minecraft.DeleteWaypoint(waypoint);
+
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Deleted waypoint")
+                .AddField("Name", waypoint.Name, true)
+                .AddField("Dimension", waypoint.Dimension, true)
+                .AddField("Coords", waypoint.PrintCoords(), true)
+                .WithColor(DiscordColor.DarkRed);
+
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+            s.ComponentInteractionCreated -= HandleWaypointDelete;
+
+        } else if (e.Id == "wpdeletedropdown\\cancel") {
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Cancelled")
+                .WithColor(DiscordColor.DarkRed);
+
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+            s.ComponentInteractionCreated -= HandleWaypointDelete;
         }
     }
 }

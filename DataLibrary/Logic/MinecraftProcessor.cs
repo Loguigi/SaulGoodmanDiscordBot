@@ -28,4 +28,9 @@ public static class MinecraftProcessor {
         string sql = @"insert into dbo.MinecraftWaypoint values (@GuildId, @Dimension, @Name, @XCord, @YCord, @ZCord)";
         return SqlDataAccess.SaveData(sql, coord);
     }
+
+    public static int DeleteWaypoint(MinecraftWaypointModel coord) {
+        string sql = @"delete from dbo.MinecraftWaypoint where GuildId=@GuildId and Dimension=@Dimension and Name=@Name;";
+        return SqlDataAccess.SaveData(sql, coord);
+    }
 }
