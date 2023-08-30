@@ -80,9 +80,10 @@ public class WheelPickerCommands : ApplicationCommandModule {
             // add server wheels to dropdown
             var wheelOptions = new List<DiscordSelectComponentOption>();
             foreach (var wheel in serverWheels.Wheels) {
-                wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
+                if (wheel.Value.Options.Count != 0)
+                    wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
             }
-            var wheelDropdown = new DiscordSelectComponent("spindropdown", "Select a wheel", wheelOptions, false);
+            var wheelDropdown = new DiscordSelectComponent("wheelspin", "Select a wheel", wheelOptions, false);
 
             // display prompt
             var prompt = new DiscordMessageBuilder()
