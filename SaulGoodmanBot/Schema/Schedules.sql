@@ -1,7 +1,7 @@
 CREATE TABLE [dbo].[Schedules] (
     [GuildId] BIGINT NOT NULL,
     [UserId] BIGINT NOT NULL,
-    [LastUpdated] DATETIME NOT NULL,
+    [LastUpdated] DATETIME NULL,
     [RecurringSchedule] BIT NOT NULL,
     [Monday] NVARCHAR(100) NULL,
     [Tuesday] NVARCHAR(100) NULL,
