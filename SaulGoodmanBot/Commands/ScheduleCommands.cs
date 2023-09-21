@@ -1,3 +1,4 @@
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using SaulGoodmanBot.Library;
@@ -33,8 +34,35 @@ public class ScheduleCommands : ApplicationCommandModule {
             },
             PictureUrl = picture?.Url
         };
-        // schedule.Update();
+        schedule.Update();
 
+        // TODO add output similar that shows user's schedule after creation
+    }
+
+    [SlashCommand("check", "Check your own or somebody else's schedule")]
+    public async Task CheckSchedule(InteractionContext ctx,
+        [Option("user", "Schedule of specific user")] DiscordUser? user=null) {
         
+        var schedule = new Schedule(ctx.Guild, user ?? ctx.User);
+
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor(schedule.User.GlobalName, "", schedule.User.AvatarUrl)
+            .WithTitle("Work Schedule")
+            .WithDescription(schedule.RecurringSchedule ? "Schedule does not change" : "Schedule changes weekly")
+            .WithImageUrl(schedule.PictureUrl ?? "")
+            .WithFooter($"Last updated {(schedule.LastUpdated != schedule.NO_DATE ? schedule.LastUpdated : "never")}")
+            .WithColor(DiscordColor.Teal);
+
+        foreach (var day in schedule.WorkSchedule) {
+            if (day.Value != null) {
+                embed.AddField(day.Key.ToString("ddd"), day.Value, true);
+            }
+        }
+
+        if (!schedule.RecurringSchedule && DateTime.Now > schedule.LastUpdated.AddDays(7)) {
+            embed.WithFooter($"{DiscordEmoji.FromName(ctx.Client, ":warning:", false)} Last updated {schedule.LastUpdated}, may be inaccurate");
+        }
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
     }
 }
