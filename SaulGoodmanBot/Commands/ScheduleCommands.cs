@@ -89,10 +89,33 @@ public class ScheduleCommands : ApplicationCommandModule {
         [Choice("Friday", (long)DayOfWeek.Friday)]
         [Choice("Saturday", (long)DayOfWeek.Saturday)]
         [Option("day", "Day of the week to edit")] long day,
-        [Option("update", "Change to the schedule")] string update) {
+        [Option("newschedule", "Change to the schedule")] string newSchedule) {
 
         var schedule = new Schedule(ctx.Guild, ctx.User);
-        schedule.WorkSchedule[(DayOfWeek)day] = update;
+        schedule.WorkSchedule[(DayOfWeek)day] = newSchedule;
+        schedule.Update();
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Work Schedule")
+            .WithDescription(schedule.RecurringSchedule ? "Schedule does not change" : "Schedule changes weekly")
+            .WithImageUrl(schedule.PictureUrl ?? "")
+            .WithFooter($"Last updated {(schedule.LastUpdated != schedule.NO_DATE ? schedule.LastUpdated : "never")}")
+            .WithColor(DiscordColor.Teal);
+
+        foreach (var d in schedule.WorkSchedule) {
+            if (d.Value != null) {
+                embed.AddField(d.Key.ToString("ddd"), d.Value, true);
+            }
+        }
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Updated schedule:").AddEmbed(embed)).AsEphemeral());
+    }
+
+    [SlashCommand("picture", "Update your schedule picture")]
+    public async Task EditPicture(InteractionContext ctx,
+        [Option("newpicture", "New picture")] DiscordAttachment img) {
+        
+        var schedule = new Schedule(ctx.Guild, ctx.User) {PictureUrl = img.Url};
         schedule.Update();
 
         var embed = new DiscordEmbedBuilder()
