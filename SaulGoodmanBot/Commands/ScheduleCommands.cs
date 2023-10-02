@@ -49,7 +49,7 @@ public class ScheduleCommands : ApplicationCommandModule {
             }
         }
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("This is how your schedule looks: ").AddEmbed(embed)).AsEphemeral());
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("This is how your schedule looks:").AddEmbed(embed)).AsEphemeral());
     }
 
     [SlashCommand("check", "Check your own or somebody else's schedule")]
@@ -77,5 +77,37 @@ public class ScheduleCommands : ApplicationCommandModule {
         }
 
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+    }
+
+    [SlashCommand("edit", "Edit a specific day or upload a new schedule picture")]
+    public async Task EditSchedule(InteractionContext ctx,
+        [Choice("Sunday", (long)DayOfWeek.Sunday)]
+        [Choice("Monday", (long)DayOfWeek.Monday)]
+        [Choice("Tuesday", (long)DayOfWeek.Tuesday)]
+        [Choice("Wednesday", (long)DayOfWeek.Wednesday)]
+        [Choice("Thursday", (long)DayOfWeek.Thursday)]
+        [Choice("Friday", (long)DayOfWeek.Friday)]
+        [Choice("Saturday", (long)DayOfWeek.Saturday)]
+        [Option("day", "Day of the week to edit")] long day,
+        [Option("update", "Change to the schedule")] string update) {
+
+        var schedule = new Schedule(ctx.Guild, ctx.User);
+        schedule.WorkSchedule[(DayOfWeek)day] = update;
+        schedule.Update();
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Work Schedule")
+            .WithDescription(schedule.RecurringSchedule ? "Schedule does not change" : "Schedule changes weekly")
+            .WithImageUrl(schedule.PictureUrl ?? "")
+            .WithFooter($"Last updated {(schedule.LastUpdated != schedule.NO_DATE ? schedule.LastUpdated : "never")}")
+            .WithColor(DiscordColor.Teal);
+
+        foreach (var d in schedule.WorkSchedule) {
+            if (d.Value != null) {
+                embed.AddField(d.Key.ToString("ddd"), d.Value, true);
+            }
+        }
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Updated schedule:").AddEmbed(embed)).AsEphemeral());
     }
 }
