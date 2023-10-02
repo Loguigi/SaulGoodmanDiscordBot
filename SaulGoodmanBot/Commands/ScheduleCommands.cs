@@ -36,7 +36,20 @@ public class ScheduleCommands : ApplicationCommandModule {
         };
         schedule.Update();
 
-        // TODO add output similar that shows user's schedule after creation
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Work Schedule")
+            .WithDescription(schedule.RecurringSchedule ? "Schedule does not change" : "Schedule changes weekly")
+            .WithImageUrl(schedule.PictureUrl ?? "")
+            .WithFooter($"Last updated {(schedule.LastUpdated != schedule.NO_DATE ? schedule.LastUpdated : "never")}")
+            .WithColor(DiscordColor.Teal);
+
+        foreach (var day in schedule.WorkSchedule) {
+            if (day.Value != null) {
+                embed.AddField(day.Key.ToString("ddd"), day.Value, true);
+            }
+        }
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("This is how your schedule looks: ").AddEmbed(embed)).AsEphemeral());
     }
 
     [SlashCommand("check", "Check your own or somebody else's schedule")]
