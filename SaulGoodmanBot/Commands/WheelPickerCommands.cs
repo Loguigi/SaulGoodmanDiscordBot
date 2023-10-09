@@ -18,11 +18,9 @@ namespace SaulGoodmanBot.Commands;
 [GuildOnly]
 public class WheelPickerCommands : ApplicationCommandModule {
     [SlashCommand("create", "Creates a new wheel picker")]
-    [GuildOnly]
     public async Task CreateWheel(InteractionContext ctx,
         [Option("name", "Name of the wheel picker")][MaximumLength(100)] string name,
-        [Option("value1", "First value to add to the wheel")][MaximumLength(100)] string value1,
-        [Option("value2", "Second value to add to the wheel")][MaximumLength(100)] string value2,
+        [Option("first_option", "First option to add to the wheel")][MaximumLength(100)] string option,
         [Option("image", "Image for the wheel")] DiscordAttachment? img = null ) {
         
         var serverWheels = new WheelPickers(ctx.Guild);
@@ -36,9 +34,9 @@ public class WheelPickerCommands : ApplicationCommandModule {
         } else {
             // saves new wheel
             if (img == null) {
-                serverWheels.Add(new Wheel(name, new List<string>(){value1, value2}, null));
+                serverWheels.Add(new WheelPickers.Wheel(name, new List<string>(){option}, null));
             } else {
-                serverWheels.Add(new Wheel(name, new List<string>(){value1, value2}, img.Url));
+                serverWheels.Add(new WheelPickers.Wheel(name, new List<string>(){option}, img.Url));
             }
 
             await ctx.CreateResponseAsync(StandardOutput.Success($"`{name}` wheel added"), ephemeral:true);
@@ -82,9 +80,10 @@ public class WheelPickerCommands : ApplicationCommandModule {
             // add server wheels to dropdown
             var wheelOptions = new List<DiscordSelectComponentOption>();
             foreach (var wheel in serverWheels.Wheels) {
-                wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
+                if (wheel.Value.Options.Count != 0)
+                    wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
             }
-            var wheelDropdown = new DiscordSelectComponent("spindropdown", "Select a wheel", wheelOptions, false);
+            var wheelDropdown = new DiscordSelectComponent("wheelspin", "Select a wheel", wheelOptions, false);
 
             // display prompt
             var prompt = new DiscordMessageBuilder()

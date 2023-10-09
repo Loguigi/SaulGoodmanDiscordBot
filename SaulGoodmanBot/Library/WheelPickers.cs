@@ -44,27 +44,27 @@ public class WheelPickers {
 
     private DiscordGuild Guild { get; set; }
     public Dictionary<string, Wheel> Wheels { get; set; } = new Dictionary<string, Wheel>();
-    private const int WHEEL_LIMIT = 20;
-}
+    private const int WHEEL_LIMIT = 25;
 
-public class Wheel {
-    public Wheel(string name, List<string> options, string? imgurl=null) {
-        Name = name;
-        Options = options;
-        Image = imgurl;
+    public class Wheel {
+        public Wheel(string name, List<string> options, string? imgurl=null) {
+            Name = name;
+            Options = options;
+            Image = imgurl;
+        }
+
+        public void AddOption(string option) {
+            Options.Add(option);
+        }
+
+        public string Spin() {
+            var random = new Random();
+            var i = random.Next(Options.Count);
+            return Options[i];
+        }
+
+        public string Name { get; private set; }
+        public List<string> Options { get; private set; }
+        public string? Image { get; set; } = null;
     }
-
-    public void AddOption(string option) {
-        Options.Add(option);
-    }
-
-    public string Spin() {
-        var random = new Random();
-        var i = random.Next(Options.Count);
-        return Options[i];
-    }
-
-    public string Name { get; private set; }
-    public List<string> Options { get; private set; }
-    public string? Image { get; set; } = null;
 }
