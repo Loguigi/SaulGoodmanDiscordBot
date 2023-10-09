@@ -40,7 +40,7 @@ public static class WheelPickerHandler {
             }
 
             // add options to database and display result message
-            serverWheels.Add(new Wheel(wheelName, optionsAdded, serverWheels.Wheels[wheelName].Image));
+            serverWheels.Add(new WheelPickers.Wheel(wheelName, optionsAdded, serverWheels.Wheels[wheelName].Image));
             await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder()
                 .AddEmbed(new DiscordEmbedBuilder()
                     .WithTitle($"Added to {wheelName}")
@@ -52,25 +52,19 @@ public static class WheelPickerHandler {
     }
 
     public static async Task HandleSpin(DiscordClient s, ComponentInteractionCreateEventArgs e) {
-        if (e.Id == "spindropdown") {
-            var wheelName = e.Values.First();
+        if (e.Id.Contains("wheelspin")) {
+            var wheelName = e.Id == "wheelspin" ? e.Values.First() : e.Id.Replace("wheelspin\\", string.Empty);
             var serverWheels = new WheelPickers(e.Guild);
-
-            // add server wheels to dropdown
-            var wheelOptions = new List<DiscordSelectComponentOption>();
-            foreach (var wheel in serverWheels.Wheels) {
-                wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
-            }
-            var wheelDropdown = new DiscordSelectComponent("spindropdown", "Select a wheel", wheelOptions, false);
+            var spinAgainButton = new DiscordButtonComponent(ButtonStyle.Success, $"wheelspin\\{wheelName}", "Spin again", false, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":repeat:", false)));
 
             // spin wheel and display result
             var response = new DiscordMessageBuilder()
                 .AddEmbed(new DiscordEmbedBuilder()
-                    .WithTitle($"Spinning {wheelName}...")
-                    .WithDescription($"## {serverWheels.Wheels[wheelName].Spin()}")
+                    .WithTitle($"{DiscordEmoji.FromName(s, ":cyclone:", false)} {wheelName} {DiscordEmoji.FromName(s, ":cyclone:", false)}")
+                    .WithDescription($"# {serverWheels.Wheels[wheelName].Spin()}")
                     .WithThumbnail(serverWheels.Wheels[wheelName].Image ?? "")
-                    .WithColor(DiscordColor.Gold))
-                .AddComponents(wheelDropdown);
+                    .WithColor(DiscordColor.Cyan))
+                .AddComponents(spinAgainButton);
             await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(response));
         }
     }
