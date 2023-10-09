@@ -71,6 +71,7 @@ public class Bot {
         slashCommandsConfig.RegisterCommands<RoleCommands>();
         slashCommandsConfig.RegisterCommands<LevelCommands>();
         slashCommandsConfig.RegisterCommands<MinecraftCommands>();
+        slashCommandsConfig.RegisterCommands<ScheduleCommands>();
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
