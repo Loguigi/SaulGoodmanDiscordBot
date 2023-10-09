@@ -2,6 +2,7 @@ using DSharpPlus.Entities;
 using DataLibrary.Logic;
 using DataLibrary.Models;
 using System.Data;
+using System.Security.Cryptography;
 
 namespace SaulGoodmanBot.Library;
 
@@ -41,6 +42,14 @@ public class Schedule {
         });
     }
 
+    public void Clear() {
+        ScheduleProcessor.UpdateSchedule(new ScheduleModel() {
+            GuildId = (long)Guild.Id,
+            UserId = (long)User.Id,
+            LastUpdated = LastUpdated,
+            RecurringSchedule = RecurringSchedule ? 1 : 0
+        });
+    }
 
     private DiscordGuild Guild { get; set; }
     public DiscordUser User { get; private set; }

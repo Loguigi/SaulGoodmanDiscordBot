@@ -1,3 +1,4 @@
+using System.Globalization;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
@@ -19,34 +20,33 @@ public class ScheduleCommands : ApplicationCommandModule {
         [Option("friday", "Schedule for Friday")] string? friday=null,
         [Option("saturday", "Schedule for Saturday")] string? saturday=null,
         [Option("picture", "Picture of your schedule if you have one")] DiscordAttachment? picture=null) {
-
+        
         var schedule = new Schedule(ctx.Guild, ctx.User) {
             LastUpdated = ctx.Interaction.CreationTimestamp.LocalDateTime,
             RecurringSchedule = recurring,
-            WorkSchedule = {
-                {DayOfWeek.Sunday, sunday},
-                {DayOfWeek.Monday, monday},
-                {DayOfWeek.Tuesday, tuesday},
-                {DayOfWeek.Wednesday, wednesday},
-                {DayOfWeek.Thursday, thursday},
-                {DayOfWeek.Friday, friday},
-                {DayOfWeek.Saturday, saturday}
-            },
             PictureUrl = picture?.Url
         };
+        schedule.WorkSchedule[DayOfWeek.Sunday] = sunday;
+        schedule.WorkSchedule[DayOfWeek.Monday] = monday;
+        schedule.WorkSchedule[DayOfWeek.Tuesday] = tuesday;
+        schedule.WorkSchedule[DayOfWeek.Wednesday] = wednesday;
+        schedule.WorkSchedule[DayOfWeek.Thursday] = thursday;
+        schedule.WorkSchedule[DayOfWeek.Friday] = friday;
+        schedule.WorkSchedule[DayOfWeek.Saturday] = saturday;
+
         schedule.Update();
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("This is how your schedule looks:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("This is what your schedule looks like:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
     }
 
     [SlashCommand("check", "Check your own or somebody else's schedule")]
     public async Task CheckSchedule(InteractionContext ctx,
         [Option("user", "Schedule of specific user")] DiscordUser? user=null) {
-
-        if (user.IsBot) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("The schedule of a bot is to serve the masses!"), ephemeral:true);
+        if (user != null && user.IsBot) {
+            await ctx.CreateResponseAsync(StandardOutput.Error("Joe Biden"), ephemeral:true);
             return;
         }
+
         var schedule = new Schedule(ctx.Guild, user ?? ctx.User);
 
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(DisplaySchedule(schedule, ctx.Client))));
@@ -81,6 +81,40 @@ public class ScheduleCommands : ApplicationCommandModule {
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Updated schedule:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
     }
 
+    [SlashCommand("today", "List the people that work today")]
+    public async Task TodaysSchedules(InteractionContext ctx) {
+        try
+        {
+            var schedules = new List<Schedule>();
+            foreach (var user in ctx.Guild.Members) {
+                if (!user.Value.IsBot) {
+                    schedules.Add(new Schedule(ctx.Guild, user.Value));
+                }
+            }
+            var interactivity = new InteractivityHelper<Schedule>(ctx.Client, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, 1, "## Nobody works today");
+
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle(DateTime.Now.ToString("dddd MMMM d, yyyy"))
+                .WithDescription(interactivity.IsEmpty())
+                .WithColor(DiscordColor.DarkBlue)
+                .WithFooter($"Page {interactivity.Page} of {interactivity.PageLimit}");
+
+            foreach (var schedule in interactivity.GetPage()) {
+                embed.Description += $"### {schedule.User.Mention}: {schedule.WorkSchedule[DateTime.Now.DayOfWeek]}\n";
+            }
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(
+                interactivity.AddPageButtons().AddEmbed(embed)));
+
+            ctx.Client.ComponentInteractionCreated -= ScheduleHandler.HandleTodaysSchedules;
+            ctx.Client.ComponentInteractionCreated += ScheduleHandler.HandleTodaysSchedules;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+
     [SlashCommand("override", "Override another user's schedule")]
     [SlashCommandPermissions(Permissions.Administrator)]
     public async Task OverrideSchedule(InteractionContext ctx,
@@ -107,6 +141,14 @@ public class ScheduleCommands : ApplicationCommandModule {
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Updated schedule:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
     }
 
+    [SlashCommand("clear", "Clear your schedule for the week")]
+    public async Task ClearSchedule(InteractionContext ctx) {
+        var schedule = new Schedule(ctx.Guild, ctx.User);
+        schedule.Clear();
+        
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Cleared schedule").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+    }
+
     private DiscordEmbedBuilder DisplaySchedule(Schedule schedule, DiscordClient client) {
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(schedule.User.GlobalName, "", schedule.User.AvatarUrl)
@@ -118,12 +160,12 @@ public class ScheduleCommands : ApplicationCommandModule {
 
         foreach (var day in schedule.WorkSchedule) {
             if (day.Value != null) {
-                embed.AddField(day.Key.ToString("ddd"), day.Value, true);
+                embed.AddField(DateTimeFormatInfo.CurrentInfo.GetDayName(day.Key), day.Value, true);
             }
         }
 
         if (!schedule.RecurringSchedule && DateTime.Now > schedule.LastUpdated.AddDays(7)) {
-            embed.WithFooter($"{DiscordEmoji.FromName(client, ":warning:", false)} Last updated {schedule.LastUpdated}, may be inaccurate");
+            embed.WithFooter($"{DiscordEmoji.FromName(client, ":warning:", false)} Last updated {(schedule.LastUpdated != schedule.NO_DATE ? schedule.LastUpdated : "never")}, may be inaccurate");
         }
 
         return embed;
