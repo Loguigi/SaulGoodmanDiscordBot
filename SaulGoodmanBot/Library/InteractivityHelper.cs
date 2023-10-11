@@ -35,10 +35,10 @@ public class InteractivityHelper<T> {
 
     public DiscordMessageBuilder AddPageButtons() {
         return new DiscordMessageBuilder().AddComponents(new List<DiscordButtonComponent>() {
-            new(ButtonStyle.Primary, $"{CustomId}1", "", Page == 1, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":track_previous:", false))),
-            new(ButtonStyle.Primary, $"{CustomId}{Page - 1}", "", Page - 1 < 1, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":rewind:", false))),
-            new(ButtonStyle.Primary, $"{CustomId}{Page + 1}", "", Page + 1 > PageLimit, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":fast_forward:", false))),
-            new(ButtonStyle.Primary, $"{CustomId}{(PageLimit == 1 ? "last" : PageLimit)}", "", Page == PageLimit, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":track_next:", false)))
+            new(ButtonStyle.Primary, $"{CustomId}\\1", "", Page == 1, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":track_previous:", false))),
+            new(ButtonStyle.Primary, $"{CustomId}\\{Page - 1}", "", Page - 1 < 1, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":rewind:", false))),
+            new(ButtonStyle.Primary, $"{CustomId}\\{Page + 1}", "", Page + 1 > PageLimit, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":fast_forward:", false))),
+            new(ButtonStyle.Primary, $"{CustomId}\\{(PageLimit == 1 ? "last" : PageLimit)}", "", Page == PageLimit, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":track_next:", false)))
         });
     }
 
