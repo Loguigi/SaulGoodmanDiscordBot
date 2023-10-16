@@ -2,12 +2,14 @@ namespace SaulGoodmanBot.Library;
 
 public static class IDHelper {
     public static class WheelPicker {
-        public static readonly string Add = "ADDOPTIONS";
-        public static readonly string List = "LISTWHEELS";
-        public static readonly string Spin = "SPINWHEEL";
-        public static readonly string Delete = "DELETEWHEEL";
+        public const string Add = "ADDOPTIONS";
+        public const string List = "LISTWHEELS";
+        public const string Spin = "SPINWHEEL";
+        public const string DeleteWheel = "DELETEWHEELSELECTION";
+        public const string DeleteOption = "DELETEOPTIONSELECTION";
+        public const string ReloadWheel = "WHEELRELOAD";
     }
     public static class Schedules {
-        public static readonly string Today = "TODAYSCHEDULE";
+        public const string Today = "TODAYSCHEDULE";
     }
 }
