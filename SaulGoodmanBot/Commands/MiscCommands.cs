@@ -19,7 +19,18 @@ namespace SaulGoodmanBot.Commands;
 public class MiscCommands : ApplicationCommandModule {
     [SlashCommand("flip", "Flips a coin")]
     public async Task CoinFlipCommand(InteractionContext ctx) {
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(CoinFlip()));
+        var coin = new Random();
+        int flip = coin.Next(1, 3);
+        var flipButton = new DiscordButtonComponent(ButtonStyle.Success, $"{IDHelper.Misc.FLIP}\\{(flip == 1 ? "Heads" : "Tails")}\\{(flip == 1 ? "1" : "0")}\\{(flip == 1 ? "0" : "1")}", "Flip Again");
+
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor("Coin Flip", "", ImageHelper.Images["Coin"])
+            .WithDescription($"# {((flip == 1) ? "Heads" : "Tails")}")
+            .WithThumbnail(ImageHelper.Images["PS2Jesse"])
+            .WithColor((flip == 1) ? DiscordColor.Aquamarine : DiscordColor.Rose);
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(flipButton)));
+
 
         ctx.Client.ComponentInteractionCreated -= MiscHandler.HandleFlip;
         ctx.Client.ComponentInteractionCreated += MiscHandler.HandleFlip;
