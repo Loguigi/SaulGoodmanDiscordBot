@@ -77,6 +77,7 @@ public class WheelPickers {
                 WheelOption = option,
                 ImageUrl = Image
             });
+            Options.Add(option);
         }
 
         public void DeleteOption(string option) {
