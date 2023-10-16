@@ -12,4 +12,8 @@ public static class IDHelper {
     public static class Schedules {
         public const string Today = "TODAYSCHEDULE";
     }
+
+    public static class Misc {
+        public const string FLIP = "COINFLIP";
+    }
 }
