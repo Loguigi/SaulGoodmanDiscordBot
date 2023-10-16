@@ -8,166 +8,209 @@ namespace SaulGoodmanBot.Handlers;
 
 public static class WheelPickerHandler {
     public static async Task HandleAdd(DiscordClient s, ComponentInteractionCreateEventArgs e) {
-        if (e.Id == "adddropdown") {
-            var intr = s.GetInteractivity();
-            var wheelName = e.Values.First();
-            var serverWheels = new WheelPickers(e.Guild);
-            var optionsAdded = new List<string>();
-            var description = "Enter `stop` to stop adding options\n";
-            var optionCount = 1;
-
-            // display starting message
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, 
-                new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(new DiscordEmbedBuilder()
-                    .WithTitle($"Adding to {wheelName}...")
-                    .WithDescription(description))));
-            var response = await intr.WaitForMessageAsync(u => u.Channel == e.Channel && u.Author == e.User, TimeSpan.FromSeconds(60));
-
-            // continue to add options to wheel
-            while (!response.Result.Content.ToLower().Contains("stop") && optionCount <= 30) {
-                // add option and update messages
-                optionsAdded.Add(response.Result.Content);
-                description += $"`{optionCount}.` {response.Result.Content}\n";
-                await e.Channel.DeleteMessageAsync(response.Result);
-                await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder()
-                    .AddEmbed(new DiscordEmbedBuilder()
-                        .WithTitle($"Adding to {wheelName}...")
-                        .WithDescription(description)));
-                
-                // get next option and update count
-                response = await intr.WaitForMessageAsync(u => u.Channel == e.Channel && u.Author == e.User, TimeSpan.FromSeconds(60));
-                optionCount++;
-            }
-
-            // add options to database and display result message
-            serverWheels.Add(new WheelPickers.Wheel(wheelName, optionsAdded, serverWheels.Wheels[wheelName].Image));
-            await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder()
-                .AddEmbed(new DiscordEmbedBuilder()
-                    .WithTitle($"Added to {wheelName}")
-                    .WithDescription(description.Replace("Enter `stop` to stop adding options\n", String.Empty))
-                    .WithColor(DiscordColor.Green)));
+        if (e.Id != IDHelper.WheelPicker.Add) {
+            await Task.CompletedTask;
+            return;
         }
+
+        var interactivity = s.GetInteractivity();
+        var wheel = new WheelPickers(e.Guild).Wheels[e.Values.First()];
+
+        // display starting message
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"Adding to {wheel.Name}...")
+            .WithDescription("Type an option to add or `stop` to stop adding\nTo add multiple options, separate by a new line")
+            .AddField("Last Added", "---", false)
+            .AddField("Status", "Still listening", true)
+            .AddField("Total Options", wheel.GetAllOptions().Count.ToString(), true);
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+        var response = await interactivity.WaitForMessageAsync(u => u.Channel == e.Channel && u.Author == e.User, TimeSpan.FromSeconds(60));
+
+        while (!response.Result.Content.ToLower().Contains("stop") && !response.TimedOut) {
+            if (response.Result.Content.Contains('\n')) {
+                foreach (var o in response.Result.Content.Split('\n')) {
+                    wheel.AddOption(o);
+                    embed.Fields.Where(x => x.Name == "Last Added").First().Value = o;
+                }
+            } else {
+                var option = response.Result.Content;
+                wheel.AddOption(option);
+                embed.Fields.Where(x => x.Name == "Last Added").First().Value = option;
+            }
+            
+            embed.Fields.Where(x => x.Name == "Total Options").First().Value = wheel.GetAllOptions().Count.ToString();
+            await e.Channel.DeleteMessageAsync(response.Result);
+            await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+            response = await interactivity.WaitForMessageAsync(u => u.Channel == e.Channel && u.Author == e.User, TimeSpan.FromSeconds(60));
+        }
+
+        embed.Fields.Where(x => x.Name == "Status").First().Value = "Finished";
+        embed.WithColor(DiscordColor.Green);
+        await e.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
 
         s.ComponentInteractionCreated -= HandleAdd;
     }
 
     public static async Task HandleSpin(DiscordClient s, ComponentInteractionCreateEventArgs e) {
-        if (e.Id.Contains("wheelspin")) {
-            var wheelName = e.Id == "wheelspin" ? e.Values.First() : e.Id.Replace("wheelspin\\", string.Empty);
-            var serverWheels = new WheelPickers(e.Guild);
-            var spinAgainButton = new DiscordButtonComponent(ButtonStyle.Success, $"wheelspin\\{wheelName}", "Spin again", false, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":repeat:", false)));
-
-            // spin wheel and display result
-            var response = new DiscordMessageBuilder()
-                .AddEmbed(new DiscordEmbedBuilder()
-                    .WithTitle($"{DiscordEmoji.FromName(s, ":cyclone:", false)} {wheelName} {DiscordEmoji.FromName(s, ":cyclone:", false)}")
-                    .WithDescription($"# {serverWheels.Wheels[wheelName].Spin()}")
-                    .WithThumbnail(serverWheels.Wheels[wheelName].Image ?? "")
-                    .WithColor(DiscordColor.Cyan))
-                .AddComponents(spinAgainButton);
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(response));
+        if (!e.Id.Contains(IDHelper.WheelPicker.Spin)) {
+            await Task.CompletedTask;
+            return;
         }
+
+        var first_spin = e.Id == IDHelper.WheelPicker.Spin;
+
+        var wheel = new WheelPickers(e.Guild).Wheels[first_spin ? e.Values.First() : e.Id.Split('\\')[WHEEL_NAME_INDEX]];
+        int spin_count = first_spin ? 1 : int.Parse(e.Id.Split('\\')[SPIN_COUNT_INDEX]);
+        var last_option_spun = first_spin ? "---" : e.Id.Split('\\')[LAST_OPTION_SPUN_INDEX];
+        var temp_delete = !first_spin && bool.Parse(e.Id.Split('\\')[REMOVE_INDEX]);
+
+        if (temp_delete) {
+            wheel.TemporarilyRemoveOption(last_option_spun);    
+        }
+
+        var result = wheel.Spin();
+
+        var buttons = new List<DiscordButtonComponent>() {
+            new(ButtonStyle.Success, $"{IDHelper.WheelPicker.Spin}\\{wheel.Name}\\{spin_count + 1}\\{result}\\false", "Spin again", false, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":repeat:", false))),
+            new(ButtonStyle.Danger, $"{IDHelper.WheelPicker.Spin}\\{wheel.Name}\\{spin_count + 1}\\{result}\\true", "Remove and spin again", wheel.Options.Count == 1, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":repeat:", false)))
+        };
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"{DiscordEmoji.FromName(s, ":cyclone:", false)} {wheel.Name} {DiscordEmoji.FromName(s, ":cyclone:", false)}")
+            .WithDescription($"# {result}")
+            .WithThumbnail(wheel.Image ?? "")
+            .AddField("Spin Count", spin_count.ToString(), true)
+            .AddField("Total Options", $"{wheel.Options.Count} / {wheel.Options.Count + wheel.RemovedOptions.Count}", true)
+            .AddField("Last Spun", temp_delete ? $"{DiscordEmoji.FromName(s, ":x:", false)} {last_option_spun} {DiscordEmoji.FromName(s, ":x:", false)}" : last_option_spun, false)
+            .WithColor(DiscordColor.Cyan)
+            .WithFooter($"Spun by {e.User.GlobalName}", e.User.AvatarUrl);
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(buttons)));
     }
 
-    public static async Task HandleDelete(DiscordClient s, ComponentInteractionCreateEventArgs e) {
-        if (e.Id == "deletewheeldropdown") {
-            var serverWheels = new WheelPickers(e.Guild);
-            var wheelName = e.Values.First();
-
-            // add wheel options to dropdown
-            var optionsList = new List<DiscordSelectComponentOption>();
-            foreach (var option in serverWheels.Wheels[wheelName].Options) {
-                optionsList.Add(new DiscordSelectComponentOption(option, $"{wheelName}/{option}"));
-            }
-            optionsList.Add(new DiscordSelectComponentOption($"Delete {wheelName} from {e.Guild.Name}", $"{wheelName}/deletetheentirewheel", "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":x:", false))));
-            optionsList.Add(new DiscordSelectComponentOption("Cancel", "cancel", "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":arrow_backward:", false))));
-            var wheelDropdown = new DiscordSelectComponent("deleteoptiondropdown", "Select an option", optionsList, false);
-
-            // display next prompt for wheel option
-            var prompt = new DiscordMessageBuilder()
-                .AddEmbed(new DiscordEmbedBuilder()
-                    .WithTitle("Delete Wheel Option")
-                    .WithDescription($"Deleting from `{wheelName}` wheel...")
-                    .WithColor(DiscordColor.DarkRed))
-                .AddComponents(wheelDropdown);
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(prompt));
-        } else if (e.Id == "deleteoptiondropdown") {
-            var serverWheels = new WheelPickers(e.Guild);
-            var select = e.Values.First();
-
-            if (select == "cancel") {
-                // cancel operation
-                var prompt = new DiscordMessageBuilder()
-                    .AddEmbed(new DiscordEmbedBuilder()
-                        .WithTitle("Delete Wheel Option")
-                        .WithDescription($"Cancelled")
-                        .WithColor(DiscordColor.DarkRed));
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(prompt));
-            } else if (select.Contains("deletetheentirewheel")) {
-                // delete wheel
-                var wheelName = select[..select.IndexOf('/')];
-
-                // update message
-                var prompt = new DiscordMessageBuilder()
-                    .AddEmbed(new DiscordEmbedBuilder()
-                        .WithTitle("Delete Wheel")
-                        .WithDescription($"Deleted `{wheelName}` from {e.Guild.Name}")
-                        .WithColor(DiscordColor.DarkRed));
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(prompt));
-
-                // delete wheel from database
-                serverWheels.Delete(serverWheels.Wheels[wheelName]);
-            } else {
-                // delete wheel option
-                var wheelName = select[..select.IndexOf('/')];
-                var wheelOption = select.Replace(wheelName + "/", string.Empty);
-
-                // update message
-                var prompt = new DiscordMessageBuilder()
-                    .AddEmbed(new DiscordEmbedBuilder()
-                        .WithTitle("Delete Wheel Option")
-                        .WithDescription($"Deleted {wheelOption} from `{wheelName}`")
-                        .WithColor(DiscordColor.DarkRed));
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(prompt));
-            
-                // delete wheel option from database
-                serverWheels.Delete(serverWheels.Wheels[wheelName], wheelOption);
-            }
-
-            s.ComponentInteractionCreated -= HandleDelete;
+    public static async Task HandleDeleteWheelSelection(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (!e.Id.Contains(IDHelper.WheelPicker.DeleteWheel)) {
+            await Task.CompletedTask;
+            return;
         }
+
+        var first_interaction = e.Id == IDHelper.WheelPicker.DeleteWheel;
+        var serverWheels = new WheelPickers(e.Guild);
+        var wheel = serverWheels.Wheels[first_interaction ? e.Values.First() : e.Id.Split('\\')[WHEEL_NAME_INDEX]];
+        var interactivity = new InteractivityHelper<string>(s, wheel.GetAllOptions(), $"{IDHelper.WheelPicker.DeleteWheel}\\{wheel.Name}", first_interaction ? "1" : e.Id.Split('\\')[PAGE_INDEX]);
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"Deleting from {wheel.Name}")
+            .WithDescription($"{wheel.GetAllOptions().Count} total options\n\n")
+            .WithFooter(interactivity.PageStatus())
+            .WithColor(DiscordColor.DarkRed);
+
+        var options = new List<DiscordSelectComponentOption>();
+        foreach (var option in interactivity.GetPage()) {
+            options.Add(new DiscordSelectComponentOption(option, option, ""));
+            embed.Description += $"`{wheel.Options.IndexOf(option) + 1}`. {option}\n";
+        }
+        options.Add(new DiscordSelectComponentOption($"Delete wheel \"{wheel.Name}\"", DELETE_ENTIRE_WHEEL, "Warning: this is irreversible", false, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":fire:", false))));
+        options.Add(new DiscordSelectComponentOption("Cancel", CANCEL_DELETE, "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":back:", false))));
+        var dropdown = new DiscordSelectComponent($"{IDHelper.WheelPicker.DeleteOption}\\{wheel.Name}", "Select an option", options);
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(
+            interactivity.AddPageButtons().AddEmbed(embed).AddComponents(dropdown)));
+        
+        s.ComponentInteractionCreated -= HandleDeleteOptionSelection;
+        s.ComponentInteractionCreated += HandleDeleteOptionSelection;
+    }
+
+    public static async Task HandleDeleteOptionSelection(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (!e.Id.Contains(IDHelper.WheelPicker.DeleteOption)) {
+            await Task.CompletedTask;
+            return;
+        }
+
+        var option = e.Values.First();
+        var serverWheels = new WheelPickers(e.Guild);
+        var wheel = serverWheels.Wheels[e.Id.Split('\\')[WHEEL_NAME_INDEX]];
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"Deleting from {wheel.Name}")
+            .WithColor(DiscordColor.DarkRed);
+
+        switch (option) {
+            case CANCEL_DELETE:
+                embed.AddField("Result", "Cancelled", true).AddField("Options Remaining", wheel.GetAllOptions().Count.ToString(), true);
+                break;
+
+            case DELETE_ENTIRE_WHEEL:
+                serverWheels.DeleteWheel(wheel);
+                embed.AddField("Result", $"Deleted saved wheel", true).AddField("Options Remaining", "0", true);
+                break;
+
+            default:
+                wheel.DeleteOption(option);
+                embed.AddField("Result", $"Deleted {option}", true).AddField("Options Remaining", wheel.GetAllOptions().Count.ToString(), true);
+                break;
+        }
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+
+        s.ComponentInteractionCreated -= HandleDeleteWheelSelection;
+        s.ComponentInteractionCreated -= HandleDeleteOptionSelection;
     }
 
     public static async Task HandleList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
-        if (e.Id == "listdropdown") {
-            var wheelName = e.Values.First();
-            var serverWheels = new WheelPickers(e.Guild);
-
-            // add server wheels to dropdown
-            var wheelOptions = new List<DiscordSelectComponentOption>();
-            foreach (var wheel in serverWheels.Wheels) {
-                wheelOptions.Add(new DiscordSelectComponentOption(wheel.Key, wheel.Key, $"{wheel.Value.Options.Count} options"));
-            }
-            var wheelDropdown = new DiscordSelectComponent("listdropdown", "Select a wheel", wheelOptions, false);
-
-            // add wheel options to description
-            var description = string.Empty;
-            var optNum = 1;
-            foreach (var o in serverWheels.Wheels[wheelName].Options) {
-                description += $"`{optNum}`. {o}\n";
-                optNum++;
-            }
-
-            // display response
-            var response = new DiscordMessageBuilder()
-                .AddEmbed(new DiscordEmbedBuilder()
-                    .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
-                    .WithTitle(serverWheels.Wheels[wheelName].Name)
-                    .WithThumbnail(serverWheels.Wheels[wheelName].Image ?? "")
-                    .WithDescription(description)
-                    .WithColor(DiscordColor.MidnightBlue))
-                .AddComponents(wheelDropdown);
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(response));
+        if (!e.Id.Contains(IDHelper.WheelPicker.List)) {
+            await Task.CompletedTask;
+            return;
         }
+
+        string wheelName = e.Id == IDHelper.WheelPicker.List ? e.Values.First() : e.Id.Split('\\')[WHEEL_NAME_INDEX];
+        var wheel = new WheelPickers(e.Guild).Wheels[wheelName];    
+        var interactivity = new InteractivityHelper<string>(s, wheel.GetAllOptions(), $"{IDHelper.WheelPicker.List}\\{wheelName}", e.Id == IDHelper.WheelPicker.List ? "1" : e.Id.Split('\\')[PAGE_INDEX], "There are no options in this wheel");
+
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
+            .WithTitle(wheel.Name)
+            .WithThumbnail(wheel.Image ?? "")
+            .WithDescription(interactivity.IsEmpty())
+            .WithColor(DiscordColor.MidnightBlue)
+            .WithFooter(interactivity.PageStatus());
+
+        // add wheel options to description
+        foreach (var o in interactivity.GetPage()) {
+            embed.Description += wheel.RemovedOptions.Contains(o) ? $"`{wheel.GetAllOptions().IndexOf(o) + 1}`. ~~{o}~~\n" : $"`{wheel.GetAllOptions().IndexOf(o) + 1}`. {o}\n";
+        }
+
+        var refresh_button = new DiscordButtonComponent(ButtonStyle.Primary, $"{IDHelper.WheelPicker.List}\\{wheelName}\\{interactivity.Page}", "Refresh", false, new DiscordComponentEmoji(DiscordEmoji.FromName(s, ":repeat:", false)));
+
+        // display response
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(
+            interactivity.AddPageButtons().AddEmbed(embed).AddComponents(refresh_button)
+        ));
     }
+
+    public static async Task HandleReload(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (!e.Id.Contains(IDHelper.WheelPicker.ReloadWheel)) {
+            await Task.CompletedTask;
+            return;
+        }
+
+        var wheel = new WheelPickers(e.Guild).Wheels[e.Values.First()];
+        wheel.Reload();
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"Reloaded {wheel.Name}")
+            .WithDescription($"Restored {wheel.RemovedOptions.Count} options")
+            .WithColor(DiscordColor.Teal);
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+
+        s.ComponentInteractionCreated -= HandleReload;
+    }
+
+    private const int WHEEL_NAME_INDEX = 1;
+    private const int PAGE_INDEX = 2;
+    private const int SPIN_COUNT_INDEX = 2;
+    private const int LAST_OPTION_SPUN_INDEX = 3;
+    private const int REMOVE_INDEX = 4;
+    private const string DELETE_ENTIRE_WHEEL = "*";
+    private const string CANCEL_DELETE = "?";
 }

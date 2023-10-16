@@ -91,7 +91,7 @@ public class ScheduleCommands : ApplicationCommandModule {
                     schedules.Add(new Schedule(ctx.Guild, user.Value));
                 }
             }
-            var interactivity = new InteractivityHelper<Schedule>(ctx.Client, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, 1, "## Nobody works today");
+            var interactivity = new InteractivityHelper<Schedule>(ctx.Client, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, "1", "## Nobody works today");
 
             var embed = new DiscordEmbedBuilder()
                 .WithTitle(DateTime.Now.ToString("dddd MMMM d, yyyy"))
