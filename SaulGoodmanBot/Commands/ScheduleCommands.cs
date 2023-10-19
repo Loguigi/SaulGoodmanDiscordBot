@@ -64,7 +64,7 @@ public class ScheduleCommands : ApplicationCommandModule {
         [Option("day", "Day of the week to edit")] long day,
         [Option("newschedule", "Change to the schedule")] string newSchedule) {
 
-        var schedule = new Schedule(ctx.Guild, ctx.User);
+        var schedule = new Schedule(ctx.Guild, ctx.User) { LastUpdated = ctx.Interaction.CreationTimestamp.LocalDateTime };
         schedule.WorkSchedule[(DayOfWeek)day] = newSchedule;
         schedule.Update();
 
@@ -134,7 +134,7 @@ public class ScheduleCommands : ApplicationCommandModule {
             return;
         }
 
-        var schedule = new Schedule(ctx.Guild, user);
+        var schedule = new Schedule(ctx.Guild, user) { LastUpdated = ctx.Interaction.CreationTimestamp.LocalDateTime };
         schedule.WorkSchedule[(DayOfWeek)day] = newSchedule;
         schedule.Update();
 
