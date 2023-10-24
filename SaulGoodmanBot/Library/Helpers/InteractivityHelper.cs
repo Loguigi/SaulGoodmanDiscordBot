@@ -2,7 +2,7 @@ using System.Data;
 using DSharpPlus;
 using DSharpPlus.Entities;
 
-namespace SaulGoodmanBot.Library;
+namespace SaulGoodmanBot.Library.Helpers;
 
 public class InteractivityHelper<T> {
     public InteractivityHelper(DiscordClient client, List<T> data, string customid, string page, string emptyMessage="") {

@@ -1,7 +1,9 @@
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
+using SaulGoodmanBot.Library.Roles;
 using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Library.Helpers;
 using SaulGoodmanBot.Handlers;
 
 namespace SaulGoodmanBot.Commands;

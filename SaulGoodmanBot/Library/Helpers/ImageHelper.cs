@@ -1,4 +1,4 @@
-namespace SaulGoodmanBot.Library;
+namespace SaulGoodmanBot.Library.Helpers;
 
 public static class ImageHelper {
     public static Dictionary<string, string> Images = new() {

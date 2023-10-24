@@ -2,7 +2,7 @@ using DSharpPlus.Entities;
 using DataLibrary.Logic;
 using DataLibrary.Models;
 
-namespace SaulGoodmanBot.Library;
+namespace SaulGoodmanBot.Library.Minecraft;
 
 public class Minecraft {
     public Minecraft(DiscordGuild guild) {
@@ -83,24 +83,4 @@ public class Minecraft {
     public int? MaxPlayers { get; set; } = null;
     public bool Whitelist { get; set; } = false;
     public const int MAX_WAYPOINTS = 25;
-
-    public class Waypoint {
-        public Waypoint(string dimension, string name, int x, int y, int z) {
-            Dimension = dimension;
-            Name = name;
-            X = x;
-            Y = y;
-            Z = z;
-        }
-
-        public string PrintCoords() {
-            return $"{X}, {Y}, {Z}";
-        }
-
-        public string Dimension { get; set; }
-        public string Name { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
-        public int Z { get; set; }
-    }
 }
