@@ -3,6 +3,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Library.Helpers;
 
 public static class ScheduleHandler {
     public static async Task HandleTodaysSchedules(DiscordClient s, ComponentInteractionCreateEventArgs e) {

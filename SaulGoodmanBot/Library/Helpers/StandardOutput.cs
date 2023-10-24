@@ -6,7 +6,7 @@
 
 using DSharpPlus.Entities;
 
-namespace SaulGoodmanBot.Library;
+namespace SaulGoodmanBot.Library.Helpers;
 
 public static class StandardOutput {
     public static DiscordEmbedBuilder Success(string message) {
