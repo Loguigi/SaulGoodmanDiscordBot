@@ -14,6 +14,12 @@ public static class IDHelper {
         public const string LIST = "LISTBIRTHDAYS";
     }
 
+    public static class Roles {
+        public const string MENU = "ROLEMENU";
+        public const string ASSIGN = "ROLEASSIGN";
+        public const string REMOVE = "REMOVEROLE";
+    }
+
     public static class Schedules {
         public const string Today = "TODAYSCHEDULE";
     }

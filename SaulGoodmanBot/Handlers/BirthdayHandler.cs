@@ -18,20 +18,21 @@ public static class BirthdayHandler {
         }
 
         config.PauseBdayNotifsTimer = ServerBirthdays.NO_BIRTHDAY;
-        config.UpdateConfig();
-
+        var embed = new DiscordEmbedBuilder()
+            .WithColor(DiscordColor.HotPink);
+        
         foreach (var birthday in birthdays.GetBirthdays()) {
             if (birthday.IsBirthdayToday()) {
-                _ = await new DiscordMessageBuilder()
-                    .AddEmbed(new DiscordEmbedBuilder()
-                    .WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} {config.BirthdayMessage} {birthday.User.Mention} ({birthday.GetAge()})")
-                    .WithColor(DiscordColor.HotPink))
-                .SendAsync(config.DefaultChannel);
-
+                embed.WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} {config.BirthdayMessage} {birthday.User.Mention} ({birthday.GetAge()})");
                 config.PauseBdayNotifsTimer = DateTime.Now;
-                config.UpdateConfig();
+            } else if (birthday.HasUpcomingBirthday()) {
+                embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__5__** days!").WithFooter($"{DiscordEmoji.FromName(s, ":birthday:", false)} {birthday} {DiscordEmoji.FromName(s, ":birthday:", false)}");
+                config.PauseBdayNotifsTimer = DateTime.Now;
             }
         }
+        config.UpdateConfig();
+
+        await config.DefaultChannel.SendMessageAsync(embed);
     }
 
     public static async Task HandleBirthdayList(DiscordClient s, ComponentInteractionCreateEventArgs e) {

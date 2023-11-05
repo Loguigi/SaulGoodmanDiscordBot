@@ -30,6 +30,10 @@ public class Birthday {
         return BDay.Month == DateTime.Now.Month && BDay.Day == DateTime.Now.Day;
     }
 
+    public bool HasUpcomingBirthday() {
+        return BDay.Month == DateTime.Now.Month && BDay.Day == DateTime.Now.Day + 5;
+    }
+
     public bool HasNoBirthday() {
         return BDay == ServerBirthdays.NO_BIRTHDAY;
     }
