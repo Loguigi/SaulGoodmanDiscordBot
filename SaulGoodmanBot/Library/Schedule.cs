@@ -1,8 +1,6 @@
 using DSharpPlus.Entities;
 using DataLibrary.Logic;
 using DataLibrary.Models;
-using System.Data;
-using System.Security.Cryptography;
 
 namespace SaulGoodmanBot.Library;
 

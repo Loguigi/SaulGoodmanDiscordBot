@@ -1,6 +1,6 @@
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Library.Helpers;
 
 namespace SaulGoodmanBot.Commands;
 

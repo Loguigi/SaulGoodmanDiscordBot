@@ -2,7 +2,7 @@ using DSharpPlus.Entities;
 using DataLibrary.Logic;
 using DSharpPlus;
 
-namespace SaulGoodmanBot.Library;
+namespace SaulGoodmanBot.Library.Roles;
 
 public class ServerRoles {
     public ServerRoles(DiscordGuild guild, DiscordClient client) {
@@ -56,17 +56,4 @@ public class ServerRoles {
     public string CategoryDescription { get; private set; }
     public bool AllowMultipleRoles { get; private set; }
     public List<RoleComponent> Roles { get; private set; } = new();
-}
-
-public class RoleComponent {
-
-    public RoleComponent(DiscordRole role, string? desc=null, DiscordEmoji? emoji=null) {
-        Role = role;
-        Description = desc;
-        Emoji = emoji;
-    }
-
-    public DiscordRole Role { get; private set; }
-    public string? Description { get; private set; }
-    public DiscordEmoji? Emoji { get; private set; }
 }

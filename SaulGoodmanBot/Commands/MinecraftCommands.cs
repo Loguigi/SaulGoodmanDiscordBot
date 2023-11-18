@@ -1,6 +1,7 @@
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
-using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Library.Minecraft;
+using SaulGoodmanBot.Library.Helpers;
 using SaulGoodmanBot.Handlers;
 using DSharpPlus.Entities;
 
@@ -96,7 +97,7 @@ public class MinecraftCommands : ApplicationCommandModule {
         [Option("dimension", "Dimension the waypoint is located in")] string dimension="overworld") {
         
         var minecraft = new Minecraft(ctx.Guild);
-        var waypoint = new Minecraft.Waypoint(dimension, name, (int)x, (int)y, (int)z);
+        var waypoint = new Waypoint(dimension, name, (int)x, (int)y, (int)z);
 
         if (minecraft.WaypointsFull(dimension)) {
             await ctx.CreateResponseAsync(StandardOutput.Error($"Too many waypoints in {dimension}"));

@@ -1,8 +1,8 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using DSharpPlus.VoiceNext.EventArgs;
-using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Library.Minecraft;
+using SaulGoodmanBot.Library.Helpers;
 
 namespace SaulGoodmanBot.Handlers;
 
