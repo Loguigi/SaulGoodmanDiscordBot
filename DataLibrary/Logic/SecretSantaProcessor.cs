@@ -35,7 +35,7 @@ public static class SecretSantaProcessor {
     }
 
     public static int UpdateConfig(SantaConfigModel config) {
-        // TODO finish update
-        return 1;
+        string sql = @"update dbo.SantaConfig set ParticipationDeadline=@ParticipationDeadline and ExchangeDate=@ExchangeDate and ExchangeLocation=@ExchangeLocation and PriceLimit=@PriceLimit and LockedIn=@LockedIn where GuildId=@GuildId;";
+        return SqlDataAccess.SaveData(sql, config);
     }
 }

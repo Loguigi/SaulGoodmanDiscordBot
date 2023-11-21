@@ -94,13 +94,35 @@ public class SecretSantaCommands : ApplicationCommandModule {
 
     [SlashCommandGroup("view", "Commands to view information for the Secret Santa")]
     public class ViewCommands : ApplicationCommandModule {
+        [SlashCommand("giftee", "View the person you are gifting")]
         public async Task ViewGiftee(InteractionContext ctx) {
+            // TODO
+        }
 
+        [SlashCommand("participants", "View everyone that is participating in the Secret Santa")]
+        public async Task ViewParticipants(InteractionContext ctx) {
+            // TODO
+        }
+
+        [SlashCommand("exchange_date", "View the date of the gift exchange")]
+        public async Task ViewExchangeDate(InteractionContext ctx) {
+            // TODO
+        }
+
+        [SlashCommand("exchange_location", "View the location of the gift exchange")]
+        public async Task ViewExchangeLocation(InteractionContext ctx) {
+            // TODO
+        }
+
+        [SlashCommand("price_limit", "View the price limit if there is one")]
+        public async Task ViewPriceLimit(InteractionContext ctx) {
+            // TODO
         }
     }
 
     [SlashCommandGroup("config", "Configuration for the Secret Santa")]
     public class ConfigCommands : ApplicationCommandModule {
+        [SlashCommand("setcouple", "Set 2 people to be a couple so they don't get each others' names")]
         public async Task SetCouple(InteractionContext ctx,
             [Option("first", "First person")] DiscordUser user1,
             [Option("second", "Second person")] DiscordUser user2) {
@@ -113,7 +135,12 @@ public class SecretSantaCommands : ApplicationCommandModule {
             }
 
             if (user1 == user2) {
-                await ctx.CreateResponseAsync(StandardOutput.Error("What are you doing"));
+                await ctx.CreateResponseAsync(StandardOutput.Error("What are you doing"), ephemeral:true);
+                return;
+            }
+
+            if (user1.IsBot) {
+                await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
                 return;
             }
 
@@ -134,20 +161,126 @@ public class SecretSantaCommands : ApplicationCommandModule {
             
             // TODO design output
         }
+
+        [SlashCommand("add_participant", "Add a participant manually")]
+        public async Task AddParticipant(InteractionContext ctx,
+            [Option("user", "User to add")] DiscordUser user,
+            [Option("name", "First name of the user")] string name) {
+            
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (!santa.Config.HasStarted) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("The event must be started using `/santa event start` before details can be changed"), ephemeral:true);
+                return;
+            }
+
+            if (santa.Config.LockedIn) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Names have already been assigned so nobody else can be added"), ephemeral:true);
+                return;
+            }
+
+            if (user.IsBot) {
+                await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
+                return;
+            }
+
+            if (santa.Find(user) != null) {
+                await ctx.CreateResponseAsync(StandardOutput.Error($"{user.Mention} is already participating"), ephemeral:true);
+                return;
+            }
+
+            santa.AddParticipant(user, name);
+
+            // TODO design output
+        }
+
+        [SlashCommand("exchange_date", "Change the date of the gift exchange")]
+        public async Task SetExchangeDate(InteractionContext ctx,
+            [ChoiceProvider(typeof(WinterMonthChoiceProvider))][Option("month", "Month of gift exchange")] long month,
+            [Option("day", "Day of gift exchange")][Minimum(1)][Maximum(31)] long day) {
+
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (!santa.Config.HasStarted) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("The event must be started using `/santa event start` before details can be changed"), ephemeral:true);
+                return;
+            }
+
+            if (month == 11 && day == 31) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("November 31 does not exist"), ephemeral:true);
+                return;
+            }
+
+            var exchange_date = new DateTime(month == 1 ? DateTime.Now.AddYears(1).Year : DateTime.Now.Year, (int)month, (int)day);
+
+            if (!ValidateDates(santa.Config.ParticipationDeadline, exchange_date)) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Date error. The participation deadline date must be after today and before the exchange date"));
+                return;
+            }
+
+            santa.Config.ExchangeDate = exchange_date;
+            santa.Config.Update();
+
+            // TODO design output
+        }
+
+        [SlashCommand("exchange_location", "Change the location of the gift exchange")]
+        public async Task SetExchangeLocation(InteractionContext ctx,
+            [Option("location", "Location of the gift exchange")][MaximumLength(30)] string location) {
+            
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (!santa.Config.HasStarted) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("The event must be started using `/santa event start` before details can be changed"), ephemeral:true);
+                return;
+            }
+
+            santa.Config.ExchangeLocation = location;
+            santa.Config.Update();
+
+            // TODO design output
+        }
+
+        [SlashCommand("participation_deadline_date", "Change the date of the participation deadline")]
+        public async Task SetParticipationDeadlineDate(InteractionContext ctx,
+            [ChoiceProvider(typeof(WinterMonthChoiceProvider))][Option("month", "Month of gift exchange")] long month,
+            [Option("day", "Day of gift exchange")][Minimum(1)][Maximum(31)] long day) {
+            
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (!santa.Config.HasStarted) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("The event must be started using `/santa event start` before details can be changed"), ephemeral:true);
+                return;
+            }
+
+            if (month == 11 && day == 31) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("November 31 does not exist"), ephemeral:true);
+                return;
+            }
+
+            var participation_deadline = new DateTime(month == 1 ? DateTime.Now.AddYears(1).Year : DateTime.Now.Year, (int)month, (int)day);
+
+            if (!ValidateDates(participation_deadline, santa.Config.ExchangeDate)) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Date error. The participation deadline date must be after today and before the exchange date"));
+                return;
+            }
+
+            santa.Config.ParticipationDeadline = participation_deadline;
+            santa.Config.Update();
+
+            // TODO output
+        }
     }
 
-    private static bool ValidateDates(DateTime participation_deadline, DateTime exchange) {
-        return exchange > participation_deadline && participation_deadline >= DateTime.Today;
+    private static bool ValidateDates(DateTime participation_deadline, DateTime exchange_date) {
+        return exchange_date > participation_deadline && participation_deadline >= DateTime.Today;
     }
 }
 
-public class WinterMonthChoiceProvider : IChoiceProvider
-{
-    public async Task<IEnumerable<DiscordApplicationCommandOptionChoice>> Provider()
-    {
+public class WinterMonthChoiceProvider : IChoiceProvider {
+    public async Task<IEnumerable<DiscordApplicationCommandOptionChoice>> Provider() {
         await Task.CompletedTask;
-        return new DiscordApplicationCommandOptionChoice[]
-        {
+        return new DiscordApplicationCommandOptionChoice[] {
             new("January", 1),
             new("November", 11),
             new("December", 12),
