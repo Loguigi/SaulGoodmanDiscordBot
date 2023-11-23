@@ -5,12 +5,17 @@ namespace DataLibrary.Logic;
 
 public static class SecretSantaProcessor {
     public static int StartEvent(SantaConfigModel config) {
-        // TODO implement
-        return 1;
+        string sql = @"insert into dbo.SantaConfig values (@GuildId, @ParticipationDeadline, @ExchangeDate, @ExchangeLocation, @PriceLimit, @LockedIn);";
+        return SqlDataAccess.SaveData(sql, config);
+    }
+
+    public static int EndEvent(ulong guildid) {
+        string sql = $"delete from dbo.SantaParticipants where GuildId={guildid}; delete from dbo.SantaConfig where GuildId={guildid}";
+        return SqlDataAccess.SaveData(sql, new SantaConfigModel());
     }
 
     public static int AddParticipant(SantaParticipantModel user) {
-        string sql = @"insert into dbo.SantaParticipants values (@GuildId, @UserId, @FirstName);";
+        string sql = @"insert into dbo.SantaParticipants values (@GuildId, @UserId, @FirstName, @GifteeId, @SOId);";
         return SqlDataAccess.SaveData(sql, user);
     }
 
@@ -35,7 +40,7 @@ public static class SecretSantaProcessor {
     }
 
     public static int UpdateConfig(SantaConfigModel config) {
-        string sql = @"update dbo.SantaConfig set ParticipationDeadline=@ParticipationDeadline and ExchangeDate=@ExchangeDate and ExchangeLocation=@ExchangeLocation and PriceLimit=@PriceLimit and LockedIn=@LockedIn where GuildId=@GuildId;";
+        string sql = @"update dbo.SantaConfig set ParticipationDeadline=@ParticipationDeadline, ExchangeDate=@ExchangeDate, ExchangeLocation=@ExchangeLocation, PriceLimit=@PriceLimit, LockedIn=@LockedIn where GuildId=@GuildId;";
         return SqlDataAccess.SaveData(sql, config);
     }
 }
