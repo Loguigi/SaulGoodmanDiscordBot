@@ -9,6 +9,7 @@ using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
 using SaulGoodmanBot.Handlers;
 using Microsoft.Extensions.Logging;
+using SaulGoodmanBot.Library.SecretSanta;
 
 namespace SaulGoodmanBot;
 
@@ -72,6 +73,12 @@ public class Bot {
         slashCommandsConfig.RegisterCommands<LevelCommands>();
         slashCommandsConfig.RegisterCommands<MinecraftCommands>();
         slashCommandsConfig.RegisterCommands<ScheduleCommands>();
+
+        // Secret Santa seasonal commands/handlers
+        if (DateTime.Now.Month == 11 || DateTime.Now.Month == 12 || DateTime.Now.Month == 1) {
+            Client.MessageCreated += SantaHandler.HandleParticipationDeadlineCheck;
+            slashCommandsConfig.RegisterCommands<SecretSantaCommands>();
+        }
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
