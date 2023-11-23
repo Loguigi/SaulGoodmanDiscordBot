@@ -27,4 +27,8 @@ public static class IDHelper {
     public static class Misc {
         public const string FLIP = "COINFLIP";
     }
+
+    public static class Santa {
+        public const string PARTICIPANTS = "SANTAPARTICIPANTS";
+    }
 }
