@@ -25,14 +25,16 @@ public static class BirthdayHandler {
             if (birthday.IsBirthdayToday()) {
                 embed.WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} {config.BirthdayMessage} {birthday.User.Mention} ({birthday.GetAge()})");
                 config.PauseBdayNotifsTimer = DateTime.Now;
+                await config.DefaultChannel.SendMessageAsync(embed);
             } else if (birthday.HasUpcomingBirthday()) {
                 embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__5__** days!").WithFooter($"{DiscordEmoji.FromName(s, ":birthday:", false)} {birthday} {DiscordEmoji.FromName(s, ":birthday:", false)}");
                 config.PauseBdayNotifsTimer = DateTime.Now;
+                await config.DefaultChannel.SendMessageAsync(embed);
             }
         }
         config.UpdateConfig();
 
-        await config.DefaultChannel.SendMessageAsync(embed);
+        
     }
 
     public static async Task HandleBirthdayList(DiscordClient s, ComponentInteractionCreateEventArgs e) {

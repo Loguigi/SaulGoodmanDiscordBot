@@ -354,7 +354,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor("ATTENTION", "https://youtu.be/a3_PPdjD6mg?si=4q_PpummrNXtmZmP", ImageHelper.Images["Heisenberg"])
                 .WithTitle("The gift exchange location has been changed to")
-                .WithDescription($"# santa.Config.ExchangeLocation")
+                .WithDescription($"# {santa.Config.ExchangeLocation}")
                 .WithColor(DiscordColor.Yellow);
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(ctx.Guild.EveryoneRole.Mention).AddEmbed(embed)));
