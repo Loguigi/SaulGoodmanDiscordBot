@@ -28,6 +28,10 @@ public static class IDHelper {
         public const string FLIP = "COINFLIP";
     }
 
+    public static class Levels {
+        public const string LEADERBOARD = "LEVELLEADERBOARD";
+    }
+
     public static class Santa {
         public const string PARTICIPANTS = "SANTAPARTICIPANTS";
     }
