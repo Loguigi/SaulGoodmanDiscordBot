@@ -1,7 +1,9 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using SaulGoodmanBot.Handlers;
 using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Library.Helpers;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -36,21 +38,26 @@ public class LevelCommands : ApplicationCommandModule {
             if (!user.IsBot) leaderboard.Add(new Levels(ctx.Guild, user, DateTime.Now));
         }
         leaderboard.Sort(delegate(Levels x, Levels y) {return x.GetRank().CompareTo(y.GetRank());});
+        var interactivity = new InteractivityHelper<Levels>(ctx.Client, leaderboard, IDHelper.Levels.LEADERBOARD, "1");
 
-        var message = new DiscordEmbedBuilder()
+        var embed = new DiscordEmbedBuilder()
             .WithAuthor(ctx.Guild.Name, "https://youtu.be/nQGodNKogEI", ctx.Guild.IconUrl)
             .WithTitle("Server Leaderboard")
             .WithDescription("")
+            .WithFooter(interactivity.PageStatus())
             .WithColor(DiscordColor.Orange);
-        foreach (var user in leaderboard) {
-            message.Description += user.GetRank() switch {
-                1 => $"{DiscordEmoji.FromName(ctx.Client, ":first_place:")} {user.User.Mention} (Level: {user.Level})\n",
-                2 => $"{DiscordEmoji.FromName(ctx.Client, ":second_place:")} {user.User.Mention} (Level: {user.Level})\n",
-                3 => $"{DiscordEmoji.FromName(ctx.Client, ":third_place:")} {user.User.Mention} (Level: {user.Level})\n",
-                _ => $"`#{user.GetRank()}` {user.User.Mention} (Level: {user.Level})\n",
+        foreach (var user in interactivity.GetPage()) {
+            embed.Description += user.GetRank() switch {
+                1 => $"### {DiscordEmoji.FromName(ctx.Client, ":first_place:")} {user.User.Mention} `LVL {user.Level}` `EXP {user.Experience}`\n",
+                2 => $"### {DiscordEmoji.FromName(ctx.Client, ":second_place:")} {user.User.Mention} `LVL {user.Level}` `EXP {user.Experience}`\n",
+                3 => $"### {DiscordEmoji.FromName(ctx.Client, ":third_place:")} {user.User.Mention} `LVL {user.Level}` `EXP {user.Experience}`\n",
+                _ => $"### **__#{user.GetRank()}__** {user.User.Mention} `LVL {user.Level}` `EXP {user.Experience}`\n",
             };
         }
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(message)));
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+
+        ctx.Client.ComponentInteractionCreated -= LevelHandler.HandleLeaderboard;
+        ctx.Client.ComponentInteractionCreated += LevelHandler.HandleLeaderboard;
     }
 }
