@@ -22,7 +22,7 @@ public static class GeneralHandlers {
         _ = await new DiscordMessageBuilder()
             .AddEmbed(new DiscordEmbedBuilder()
                 .WithDescription($"## {config.WelcomeMessage} {e.Member.Mention}")
-                .WithColor(DiscordColor.Gold))
+                .WithColor(DiscordColor.Green))
             .SendAsync(config.DefaultChannel);
     }
 
@@ -40,7 +40,7 @@ public static class GeneralHandlers {
         _ = await new DiscordMessageBuilder()
             .AddEmbed(new DiscordEmbedBuilder()
                 .WithDescription($"## {e.Member.Mention} {config.LeaveMessage}")
-                .WithColor(DiscordColor.Orange))
+                .WithColor(DiscordColor.Red))
             .SendAsync(config.DefaultChannel);
     }
 }
