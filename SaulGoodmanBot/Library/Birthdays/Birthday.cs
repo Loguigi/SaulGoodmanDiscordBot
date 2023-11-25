@@ -31,7 +31,7 @@ public class Birthday {
     }
 
     public bool HasUpcomingBirthday() {
-        return BDay.Month == DateTime.Now.Month && BDay.Day == DateTime.Now.Day + 5;
+        return BDay.Month == DateTime.Now.Month && BDay.Day == DateTime.Now.AddDays(5).Day;
     }
 
     public bool HasNoBirthday() {
