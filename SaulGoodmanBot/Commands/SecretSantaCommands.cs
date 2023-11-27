@@ -4,6 +4,7 @@ using DSharpPlus.Entities;
 using SaulGoodmanBot.Library.SecretSanta;
 using SaulGoodmanBot.Library.Helpers;
 using SaulGoodmanBot.Handlers;
+using System.Security.Cryptography.X509Certificates;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -131,6 +132,62 @@ public class SecretSantaCommands : ApplicationCommandModule {
             santa.EndEvent();
 
             await ctx.CreateResponseAsync("Secret Santa has ended");
+        }
+    }
+
+    [SlashCommandGroup("gift", "Commands to manage Secret Santa gifts")]
+    public class GiftCommands : ApplicationCommandModule {
+        [SlashCommand("ready", "Use this command if you've gotten your gift for your secret Santa")]
+        public async Task GiftReady(InteractionContext ctx) {
+            var santa = new Santa(ctx.Client, ctx.Guild);
+            var user = santa.Find(ctx.User);
+
+            if (user == null) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("You must participate first using </santa event participate:1177333432649531493> before getting a gift"), ephemeral:true);
+                return;
+            }
+
+            if (!santa.Config.LockedIn) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Please wait for names to be assigned before getting your gift"), ephemeral:true);
+                return;
+            }
+
+            user.SetGiftReady(ctx.Guild.Id);
+
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Thank you!")
+                .WithDescription(user.GiftReady ? "When everyone has their gift, the gift exchange can begin" : "When you have your gift, enter this command again to change")
+                .WithColor(DiscordColor.PhthaloGreen)
+                .WithFooter(user.GiftReady ? $"{DiscordEmoji.FromName(ctx.Client, ":white_check_mark:", false)} Ready" : $"{DiscordEmoji.FromName(ctx.Client, ":x:", false)} Not Ready");
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
+        }
+
+        [SlashCommand("statuses", "See if everyone is ready with their gift or not")]
+        public async Task GiftStatuses(InteractionContext ctx) {
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (!santa.Config.LockedIn) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Please wait for names to be assigned first"), ephemeral:true);
+                return;
+            }
+
+            var interactivity = new InteractivityHelper<SantaParticipant>(ctx.Client, santa.Participants, IDHelper.Santa.GIFTSTATUSES, "1");
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
+                .WithTitle("Secret Santa Gift Statuses")
+                .WithDescription("List of people that have gifts ready for their Secret Santa\n\n")
+                .WithColor(DiscordColor.Rose)
+                .WithFooter(interactivity.PageStatus());
+
+            foreach (var p in interactivity.GetPage()) {
+                embed.Description += $"{(p.GiftReady ? DiscordEmoji.FromName(ctx.Client, ":white_check_mark:", false) : DiscordEmoji.FromName(ctx.Client, ":x:", false))} {p.User.Mention} ({p.FirstName}) {(p.GiftReady ? "`READY`" : "`NOT READY`")}\n";
+            }
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+
+            ctx.Client.ComponentInteractionCreated -= SantaHandler.HandleGiftStatusesList;
+            ctx.Client.ComponentInteractionCreated += SantaHandler.HandleGiftStatusesList;
         }
     }
 
