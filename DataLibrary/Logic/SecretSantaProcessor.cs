@@ -15,7 +15,7 @@ public static class SecretSantaProcessor {
     }
 
     public static int AddParticipant(SantaParticipantModel user) {
-        string sql = @"insert into dbo.SantaParticipants values (@GuildId, @UserId, @FirstName, @GifteeId, @SOId);";
+        string sql = @"insert into dbo.SantaParticipants values (@GuildId, @UserId, @FirstName, @GifteeId, @SOId, @GiftReady);";
         return SqlDataAccess.SaveData(sql, user);
     }
 
@@ -32,6 +32,11 @@ public static class SecretSantaProcessor {
     public static int AssignGiftee(ulong guildid, ulong gifterid, ulong gifteeid) {
         string sql = $"update dbo.SantaParticipants set GifteeId={gifteeid} where UserId={gifterid} and GuildId={guildid}";
         return SqlDataAccess.SaveData(sql, new SantaParticipantModel());
+    }
+
+    public static int SetGiftReady(SantaParticipantModel user) {
+        string sql = @"update dbo.SantaParticipants set GiftReady=@GiftReady where GuildId=@GuildId and UserId=@UserId;";
+        return SqlDataAccess.SaveData(sql, user);
     }
 
     public static int SetCouple(ulong guildid, ulong user1id, ulong user2id) {
