@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using DataLibrary.Logic;
 using DataLibrary.Models;
 using DSharpPlus;
@@ -55,7 +52,7 @@ public class Santa {
 
         foreach (var p in Participants) {
             var y = shuffledParticipants.Where(x => x.User != p.User).ToList();
-            if (p.SO != null)
+            if (p.SO! != null!)
                 y = shuffledParticipants.Where(x => x.User != p.User && x.User != p.SO).ToList();
 
             p.Giftee = y[rng.Next(y.Count)].User;
