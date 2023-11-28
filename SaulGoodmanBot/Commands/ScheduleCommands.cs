@@ -2,6 +2,7 @@ using System.Globalization;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Library.Helpers;
 
@@ -117,7 +118,7 @@ public class ScheduleCommands : ApplicationCommandModule {
     }
 
     [SlashCommand("override", "Override another user's schedule")]
-    [SlashCommandPermissions(Permissions.Administrator)]
+    [SlashRequirePermissions(Permissions.Administrator)]
     public async Task OverrideSchedule(InteractionContext ctx,
         [Option("user", "Users' schedule to change")] DiscordUser user,
         [Choice("Sunday", (long)DayOfWeek.Sunday)]

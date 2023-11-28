@@ -4,11 +4,12 @@ using DSharpPlus.SlashCommands;
 using DSharpPlus.Interactivity.Extensions;
 using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Library.Helpers;
+using DSharpPlus.SlashCommands.Attributes;
 
 namespace SaulGoodmanBot.Commands;
 
 [GuildOnly]
-[SlashCommandPermissions(Permissions.Administrator)]
+[SlashRequirePermissions(Permissions.Administrator)]
 [SlashCommandGroup("config", "Bot configuration commands")]
 public class ServerConfigCommands : ApplicationCommandModule {
     [SlashCommand("messags", "Bot message responses to events")]

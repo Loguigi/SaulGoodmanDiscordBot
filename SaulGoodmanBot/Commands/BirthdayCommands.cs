@@ -13,6 +13,7 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.Handlers;
 using SaulGoodmanBot.Library.Birthdays;
 using SaulGoodmanBot.Library.Helpers;
@@ -62,8 +63,8 @@ public class BirthdayCommands : ApplicationCommandModule {
         await ctx.CreateResponseAsync(StandardOutput.Success($"Your birthday is changed to {month}/{day}/{year}"));
     }
 
-    [SlashCommandPermissions(Permissions.Administrator)]
     [SlashCommand("change", "Change a user's birthday")]
+    [SlashRequirePermissions(Permissions.Administrator)]
     public async Task ChangeBirthday(InteractionContext ctx,
         [Option("user", "User's birthday to add")] DiscordUser user, 
         [ChoiceProvider(typeof(MonthChoiceProvider))][Option("month", "Month of birthday")] long month,
