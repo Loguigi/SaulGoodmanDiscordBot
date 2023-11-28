@@ -15,7 +15,7 @@ public class Santa {
         Config = new SantaConfig(Guild);
         var participants = SecretSantaProcessor.LoadParticipants(Guild.Id);
         foreach (var p in participants) {
-            Participants.Add(new SantaParticipant(Client, p.UserId, p.FirstName, p.GifteeId, p.SOId, p.GiftReady == 1));
+            Participants.Add(new SantaParticipant(Client, p.UserId, p.FirstName, SecretSantaProcessor.LoadWishlist(Guild.Id, (ulong)p.UserId), p.GifteeId, p.SOId, p.GiftReady == 1));
         }
     }
 

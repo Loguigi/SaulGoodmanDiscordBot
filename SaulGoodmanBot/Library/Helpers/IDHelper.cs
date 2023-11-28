@@ -35,5 +35,6 @@ public static class IDHelper {
     public static class Santa {
         public const string PARTICIPANTS = "SANTAPARTICIPANTS";
         public const string GIFTSTATUSES = "SANTAGIFTSTATUSES";
+        public const string WISHLISTREMOVE = "SANTAWISHLISTREMOVE";
     }
 }

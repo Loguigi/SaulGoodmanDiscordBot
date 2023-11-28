@@ -5,6 +5,7 @@ using SaulGoodmanBot.Library.SecretSanta;
 using SaulGoodmanBot.Library.Helpers;
 using SaulGoodmanBot.Handlers;
 using System.Security.Cryptography.X509Certificates;
+using DSharpPlus.Interactivity.Extensions;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -286,6 +287,136 @@ public class SecretSantaCommands : ApplicationCommandModule {
         }
     }
 
+    [SlashCommandGroup("wishlist", "Secret Santa wishlist")]
+    public class WishlistCommands : ApplicationCommandModule {
+        [SlashCommand("add", "Add items to your wishlist")]
+        public async Task WishlistAdd(InteractionContext ctx) {
+            var santa = new Santa(ctx.Client, ctx.Guild);
+            var interactivity = ctx.Client.GetInteractivity();
+
+            if (!santa.Config.HasStarted) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Secret Santa has not started yet. Please try again after"), ephemeral:true);
+                return;
+            }
+
+            var user = santa.Find(ctx.User);
+
+            if (user == null) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("You must participate using </santa event participate:1177333432649531493> before creating a wishlist"), ephemeral:true);
+                return;
+            }
+
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(user.User.GlobalName, "", user.User.AvatarUrl)
+                .WithTitle($"Adding to wishlist...")
+                .WithDescription($"Type an option to add or `stop` to stop adding\nTo add multiple items, separate by a new line\nMaximum of {SantaParticipant.MAX_WISHLIST_ITEMS} items allowed")
+                .AddField("Last Added", "---", false)
+                .AddField("Status", "Still listening", true)
+                .AddField("Total Items", user.Wishlist.Count.ToString(), true);
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+            var response = await interactivity.WaitForMessageAsync(u => u.Channel == ctx.Channel && u.Author == ctx.User, TimeSpan.FromSeconds(60));
+
+            while (!response.Result.Content.ToLower().Contains("stop") && !user.IsWishlistFull() && !response.TimedOut) {
+                if (response.Result.Content.Contains('\n')) {
+                    foreach (var i in response.Result.Content.Split('\n')) {
+                        if (user.IsWishlistFull())
+                            break;
+                        user.EditWishlist(ctx.Guild.Id, DataOperations.Add, i);
+                        user.Wishlist.Add(i);
+                        embed.Fields.Where(x => x.Name == "Last Added").First().Value = i;
+                    }
+                } else {
+                    var item = response.Result.Content;
+                    user.EditWishlist(ctx.Guild.Id, DataOperations.Add, item);
+                    user.Wishlist.Add(item);
+                    embed.Fields.Where(x => x.Name == "Last Added").First().Value = item;
+                }
+                
+                embed.Fields.Where(x => x.Name == "Total Items").First().Value = user.Wishlist.Count.ToString();
+                await ctx.Channel.DeleteMessageAsync(response.Result);
+                await ctx.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                response = await interactivity.WaitForMessageAsync(u => u.Channel == ctx.Channel && u.Author == ctx.User, TimeSpan.FromSeconds(60));
+            }
+
+            embed.Fields.Where(x => x.Name == "Status").First().Value = "Finished";
+            embed.WithColor(DiscordColor.Green);
+            await ctx.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+        }
+
+        [SlashCommand("remove", "Remove an item from your wishlist")]
+        public async Task WishlistRemove(InteractionContext ctx) {
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (!santa.Config.HasStarted) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Secret Santa has not started yet. Please try again after"), ephemeral:true);
+                return;
+            }
+
+            var user = santa.Find(ctx.User);
+
+            if (user == null) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("You must participate using </santa event participate:1177333432649531493> before creating a wishlist"), ephemeral:true);
+                return;
+            }
+
+            if (user.Wishlist.Count == 0) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Your wishlist is empty!"), ephemeral:true);
+                return;
+            }
+
+            var dropdown_options = new List<DiscordSelectComponentOption>() {new DiscordSelectComponentOption("Cancel", "CANCEL", "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_backward:", false)))};
+            foreach (var i in user.Wishlist) {
+                dropdown_options.Add(new DiscordSelectComponentOption(i, i, "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":gift:", false))));
+            }
+            var dropdown = new DiscordSelectComponent(IDHelper.Santa.WISHLISTREMOVE, "Select a wishlist item...", dropdown_options, false, 1, user.Wishlist.Count + 1);
+
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Wishlist Remove")
+                .WithColor(DiscordColor.DarkRed);
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown)));
+
+            ctx.Client.ComponentInteractionCreated -= SantaHandler.HandleWishlistRemove;
+            ctx.Client.ComponentInteractionCreated += SantaHandler.HandleWishlistRemove;
+        }
+
+        [SlashCommand("view", "View your own or somebody else's wishlist")]
+        public async Task WishlistView(InteractionContext ctx,
+            [Option("user", "Person's wishlist that you want to see")] DiscordUser? user=null) {
+            
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (user! != null! && user.IsBot) {
+                await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
+                return;
+            }
+
+            user ??= ctx.User;
+
+            var participant = santa.Find(user);
+
+            if (participant == null) {
+                await ctx.CreateResponseAsync(StandardOutput.Error($"{user.Mention} has not chosen to participate in the Secret Santa"), ephemeral:true);
+                return;
+            }
+
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(user.GlobalName, "", user.AvatarUrl)
+                .WithTitle("Secret Santa Wishlist")
+                .WithDescription(participant.Wishlist.Count == 0 ? $"### {user.Mention}'s wishlist is empty" : "")
+                .WithColor(DiscordColor.Teal);
+
+            foreach (var i in participant.Wishlist) {
+                if (i == participant.Wishlist.Last())
+                    embed.Description += i;
+                else
+                    embed.Description += $"{i}, ";
+            }
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
+        }
+    }
+
     [SlashCommandGroup("config", "Configuration for the Secret Santa")]
     [SlashCommandPermissions(Permissions.Administrator)]
     public class ConfigCommands : ApplicationCommandModule {
@@ -297,7 +428,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
             var santa = new Santa(ctx.Client, ctx.Guild);
 
             if (santa.Config.LockedIn) {
-                await ctx.CreateResponseAsync(StandardOutput.Error("Names have already been assignd"), ephemeral:true);
+                await ctx.CreateResponseAsync(StandardOutput.Error("Names have already been assigned"), ephemeral:true);
                 return;
             }
 
