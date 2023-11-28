@@ -243,13 +243,13 @@ public class SecretSantaCommands : ApplicationCommandModule {
             ctx.Client.ComponentInteractionCreated += SantaHandler.HandleParticipantList;
         }
 
-        [SlashCommand("exchange_date", "View the date of the gift exchange")]
-        public async Task ViewExchangeDate(InteractionContext ctx) {
+        [SlashCommand("exchange_time", "View the time of the gift exchange")]
+        public async Task ViewExchangeTime(InteractionContext ctx) {
             var santa = new Santa(ctx.Client, ctx.Guild);
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
-                .WithTitle("Gift Exchange Date")
-                .WithDescription(santa.Config.HasStarted ? $"# {santa.Config.ExchangeDate:dddd, MMMM d}" : "### Undecided")
+                .WithTitle("Gift Exchange Date/Time")
+                .WithDescription(santa.Config.HasStarted ? $"# {santa.Config.ExchangeDate:dddd, MMMM d h:mm tt}" : "### Undecided")
                 .WithColor(DiscordColor.SpringGreen)
                 .WithThumbnail(ImageHelper.Images["WalterChristmas"]);
 
@@ -364,7 +364,9 @@ public class SecretSantaCommands : ApplicationCommandModule {
         [SlashCommand("exchange_date", "Change the date of the gift exchange")]
         public async Task SetExchangeDate(InteractionContext ctx,
             [ChoiceProvider(typeof(WinterMonthChoiceProvider))][Option("month", "Month of gift exchange")] long month,
-            [Option("day", "Day of gift exchange")][Minimum(1)][Maximum(31)] long day) {
+            [Option("day", "Day of gift exchange")][Minimum(1)][Maximum(31)] long day,
+            [Option("hour", "Hour of when the gift exchange starts")][Minimum(0)][Maximum(23)] long hour=0,
+            [Option("minute", "Minute of when the gift exchange starts")][Minimum(0)][Maximum(59)] long minute=0) {
 
             var santa = new Santa(ctx.Client, ctx.Guild);
 
@@ -378,7 +380,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 return;
             }
 
-            var exchange_date = new DateTime(month == 1 ? DateTime.Now.AddYears(1).Year : DateTime.Now.Year, (int)month, (int)day);
+            var exchange_date = new DateTime(month == 1 ? DateTime.Now.AddYears(1).Year : DateTime.Now.Year, (int)month, (int)day, (int)hour, (int)minute, 0);
 
             if (!ValidateDates(santa.Config.ParticipationDeadline, exchange_date)) {
                 await ctx.CreateResponseAsync(StandardOutput.Error("Date error. The participation deadline date must be after today and before the exchange date"));
@@ -390,8 +392,8 @@ public class SecretSantaCommands : ApplicationCommandModule {
 
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor("ATTENTION", "https://youtu.be/a3_PPdjD6mg?si=4q_PpummrNXtmZmP", ImageHelper.Images["Heisenberg"])
-                .WithTitle("The gift exchange date has been changed to")
-                .WithDescription($"# {santa.Config.ExchangeDate:dddd, MMMM d}")
+                .WithTitle("The gift exchange date/time has been changed to")
+                .WithDescription($"# {santa.Config.ExchangeDate:dddd, MMMM d h:mm tt}")
                 .WithColor(DiscordColor.Yellow);
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(ctx.Guild.EveryoneRole.Mention).AddEmbed(embed)));
