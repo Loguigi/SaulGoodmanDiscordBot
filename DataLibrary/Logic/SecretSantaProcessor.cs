@@ -5,7 +5,7 @@ namespace DataLibrary.Logic;
 
 public static class SecretSantaProcessor {
     public static int StartEvent(SantaConfigModel config) {
-        string sql = @"insert into dbo.SantaConfig values (@GuildId, @ParticipationDeadline, @ExchangeDate, @ExchangeLocation, @PriceLimit, @LockedIn);";
+        string sql = @"insert into dbo.SantaConfig values (@GuildId, @ParticipationDeadline, @ExchangeDate, @ExchangeLocation, @ExchangeAddress, @PriceLimit, @LockedIn);";
         return SqlDataAccess.SaveData(sql, config);
     }
 
@@ -45,7 +45,7 @@ public static class SecretSantaProcessor {
     }
 
     public static int UpdateConfig(SantaConfigModel config) {
-        string sql = @"update dbo.SantaConfig set ParticipationDeadline=@ParticipationDeadline, ExchangeDate=@ExchangeDate, ExchangeLocation=@ExchangeLocation, PriceLimit=@PriceLimit, LockedIn=@LockedIn where GuildId=@GuildId;";
+        string sql = @"update dbo.SantaConfig set ParticipationDeadline=@ParticipationDeadline, ExchangeDate=@ExchangeDate, ExchangeLocation=@ExchangeLocation, ExchangeAddress=@ExchangeAddress, PriceLimit=@PriceLimit, LockedIn=@LockedIn where GuildId=@GuildId;";
         return SqlDataAccess.SaveData(sql, config);
     }
 }

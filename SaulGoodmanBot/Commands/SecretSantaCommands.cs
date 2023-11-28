@@ -262,9 +262,12 @@ public class SecretSantaCommands : ApplicationCommandModule {
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
                 .WithTitle("Gift Exchange Location")
-                .WithDescription(santa.Config.HasStarted ? santa.Config.ExchangeLocation : "### Undecided")
+                .WithDescription(santa.Config.HasStarted ? $"### {santa.Config.ExchangeLocation}" : "### Undecided")
                 .WithColor(DiscordColor.Red)
                 .WithThumbnail(ImageHelper.Images["WalterChristmas"]);
+
+            if (santa.Config.ExchangeAddress != null)
+                embed.AddField("Address", santa.Config.ExchangeAddress);
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithEmbed(embed)));
         }
@@ -275,7 +278,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
                 .WithTitle("Gift Price Limit")
-                .WithDescription(santa.Config.HasStarted ? santa.Config.PriceLimit.ToString() ?? "### No price limit" : "### Undecided")
+                .WithDescription(santa.Config.HasStarted ? (santa.Config.PriceLimit.ToString() ?? "### No price limit") : "### Undecided")
                 .WithColor(DiscordColor.Green)
                 .WithThumbnail(ImageHelper.Images["WalterChristmas"]);
 
@@ -396,7 +399,8 @@ public class SecretSantaCommands : ApplicationCommandModule {
 
         [SlashCommand("exchange_location", "Change the location of the gift exchange")]
         public async Task SetExchangeLocation(InteractionContext ctx,
-            [Option("location", "Location of the gift exchange")][MaximumLength(30)] string location) {
+            [Option("location", "Location of the gift exchange")][MaximumLength(30)] string location,
+            [Option("address", "Address of the gift exchange location")][MaximumLength(100)] string? address=null) {
             
             var santa = new Santa(ctx.Client, ctx.Guild);
 
@@ -406,6 +410,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
             }
 
             santa.Config.ExchangeLocation = location;
+            santa.Config.ExchangeAddress = address;
             santa.Config.Update();
 
             var embed = new DiscordEmbedBuilder()
@@ -413,6 +418,10 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 .WithTitle("The gift exchange location has been changed to")
                 .WithDescription($"# {santa.Config.ExchangeLocation}")
                 .WithColor(DiscordColor.Yellow);
+            
+            if (santa.Config.ExchangeAddress != null) {
+                embed.AddField("Address", santa.Config.ExchangeAddress);
+            }
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(ctx.Guild.EveryoneRole.Mention).AddEmbed(embed)));
         }
