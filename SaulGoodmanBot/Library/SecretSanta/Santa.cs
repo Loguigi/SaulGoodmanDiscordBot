@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using DataLibrary.Logic;
 using DataLibrary.Models;
 using DSharpPlus;
@@ -15,7 +12,7 @@ public class Santa {
         Config = new SantaConfig(Guild);
         var participants = SecretSantaProcessor.LoadParticipants(Guild.Id);
         foreach (var p in participants) {
-            Participants.Add(new SantaParticipant(Client, p.UserId, p.FirstName, p.GifteeId, p.SOId));
+            Participants.Add(new SantaParticipant(Client, p.UserId, p.FirstName, SecretSantaProcessor.LoadWishlist(Guild.Id, (ulong)p.UserId), p.GifteeId, p.SOId, p.GiftReady == 1));
         }
     }
 
@@ -55,7 +52,7 @@ public class Santa {
 
         foreach (var p in Participants) {
             var y = shuffledParticipants.Where(x => x.User != p.User).ToList();
-            if (p.SO != null)
+            if (p.SO! != null!)
                 y = shuffledParticipants.Where(x => x.User != p.User && x.User != p.SO).ToList();
 
             p.Giftee = y[rng.Next(y.Count)].User;

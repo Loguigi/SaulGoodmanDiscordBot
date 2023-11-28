@@ -6,4 +6,5 @@ public class SantaParticipantModel {
     public string FirstName { get; set; } = string.Empty;
     public long? GifteeId { get; set; }
     public long? SOId { get; set; }
+    public int GiftReady { get; set; } = 0;
 }

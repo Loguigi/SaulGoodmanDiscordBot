@@ -4,6 +4,8 @@ using DSharpPlus.Entities;
 using SaulGoodmanBot.Library.SecretSanta;
 using SaulGoodmanBot.Library.Helpers;
 using SaulGoodmanBot.Handlers;
+using System.Security.Cryptography.X509Certificates;
+using DSharpPlus.Interactivity.Extensions;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -134,6 +136,62 @@ public class SecretSantaCommands : ApplicationCommandModule {
         }
     }
 
+    [SlashCommandGroup("gift", "Commands to manage Secret Santa gifts")]
+    public class GiftCommands : ApplicationCommandModule {
+        [SlashCommand("ready", "Use this command if you've gotten your gift for your secret Santa")]
+        public async Task GiftReady(InteractionContext ctx) {
+            var santa = new Santa(ctx.Client, ctx.Guild);
+            var user = santa.Find(ctx.User);
+
+            if (user == null) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("You must participate first using </santa event participate:1177333432649531493> before getting a gift"), ephemeral:true);
+                return;
+            }
+
+            if (!santa.Config.LockedIn) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Please wait for names to be assigned before getting your gift"), ephemeral:true);
+                return;
+            }
+
+            user.SetGiftReady(ctx.Guild.Id);
+
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Thank you!")
+                .WithDescription(user.GiftReady ? "When everyone has their gift, the gift exchange can begin" : "When you have your gift, enter this command again to change")
+                .WithColor(DiscordColor.PhthaloGreen)
+                .WithFooter(user.GiftReady ? $"{DiscordEmoji.FromName(ctx.Client, ":white_check_mark:", false)} Ready" : $"{DiscordEmoji.FromName(ctx.Client, ":x:", false)} Not Ready");
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
+        }
+
+        [SlashCommand("statuses", "See if everyone is ready with their gift or not")]
+        public async Task GiftStatuses(InteractionContext ctx) {
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (!santa.Config.LockedIn) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Please wait for names to be assigned first"), ephemeral:true);
+                return;
+            }
+
+            var interactivity = new InteractivityHelper<SantaParticipant>(ctx.Client, santa.Participants, IDHelper.Santa.GIFTSTATUSES, "1");
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
+                .WithTitle("Secret Santa Gift Statuses")
+                .WithDescription("List of people that have gifts ready for their Secret Santa\n\n")
+                .WithColor(DiscordColor.Rose)
+                .WithFooter(interactivity.PageStatus());
+
+            foreach (var p in interactivity.GetPage()) {
+                embed.Description += $"{(p.GiftReady ? DiscordEmoji.FromName(ctx.Client, ":white_check_mark:", false) : DiscordEmoji.FromName(ctx.Client, ":x:", false))} {p.User.Mention} ({p.FirstName}) {(p.GiftReady ? "`READY`" : "`NOT READY`")}\n";
+            }
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+
+            ctx.Client.ComponentInteractionCreated -= SantaHandler.HandleGiftStatusesList;
+            ctx.Client.ComponentInteractionCreated += SantaHandler.HandleGiftStatusesList;
+        }
+    }
+
     [SlashCommandGroup("view", "Commands to view information for the Secret Santa")]
     public class ViewCommands : ApplicationCommandModule {
         [SlashCommand("giftee", "View the person you are gifting")]
@@ -186,13 +244,13 @@ public class SecretSantaCommands : ApplicationCommandModule {
             ctx.Client.ComponentInteractionCreated += SantaHandler.HandleParticipantList;
         }
 
-        [SlashCommand("exchange_date", "View the date of the gift exchange")]
-        public async Task ViewExchangeDate(InteractionContext ctx) {
+        [SlashCommand("exchange_time", "View the time of the gift exchange")]
+        public async Task ViewExchangeTime(InteractionContext ctx) {
             var santa = new Santa(ctx.Client, ctx.Guild);
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
-                .WithTitle("Gift Exchange Date")
-                .WithDescription(santa.Config.HasStarted ? $"# {santa.Config.ExchangeDate:dddd, MMMM d}" : "### Undecided")
+                .WithTitle("Gift Exchange Date/Time")
+                .WithDescription(santa.Config.HasStarted ? $"# {santa.Config.ExchangeDate:dddd, MMMM d h:mm tt}" : "### Undecided")
                 .WithColor(DiscordColor.SpringGreen)
                 .WithThumbnail(ImageHelper.Images["WalterChristmas"]);
 
@@ -205,9 +263,12 @@ public class SecretSantaCommands : ApplicationCommandModule {
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
                 .WithTitle("Gift Exchange Location")
-                .WithDescription(santa.Config.HasStarted ? santa.Config.ExchangeLocation : "### Undecided")
+                .WithDescription(santa.Config.HasStarted ? $"### {santa.Config.ExchangeLocation}" : "### Undecided")
                 .WithColor(DiscordColor.Red)
                 .WithThumbnail(ImageHelper.Images["WalterChristmas"]);
+
+            if (santa.Config.ExchangeAddress != null)
+                embed.AddField("Address", santa.Config.ExchangeAddress);
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithEmbed(embed)));
         }
@@ -218,11 +279,141 @@ public class SecretSantaCommands : ApplicationCommandModule {
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
                 .WithTitle("Gift Price Limit")
-                .WithDescription(santa.Config.HasStarted ? santa.Config.PriceLimit.ToString() ?? "### No price limit" : "### Undecided")
+                .WithDescription(santa.Config.HasStarted ? (santa.Config.PriceLimit.ToString() ?? "### No price limit") : "### Undecided")
                 .WithColor(DiscordColor.Green)
                 .WithThumbnail(ImageHelper.Images["WalterChristmas"]);
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithEmbed(embed)));
+        }
+    }
+
+    [SlashCommandGroup("wishlist", "Secret Santa wishlist")]
+    public class WishlistCommands : ApplicationCommandModule {
+        [SlashCommand("add", "Add items to your wishlist")]
+        public async Task WishlistAdd(InteractionContext ctx) {
+            var santa = new Santa(ctx.Client, ctx.Guild);
+            var interactivity = ctx.Client.GetInteractivity();
+
+            if (!santa.Config.HasStarted) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Secret Santa has not started yet. Please try again after"), ephemeral:true);
+                return;
+            }
+
+            var user = santa.Find(ctx.User);
+
+            if (user == null) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("You must participate using </santa event participate:1177333432649531493> before creating a wishlist"), ephemeral:true);
+                return;
+            }
+
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(user.User.GlobalName, "", user.User.AvatarUrl)
+                .WithTitle($"Adding to wishlist...")
+                .WithDescription($"Type an option to add or `stop` to stop adding\nTo add multiple items, separate by a new line\nMaximum of {SantaParticipant.MAX_WISHLIST_ITEMS} items allowed")
+                .AddField("Last Added", "---", false)
+                .AddField("Status", "Still listening", true)
+                .AddField("Total Items", user.Wishlist.Count.ToString(), true);
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+            var response = await interactivity.WaitForMessageAsync(u => u.Channel == ctx.Channel && u.Author == ctx.User, TimeSpan.FromSeconds(60));
+
+            while (!response.Result.Content.ToLower().Contains("stop") && !user.IsWishlistFull() && !response.TimedOut) {
+                if (response.Result.Content.Contains('\n')) {
+                    foreach (var i in response.Result.Content.Split('\n')) {
+                        if (user.IsWishlistFull())
+                            break;
+                        user.EditWishlist(ctx.Guild.Id, DataOperations.Add, i);
+                        user.Wishlist.Add(i);
+                        embed.Fields.Where(x => x.Name == "Last Added").First().Value = i;
+                    }
+                } else {
+                    var item = response.Result.Content;
+                    user.EditWishlist(ctx.Guild.Id, DataOperations.Add, item);
+                    user.Wishlist.Add(item);
+                    embed.Fields.Where(x => x.Name == "Last Added").First().Value = item;
+                }
+                
+                embed.Fields.Where(x => x.Name == "Total Items").First().Value = user.Wishlist.Count.ToString();
+                await ctx.Channel.DeleteMessageAsync(response.Result);
+                await ctx.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+                response = await interactivity.WaitForMessageAsync(u => u.Channel == ctx.Channel && u.Author == ctx.User, TimeSpan.FromSeconds(60));
+            }
+
+            embed.Fields.Where(x => x.Name == "Status").First().Value = "Finished";
+            embed.WithColor(DiscordColor.Green);
+            await ctx.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+        }
+
+        [SlashCommand("remove", "Remove an item from your wishlist")]
+        public async Task WishlistRemove(InteractionContext ctx) {
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (!santa.Config.HasStarted) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Secret Santa has not started yet. Please try again after"), ephemeral:true);
+                return;
+            }
+
+            var user = santa.Find(ctx.User);
+
+            if (user == null) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("You must participate using </santa event participate:1177333432649531493> before creating a wishlist"), ephemeral:true);
+                return;
+            }
+
+            if (user.Wishlist.Count == 0) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Your wishlist is empty!"), ephemeral:true);
+                return;
+            }
+
+            var dropdown_options = new List<DiscordSelectComponentOption>() {new DiscordSelectComponentOption("Cancel", "CANCEL", "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_backward:", false)))};
+            foreach (var i in user.Wishlist) {
+                dropdown_options.Add(new DiscordSelectComponentOption(i, i, "", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":gift:", false))));
+            }
+            var dropdown = new DiscordSelectComponent(IDHelper.Santa.WISHLISTREMOVE, "Select a wishlist item...", dropdown_options, false, 1, user.Wishlist.Count + 1);
+
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Wishlist Remove")
+                .WithColor(DiscordColor.DarkRed);
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown)));
+
+            ctx.Client.ComponentInteractionCreated -= SantaHandler.HandleWishlistRemove;
+            ctx.Client.ComponentInteractionCreated += SantaHandler.HandleWishlistRemove;
+        }
+
+        [SlashCommand("view", "View your own or somebody else's wishlist")]
+        public async Task WishlistView(InteractionContext ctx,
+            [Option("user", "Person's wishlist that you want to see")] DiscordUser? user=null) {
+            
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (user! != null! && user.IsBot) {
+                await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
+                return;
+            }
+
+            user ??= ctx.User;
+
+            var participant = santa.Find(user);
+
+            if (participant == null) {
+                await ctx.CreateResponseAsync(StandardOutput.Error($"{user.Mention} has not chosen to participate in the Secret Santa"), ephemeral:true);
+                return;
+            }
+
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(user.GlobalName, "", user.AvatarUrl)
+                .WithTitle("Secret Santa Wishlist")
+                .WithDescription(participant.Wishlist.Count == 0 ? $"### {user.Mention}'s wishlist is empty" : "")
+                .WithColor(DiscordColor.Teal);
+
+            foreach (var i in participant.Wishlist) {
+                if (i == participant.Wishlist.Last())
+                    embed.Description += i;
+                else
+                    embed.Description += $"{i}, ";
+            }
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
         }
     }
 
@@ -237,7 +428,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
             var santa = new Santa(ctx.Client, ctx.Guild);
 
             if (santa.Config.LockedIn) {
-                await ctx.CreateResponseAsync(StandardOutput.Error("Names have already been assignd"), ephemeral:true);
+                await ctx.CreateResponseAsync(StandardOutput.Error("Names have already been assigned"), ephemeral:true);
                 return;
             }
 
@@ -304,7 +495,9 @@ public class SecretSantaCommands : ApplicationCommandModule {
         [SlashCommand("exchange_date", "Change the date of the gift exchange")]
         public async Task SetExchangeDate(InteractionContext ctx,
             [ChoiceProvider(typeof(WinterMonthChoiceProvider))][Option("month", "Month of gift exchange")] long month,
-            [Option("day", "Day of gift exchange")][Minimum(1)][Maximum(31)] long day) {
+            [Option("day", "Day of gift exchange")][Minimum(1)][Maximum(31)] long day,
+            [Option("hour", "Hour of when the gift exchange starts")][Minimum(0)][Maximum(23)] long hour=0,
+            [Option("minute", "Minute of when the gift exchange starts")][Minimum(0)][Maximum(59)] long minute=0) {
 
             var santa = new Santa(ctx.Client, ctx.Guild);
 
@@ -318,7 +511,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 return;
             }
 
-            var exchange_date = new DateTime(month == 1 ? DateTime.Now.AddYears(1).Year : DateTime.Now.Year, (int)month, (int)day);
+            var exchange_date = new DateTime(month == 1 ? DateTime.Now.AddYears(1).Year : DateTime.Now.Year, (int)month, (int)day, (int)hour, (int)minute, 0);
 
             if (!ValidateDates(santa.Config.ParticipationDeadline, exchange_date)) {
                 await ctx.CreateResponseAsync(StandardOutput.Error("Date error. The participation deadline date must be after today and before the exchange date"));
@@ -330,8 +523,8 @@ public class SecretSantaCommands : ApplicationCommandModule {
 
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor("ATTENTION", "https://youtu.be/a3_PPdjD6mg?si=4q_PpummrNXtmZmP", ImageHelper.Images["Heisenberg"])
-                .WithTitle("The gift exchange date has been changed to")
-                .WithDescription($"# {santa.Config.ExchangeDate:dddd, MMMM d}")
+                .WithTitle("The gift exchange date/time has been changed to")
+                .WithDescription($"# {santa.Config.ExchangeDate:dddd, MMMM d h:mm tt}")
                 .WithColor(DiscordColor.Yellow);
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(ctx.Guild.EveryoneRole.Mention).AddEmbed(embed)));
@@ -339,7 +532,8 @@ public class SecretSantaCommands : ApplicationCommandModule {
 
         [SlashCommand("exchange_location", "Change the location of the gift exchange")]
         public async Task SetExchangeLocation(InteractionContext ctx,
-            [Option("location", "Location of the gift exchange")][MaximumLength(30)] string location) {
+            [Option("location", "Location of the gift exchange")][MaximumLength(30)] string location,
+            [Option("address", "Address of the gift exchange location")][MaximumLength(100)] string? address=null) {
             
             var santa = new Santa(ctx.Client, ctx.Guild);
 
@@ -349,6 +543,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
             }
 
             santa.Config.ExchangeLocation = location;
+            santa.Config.ExchangeAddress = address;
             santa.Config.Update();
 
             var embed = new DiscordEmbedBuilder()
@@ -356,6 +551,10 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 .WithTitle("The gift exchange location has been changed to")
                 .WithDescription($"# {santa.Config.ExchangeLocation}")
                 .WithColor(DiscordColor.Yellow);
+            
+            if (santa.Config.ExchangeAddress != null) {
+                embed.AddField("Address", santa.Config.ExchangeAddress);
+            }
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(ctx.Guild.EveryoneRole.Mention).AddEmbed(embed)));
         }
