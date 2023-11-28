@@ -10,6 +10,9 @@ using SaulGoodmanBot.Commands;
 using SaulGoodmanBot.Handlers;
 using Microsoft.Extensions.Logging;
 using SaulGoodmanBot.Library.SecretSanta;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.SlashCommands.Attributes;
+using SaulGoodmanBot.Library.Helpers;
 
 namespace SaulGoodmanBot;
 
@@ -63,22 +66,37 @@ public class Bot {
         Commands = Client.UseCommandsNext(commandsConfig);
 
         // Slash commands registration
-        var slashCommandsConfig = Client.UseSlashCommands();
-        slashCommandsConfig.RegisterCommands<MiscCommands>();
-        slashCommandsConfig.RegisterCommands<WheelPickerCommands>();
-        slashCommandsConfig.RegisterCommands<ReactionCommands>();
-        slashCommandsConfig.RegisterCommands<BirthdayCommands>();
-        slashCommandsConfig.RegisterCommands<ServerConfigCommands>();
-        slashCommandsConfig.RegisterCommands<RoleCommands>();
-        slashCommandsConfig.RegisterCommands<LevelCommands>();
-        slashCommandsConfig.RegisterCommands<MinecraftCommands>();
-        slashCommandsConfig.RegisterCommands<ScheduleCommands>();
+        var slash = Client.UseSlashCommands();
+        slash.RegisterCommands<MiscCommands>();
+        slash.RegisterCommands<WheelPickerCommands>();
+        slash.RegisterCommands<ReactionCommands>(270349691147780096);
+        slash.RegisterCommands<BirthdayCommands>();
+        slash.RegisterCommands<ServerConfigCommands>();
+        slash.RegisterCommands<RoleCommands>();
+        slash.RegisterCommands<LevelCommands>();
+        slash.RegisterCommands<MinecraftCommands>();
+        slash.RegisterCommands<ScheduleCommands>();
 
         // Secret Santa seasonal commands/handlers
         if (DateTime.Now.Month == 11 || DateTime.Now.Month == 12 || DateTime.Now.Month == 1) {
             Client.MessageCreated += SantaHandler.HandleParticipationDeadlineCheck;
-            slashCommandsConfig.RegisterCommands<SecretSantaCommands>();
+            slash.RegisterCommands<SecretSantaCommands>();
         }
+
+        slash.SlashCommandInvoked += async (s, e) => {
+            Console.WriteLine($"{e.Context.CommandName} invoked by {e.Context.User} in {e.Context.Channel}/{e.Context.Guild}");
+            await Task.CompletedTask;
+        };
+
+        slash.SlashCommandErrored += async (s, e) => {
+            if (e.Exception is SlashExecutionChecksFailedException slex) {
+                foreach (var check in slex.FailedChecks) {
+                    if (check is SlashRequirePermissionsAttribute att) {
+                        await e.Context.CreateResponseAsync(StandardOutput.Error("Only an admin can run this command!"), ephemeral:true);
+                    }
+                }
+            }
+        };
 
         await Client.ConnectAsync();
         await Task.Delay(-1);
