@@ -6,6 +6,7 @@ using SaulGoodmanBot.Library.Helpers;
 using SaulGoodmanBot.Handlers;
 using System.Security.Cryptography.X509Certificates;
 using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.SlashCommands.Attributes;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -14,8 +15,8 @@ namespace SaulGoodmanBot.Commands;
 public class SecretSantaCommands : ApplicationCommandModule {
     [SlashCommandGroup("event", "Commands for the event itself")]
     public class EventCommmands : ApplicationCommandModule {
-        [SlashCommandPermissions(Permissions.Administrator)]
         [SlashCommand("start", "Starts the event and sends a notification to the chat")]
+        [SlashRequirePermissions(Permissions.Administrator)]
         public async Task StartEvent(InteractionContext ctx,
             [ChoiceProvider(typeof(WinterMonthChoiceProvider))][Option("participation_deadline_month", "Month for the participation deadline")] long participation_month,
             [Option("participation_deadline_day", "Day for the participation deadline")][Minimum(1)][Maximum(31)] long participation_day,
@@ -95,7 +96,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
         }
 
         [SlashCommand("lock", "Force locks all participants before the deadline and begins name assignment")]
-        [SlashCommandPermissions(Permissions.Administrator)]
+        [SlashRequirePermissions(Permissions.Administrator)]
         public async Task LockParticipants(InteractionContext ctx) {
             var santa = new Santa(ctx.Client, ctx.Guild);
 
@@ -121,7 +122,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
         }
 
         [SlashCommand("end", "End the Secret Santa event")]
-        [SlashCommandPermissions(Permissions.Administrator)]
+        [SlashRequirePermissions(Permissions.Administrator)]
         public async Task EndEvent(InteractionContext ctx) {
             var santa = new Santa(ctx.Client, ctx.Guild);
 
@@ -309,7 +310,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(user.User.GlobalName, "", user.User.AvatarUrl)
                 .WithTitle($"Adding to wishlist...")
-                .WithDescription($"Type an option to add or `stop` to stop adding\nTo add multiple items, separate by a new line\nMaximum of {SantaParticipant.MAX_WISHLIST_ITEMS} items allowed")
+                .WithDescription($"Type an item to add or `stop` to stop adding\nTo add multiple items, separate by a new line\nMaximum of {SantaParticipant.MAX_WISHLIST_ITEMS} items allowed")
                 .AddField("Last Added", "---", false)
                 .AddField("Status", "Still listening", true)
                 .AddField("Total Items", user.Wishlist.Count.ToString(), true);
@@ -343,7 +344,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
             await ctx.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
         }
 
-        [SlashCommand("remove", "Remove an item from your wishlist")]
+        [SlashCommand("remove", "Remove items from your wishlist")]
         public async Task WishlistRemove(InteractionContext ctx) {
             var santa = new Santa(ctx.Client, ctx.Guild);
 
@@ -418,7 +419,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
     }
 
     [SlashCommandGroup("config", "Configuration for the Secret Santa")]
-    [SlashCommandPermissions(Permissions.Administrator)]
+    [SlashRequirePermissions(Permissions.Administrator)]
     public class ConfigCommands : ApplicationCommandModule {
         [SlashCommand("setcouple", "Set 2 people to be a couple so they don't get each others' names")]
         public async Task SetCouple(InteractionContext ctx,

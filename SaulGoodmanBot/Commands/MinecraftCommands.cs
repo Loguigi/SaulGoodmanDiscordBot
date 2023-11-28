@@ -4,13 +4,14 @@ using SaulGoodmanBot.Library.Minecraft;
 using SaulGoodmanBot.Library.Helpers;
 using SaulGoodmanBot.Handlers;
 using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands.Attributes;
 
 namespace SaulGoodmanBot.Commands;
 
 [SlashCommandGroup("mc", "Commands for working with Minecraft waypoints")]
 public class MinecraftCommands : ApplicationCommandModule {
     [SlashCommand("save", "Saves information for a Minecraft server")]
-    [SlashCommandPermissions(Permissions.Administrator)]
+    [SlashRequirePermissions(Permissions.Administrator)]
     public async Task SaveInfo(InteractionContext ctx,
         [Option("name", "Name of the world/server")] string name,
         [Option("description", "Short description of the server")] string? description=null,

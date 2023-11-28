@@ -5,6 +5,7 @@ using SaulGoodmanBot.Library.Roles;
 using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Library.Helpers;
 using SaulGoodmanBot.Handlers;
+using DSharpPlus.SlashCommands.Attributes;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -12,7 +13,7 @@ namespace SaulGoodmanBot.Commands;
 [SlashCommandGroup("role", "Manage self-assigning roles in server")]
 public class RoleCommands : ApplicationCommandModule {
     [SlashCommand("setup", "Setup how roles are assigned in your server")]
-    [SlashCommandPermissions(Permissions.Administrator)]
+    [SlashRequirePermissions(Permissions.Administrator)]
     public async Task Setup(InteractionContext ctx,
         [Option("name", "Name for the category of roles")] string name,
         [Option("description", "Description for the role category")] string description,
@@ -29,7 +30,7 @@ public class RoleCommands : ApplicationCommandModule {
     }
 
     [SlashCommand("add", "Add roles to the list of self-assignable roles")]
-    [SlashCommandPermissions(Permissions.Administrator)]
+    [SlashRequirePermissions(Permissions.Administrator)]
     public async Task AddRole(InteractionContext ctx,
         [Option("role", "Role to add")] DiscordRole role,
         [Option("description", "Description to add to the role")] string? description=null,
@@ -77,7 +78,7 @@ public class RoleCommands : ApplicationCommandModule {
     }
 
     [SlashCommand("remove", "Remove a role from the list of self-assignable roles")]
-    [SlashCommandPermissions(Permissions.Administrator)]
+    [SlashRequirePermissions(Permissions.Administrator)]
     public async Task RemoveRole(InteractionContext ctx) {
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
 
