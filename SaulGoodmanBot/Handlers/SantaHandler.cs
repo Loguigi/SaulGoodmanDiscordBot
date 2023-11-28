@@ -61,5 +61,56 @@ public static class SantaHandler {
         await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
     }
 
+    public static async Task HandleGiftStatusesList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (!e.Id.Contains(IDHelper.Santa.GIFTSTATUSES)) {
+            await Task.CompletedTask;
+            return;
+        }
+
+        var santa = new Santa(s, e.Guild);
+        var interactivity = new InteractivityHelper<SantaParticipant>(s, santa.Participants, IDHelper.Santa.GIFTSTATUSES, e.Id.Split('\\')[PAGE_INDEX]);
+
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
+            .WithTitle("Secret Santa Gift Statuses")
+            .WithDescription("List of people that have gifts ready for their Secret Santa\n\n")
+            .WithColor(DiscordColor.Rose)
+            .WithFooter(interactivity.PageStatus());
+
+        foreach (var p in interactivity.GetPage()) {
+            embed.Description += $"{(p.GiftReady ? DiscordEmoji.FromName(s, ":white_check_mark:", false) : DiscordEmoji.FromName(s, ":x:", false))} {p.User.Mention} ({p.FirstName}) {(p.GiftReady ? "`READY`" : "`NOT READY`")}\n";
+        }
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+    }
+
+    public static async Task HandleWishlistRemove(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (e.Id != IDHelper.Santa.WISHLISTREMOVE) {
+            await Task.CompletedTask;
+            return;
+        }
+
+        var user = new Santa(s, e.Guild).Find(e.User) ?? throw new Exception("This should not happen");
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Wishlist Remove")
+            .WithDescription("Removed:\n\n")
+            .WithColor(DiscordColor.DarkRed);
+        
+        if (e.Values.Contains("CANCEL")) {
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed.WithDescription("### Cancelled"))));
+            return;
+        }
+
+        foreach (var i in e.Values) {
+            user.EditWishlist(e.Guild.Id, DataOperations.Delete, i);
+            embed.Description += $"{DiscordEmoji.FromName(s, ":x:", false)} {i}\n";
+        }
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+
+        s.ComponentInteractionCreated -= HandleWishlistRemove;
+    }
+
     private const int PAGE_INDEX = 1;
 }

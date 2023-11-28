@@ -3,5 +3,6 @@ CREATE TABLE [dbo].[SantaParticipants] (
     [UserId] BIGINT NOT NULL,
     [FirstName] NVARCHAR(20) NOT NULL,
     [GifteeId] BIGINT NULL,
-    [SOId] BIGINT NULL
+    [SOId] BIGINT NULL,
+    [GiftReady] BIT NOT NULL,
 )

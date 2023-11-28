@@ -43,7 +43,7 @@ public class ScheduleCommands : ApplicationCommandModule {
     [SlashCommand("check", "Check your own or somebody else's schedule")]
     public async Task CheckSchedule(InteractionContext ctx,
         [Option("user", "Schedule of specific user")] DiscordUser? user=null) {
-        if (user != null && user.IsBot) {
+        if (user! != null! && user.IsBot) {
             await ctx.CreateResponseAsync(StandardOutput.Error("Joe Biden"), ephemeral:true);
             return;
         }

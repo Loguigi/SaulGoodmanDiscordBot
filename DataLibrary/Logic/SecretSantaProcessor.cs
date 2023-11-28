@@ -5,17 +5,17 @@ namespace DataLibrary.Logic;
 
 public static class SecretSantaProcessor {
     public static int StartEvent(SantaConfigModel config) {
-        string sql = @"insert into dbo.SantaConfig values (@GuildId, @ParticipationDeadline, @ExchangeDate, @ExchangeLocation, @PriceLimit, @LockedIn);";
+        string sql = @"insert into dbo.SantaConfig values (@GuildId, @ParticipationDeadline, @ExchangeDate, @ExchangeLocation, @ExchangeAddress, @PriceLimit, @LockedIn);";
         return SqlDataAccess.SaveData(sql, config);
     }
 
     public static int EndEvent(ulong guildid) {
-        string sql = $"delete from dbo.SantaParticipants where GuildId={guildid}; delete from dbo.SantaConfig where GuildId={guildid}";
+        string sql = $"delete from dbo.SantaParticipants where GuildId={guildid}; delete from dbo.SantaConfig where GuildId={guildid}; delete from dbo.SantaWishlist where GuildId={guildid};";
         return SqlDataAccess.SaveData(sql, new SantaConfigModel());
     }
 
     public static int AddParticipant(SantaParticipantModel user) {
-        string sql = @"insert into dbo.SantaParticipants values (@GuildId, @UserId, @FirstName, @GifteeId, @SOId);";
+        string sql = @"insert into dbo.SantaParticipants values (@GuildId, @UserId, @FirstName, @GifteeId, @SOId, @GiftReady);";
         return SqlDataAccess.SaveData(sql, user);
     }
 
@@ -29,9 +29,29 @@ public static class SecretSantaProcessor {
         return SqlDataAccess.LoadData<SantaParticipantModel>(sql);
     }
 
+    public static List<string> LoadWishlist(ulong guildid, ulong userid) {
+        string sql = $"select WishlistItem from dbo.SantaWishlist where GuildId={guildid} and UserId={userid};";
+        return SqlDataAccess.LoadData<string>(sql);
+    }
+
+    public static int AddWishlistItem(SantaWishlistModel wishlist) {
+        string sql = @"insert into dbo.SantaWishlist values (@GuildId, @UserId, @WishlistItem);";
+        return SqlDataAccess.SaveData(sql, wishlist);
+    }
+
+    public static int RemoveWishlistItem(SantaWishlistModel wishlist) {
+        string sql = @"delete from dbo.SantaWishlist where GuildId=@GuildId and UserId=@UserId and WishlistItem=@WishlistItem;";
+        return SqlDataAccess.SaveData(sql, wishlist);
+    }
+
     public static int AssignGiftee(ulong guildid, ulong gifterid, ulong gifteeid) {
         string sql = $"update dbo.SantaParticipants set GifteeId={gifteeid} where UserId={gifterid} and GuildId={guildid}";
         return SqlDataAccess.SaveData(sql, new SantaParticipantModel());
+    }
+
+    public static int SetGiftReady(SantaParticipantModel user) {
+        string sql = @"update dbo.SantaParticipants set GiftReady=@GiftReady where GuildId=@GuildId and UserId=@UserId;";
+        return SqlDataAccess.SaveData(sql, user);
     }
 
     public static int SetCouple(ulong guildid, ulong user1id, ulong user2id) {
@@ -40,7 +60,7 @@ public static class SecretSantaProcessor {
     }
 
     public static int UpdateConfig(SantaConfigModel config) {
-        string sql = @"update dbo.SantaConfig set ParticipationDeadline=@ParticipationDeadline, ExchangeDate=@ExchangeDate, ExchangeLocation=@ExchangeLocation, PriceLimit=@PriceLimit, LockedIn=@LockedIn where GuildId=@GuildId;";
+        string sql = @"update dbo.SantaConfig set ParticipationDeadline=@ParticipationDeadline, ExchangeDate=@ExchangeDate, ExchangeLocation=@ExchangeLocation, ExchangeAddress=@ExchangeAddress, PriceLimit=@PriceLimit, LockedIn=@LockedIn where GuildId=@GuildId;";
         return SqlDataAccess.SaveData(sql, config);
     }
 }

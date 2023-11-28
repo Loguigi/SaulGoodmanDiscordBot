@@ -92,13 +92,12 @@ public class RoleCommands : ApplicationCommandModule {
         var roleDropdown = new DiscordSelectComponent(IDHelper.Roles.REMOVE, "Select a role", roleOptions);
         var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, IDHelper.Roles.REMOVE, "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_left:, false")));
 
-        var prompt = new DiscordMessageBuilder()
-            .AddEmbed(new DiscordEmbedBuilder()
-                .WithTitle("Remove Role")
-                .WithColor(DiscordColor.DarkRed))
-            .AddComponents(roleDropdown);
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(prompt));
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Remove Role")
+            .WithColor(DiscordColor.DarkRed);
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(roleDropdown)));
 
+        ctx.Client.ComponentInteractionCreated -= RoleHandler.HandleRemoveRole;
         ctx.Client.ComponentInteractionCreated += RoleHandler.HandleRemoveRole;
     }
 

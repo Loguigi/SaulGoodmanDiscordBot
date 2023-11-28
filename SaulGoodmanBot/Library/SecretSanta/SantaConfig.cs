@@ -9,15 +9,17 @@ public class SantaConfig {
         Guild = guild;
         var config = SecretSantaProcessor.LoadConfig(Guild.Id);
 
-        if (config == null)
+        if (config == null) {
             HasStarted = false;
-        else {
-            ParticipationDeadline = config.ParticipationDeadline;
-            ExchangeDate = config.ExchangeDate;
-            ExchangeLocation = config.ExchangeLocation;
-            PriceLimit = config.PriceLimit;
-            LockedIn = config.LockedIn == 1;
+            return;
         }
+
+        ParticipationDeadline = config.ParticipationDeadline;
+        ExchangeDate = config.ExchangeDate;
+        ExchangeLocation = config.ExchangeLocation;
+        ExchangeAddress = config.ExchangeAddress;
+        PriceLimit = config.PriceLimit;
+        LockedIn = config.LockedIn == 1;
     }
 
     public void Update() {
@@ -27,6 +29,7 @@ public class SantaConfig {
                 ParticipationDeadline = ParticipationDeadline,
                 ExchangeDate = ExchangeDate,
                 ExchangeLocation = ExchangeLocation,
+                ExchangeAddress = ExchangeAddress,
                 PriceLimit = PriceLimit,
                 LockedIn = LockedIn ? 1 : 0
             });
@@ -37,7 +40,6 @@ public class SantaConfig {
                 ExchangeDate = ExchangeDate,
                 ExchangeLocation = ExchangeLocation,
                 PriceLimit = PriceLimit,
-                LockedIn = LockedIn ? 1 : 0
             });
             HasStarted = true;
         }
@@ -48,6 +50,7 @@ public class SantaConfig {
     public DateTime ParticipationDeadline { get; set; }
     public DateTime ExchangeDate { get; set; }
     public string ExchangeLocation { get; set; } = string.Empty;
+    public string? ExchangeAddress { get; set; } = null;
     public double? PriceLimit { get; set; } = null;
     public bool LockedIn { get; set; } = false;
 }
