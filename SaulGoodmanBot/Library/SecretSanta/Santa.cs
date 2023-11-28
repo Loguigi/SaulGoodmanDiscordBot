@@ -2,6 +2,7 @@ using DataLibrary.Logic;
 using DataLibrary.Models;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using SaulGoodmanBot.Library.Helpers;
 
 namespace SaulGoodmanBot.Library.SecretSanta;
 
@@ -47,15 +48,14 @@ public class Santa {
     public void AssignNames() {
         Config.LockedIn = true;
         Config.Update();
-        var rng = new Random();
-        var shuffledParticipants = Participants.OrderBy(x => rng.Next()).ToList();
+        var shuffledParticipants = Participants.OrderBy(x => RandomHelper.RNG.Next()).ToList();
 
         foreach (var p in Participants) {
             var y = shuffledParticipants.Where(x => x.User != p.User).ToList();
             if (p.SO! != null!)
                 y = shuffledParticipants.Where(x => x.User != p.User && x.User != p.SO).ToList();
 
-            p.Giftee = y[rng.Next(y.Count)].User;
+            p.Giftee = y[RandomHelper.RNG.Next(y.Count)].User;
             SecretSantaProcessor.AssignGiftee(Guild.Id, p.User.Id, p.Giftee.Id);
             shuffledParticipants.Remove(Participants.Where(x => x.User == p.Giftee).First());
         }

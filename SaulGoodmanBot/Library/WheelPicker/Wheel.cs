@@ -1,6 +1,7 @@
 using DSharpPlus.Entities;
 using DataLibrary.Logic;
 using DataLibrary.Models;
+using SaulGoodmanBot.Library.Helpers;
 
 namespace SaulGoodmanBot.Library.WheelPicker;
 
@@ -14,8 +15,7 @@ public class Wheel {
     }
 
     public string Spin() {
-        var random = new Random();
-        var i = random.Next(Options.Count);
+        var i = RandomHelper.RNG.Next(Options.Count);
         return Options[i];
     }
 

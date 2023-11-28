@@ -16,8 +16,7 @@ public static class MiscHandler {
         int heads_count = int.Parse(e.Id.Split('\\')[HEADS_COUNT_INDEX]);
         int tails_count = int.Parse(e.Id.Split('\\')[TAILS_COUNT_INDEX]);
 
-        var coin = new Random();
-        int flip = coin.Next(1, 3);
+        int flip = RandomHelper.RNG.Next(1, 3);
 
         heads_count += flip == 1 ? 1 : 0;
         tails_count += flip != 1 ? 1 : 0;

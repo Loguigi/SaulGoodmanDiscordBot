@@ -20,8 +20,7 @@ namespace SaulGoodmanBot.Commands;
 public class MiscCommands : ApplicationCommandModule {
     [SlashCommand("flip", "Flips a coin")]
     public async Task CoinFlipCommand(InteractionContext ctx) {
-        var coin = new Random();
-        int flip = coin.Next(1, 3);
+        int flip = RandomHelper.RNG.Next(2);
         var flipButton = new DiscordButtonComponent(ButtonStyle.Success, $"{IDHelper.Misc.FLIP}\\{(flip == 1 ? "Heads" : "Tails")}\\{(flip == 1 ? "1" : "0")}\\{(flip == 1 ? "0" : "1")}", "Flip Again");
 
         var embed = new DiscordEmbedBuilder()
@@ -54,8 +53,7 @@ public class MiscCommands : ApplicationCommandModule {
         [Option("user", "User to find the size of")] DiscordUser user) {
         
         // calculate size
-        var random = new Random();
-        var inches = random.NextDouble() * (10 - 1) + 1;
+        var inches = RandomHelper.RNG.NextDouble() * (10 - 1) + 1;
 
         // display result
         var response = new DiscordMessageBuilder()
@@ -67,8 +65,7 @@ public class MiscCommands : ApplicationCommandModule {
 
     public DiscordMessageBuilder CoinFlip() {
         var flipButton = new DiscordButtonComponent(ButtonStyle.Success, "flipagain", "Flip Again");
-        var coin = new Random();
-        int flip = coin.Next(1, 3);
+        int flip = RandomHelper.RNG.Next(1, 3);
         var response = new DiscordMessageBuilder()
             .AddEmbed(new DiscordEmbedBuilder()
                 .WithAuthor("Coin Flip", "", ImageHelper.Images["Coin"])
