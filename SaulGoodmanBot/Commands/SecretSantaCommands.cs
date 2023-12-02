@@ -315,7 +315,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 .AddField("Status", "Still listening", true)
                 .AddField("Total Items", user.Wishlist.Count.ToString(), true);
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
-            var response = await interactivity.WaitForMessageAsync(u => u.Channel == ctx.Channel && u.Author == ctx.User, TimeSpan.FromSeconds(60));
+            var response = await interactivity.WaitForMessageAsync(u => u.Channel == ctx.Channel && u.Author == ctx.User, TimeSpan.FromSeconds(300));
 
             while (!response.Result.Content.ToLower().Contains("stop") && !user.IsWishlistFull() && !response.TimedOut) {
                 if (response.Result.Content.Contains('\n')) {
@@ -336,7 +336,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 embed.Fields.Where(x => x.Name == "Total Items").First().Value = user.Wishlist.Count.ToString();
                 await ctx.Channel.DeleteMessageAsync(response.Result);
                 await ctx.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
-                response = await interactivity.WaitForMessageAsync(u => u.Channel == ctx.Channel && u.Author == ctx.User, TimeSpan.FromSeconds(60));
+                response = await interactivity.WaitForMessageAsync(u => u.Channel == ctx.Channel && u.Author == ctx.User, TimeSpan.FromSeconds(300));
             }
 
             embed.Fields.Where(x => x.Name == "Status").First().Value = "Finished";
@@ -408,10 +408,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 .WithColor(DiscordColor.Teal);
 
             foreach (var i in participant.Wishlist) {
-                if (i == participant.Wishlist.Last())
-                    embed.Description += i;
-                else
-                    embed.Description += $"{i}, ";
+                embed.Description += $"* {i}\n";
             }
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
