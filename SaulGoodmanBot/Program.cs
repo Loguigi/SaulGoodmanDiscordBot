@@ -9,20 +9,18 @@ using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
 using SaulGoodmanBot.Handlers;
 using Microsoft.Extensions.Logging;
-using SaulGoodmanBot.Library.SecretSanta;
-using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.Library.Helpers;
 
 namespace SaulGoodmanBot;
 
-public class Bot {
+internal class Program {
     // Discord Client Properties
     public static DiscordClient? Client { get; private set; }
     public static InteractivityExtension? Interactivity { get; private set; }
     public static CommandsNextExtension? Commands { get; private set; }
 
-    public async Task MainAsync() {
+    internal async Task MainAsync() {
         // Json Config Reader
         var json = string.Empty;
         using (var fs = File.OpenRead("Config/config.json"))
@@ -102,5 +100,5 @@ public class Bot {
         await Task.Delay(-1);
     }
 
-    public static void Main() => new Bot().MainAsync().GetAwaiter().GetResult();
+    internal static void Main() => new Program().MainAsync().GetAwaiter().GetResult();
 }
