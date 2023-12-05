@@ -85,36 +85,29 @@ public class ScheduleCommands : ApplicationCommandModule {
 
     [SlashCommand("today", "List the people that work today")]
     public async Task TodaysSchedules(InteractionContext ctx) {
-        try
-        {
-            var schedules = new List<Schedule>();
-            foreach (var user in ctx.Guild.Members) {
-                if (!user.Value.IsBot) {
-                    schedules.Add(new Schedule(ctx.Guild, user.Value));
-                }
+        var schedules = new List<Schedule>();
+        foreach (var user in ctx.Guild.Members) {
+            if (!user.Value.IsBot) {
+                schedules.Add(new Schedule(ctx.Guild, user.Value));
             }
-            var interactivity = new InteractivityHelper<Schedule>(ctx.Client, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, "1", "## Nobody works today");
-
-            var embed = new DiscordEmbedBuilder()
-                .WithTitle(DateTime.Now.ToString("dddd MMMM d, yyyy"))
-                .WithDescription(interactivity.IsEmpty())
-                .WithColor(DiscordColor.DarkBlue)
-                .WithFooter($"Page {interactivity.Page} of {interactivity.PageLimit}");
-
-            foreach (var schedule in interactivity.GetPage()) {
-                embed.Description += $"### {schedule.User.Mention}: {schedule.WorkSchedule[DateTime.Now.DayOfWeek]}\n";
-            }
-
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(
-                interactivity.AddPageButtons().AddEmbed(embed)));
-
-            ctx.Client.ComponentInteractionCreated -= ScheduleHandler.HandleTodaysSchedules;
-            ctx.Client.ComponentInteractionCreated += ScheduleHandler.HandleTodaysSchedules;
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
+        var interactivity = new InteractivityHelper<Schedule>(ctx.Client, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, "1", "## Nobody works today");
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle(DateTime.Now.ToString("dddd MMMM d, yyyy"))
+            .WithDescription(interactivity.IsEmpty())
+            .WithColor(DiscordColor.DarkBlue)
+            .WithFooter($"Page {interactivity.Page} of {interactivity.PageLimit}");
+
+        foreach (var schedule in interactivity.GetPage()) {
+            embed.Description += $"### {schedule.User.Mention}: {schedule.WorkSchedule[DateTime.Now.DayOfWeek]}\n";
         }
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(
+            interactivity.AddPageButtons().AddEmbed(embed)));
+
+        ctx.Client.ComponentInteractionCreated -= ScheduleHandler.HandleTodaysSchedules;
+        ctx.Client.ComponentInteractionCreated += ScheduleHandler.HandleTodaysSchedules;
     }
 
     [SlashCommand("override", "Override another user's schedule")]

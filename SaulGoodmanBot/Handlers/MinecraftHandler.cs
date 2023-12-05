@@ -8,6 +8,7 @@ namespace SaulGoodmanBot.Handlers;
 
 public static class MinecraftHandler {
     public static async Task HandleDimensionChange(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        // TODO fix waypoint view interactivity
         if (e.Id == "mcviewdropdown") {
             var minecraft = new Minecraft(e.Guild);
             var dimension = e.Values.First();
@@ -55,6 +56,7 @@ public static class MinecraftHandler {
     }
 
     public static async Task HandleWaypointDelete(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        // TODO fix delete interactivity
         if (e.Id == "wpdeletedropdown") {
             var minecraft = new Minecraft(e.Guild);
             var waypoint = minecraft.Waypoints.Where(x => x.Name == e.Values.First()).First();
@@ -79,4 +81,35 @@ public static class MinecraftHandler {
             s.ComponentInteractionCreated -= HandleWaypointDelete;
         }
     }
+
+    public static async Task HandleWaypointList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (!e.Id.Contains(IDHelper.Minecraft.WAYPOINTLIST)) {
+            await Task.CompletedTask;
+            return;
+        }
+
+        var minecraft = new Minecraft(e.Guild);
+        var dimension = e.Id.Split('\\')[DIMENSION_INDEX];
+        var interactivity = new InteractivityHelper<Waypoint>(s, minecraft.GetDimensionWaypoints(dimension), $"{IDHelper.Minecraft.WAYPOINTLIST}\\{dimension}", e.Id.Split('\\')[PAGE_INDEX], $"There are no waypoints in {dimension}");
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"{minecraft.WorldName} {dimension} waypoints")
+            .WithDescription(interactivity.IsEmpty())
+            .WithFooter(interactivity.PageStatus());
+        embed.WithColor(dimension switch {
+            "overworld" => DiscordColor.SapGreen,
+            "nether" => DiscordColor.DarkRed,
+            "end" => DiscordColor.Purple,
+            _ => DiscordColor.Black
+        });
+
+        foreach (var w in interactivity.GetPage()) {
+            embed.Description += $"* *{w.Name}* - `{w.PrintCoords()}`\n";
+        }
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+    }
+
+    private const int PAGE_INDEX = 2;
+    private const int DIMENSION_INDEX = 1;
 }

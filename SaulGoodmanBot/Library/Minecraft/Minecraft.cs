@@ -27,6 +27,7 @@ public class Minecraft {
     }
 
     public void SaveNewWaypoint(Waypoint wp) {
+        Waypoints.Add(wp);
         MinecraftProcessor.SaveWaypoint(new MinecraftWaypointModel {
             GuildId = (long)Guild.Id,
             Dimension = wp.Dimension,
@@ -38,6 +39,7 @@ public class Minecraft {
     }
 
     public void DeleteWaypoint(Waypoint wp) {
+        Waypoints.Remove(wp);
         MinecraftProcessor.DeleteWaypoint(new MinecraftWaypointModel {
             GuildId = (long)Guild.Id,
             Dimension = wp.Dimension,
@@ -67,10 +69,16 @@ public class Minecraft {
         });
     }
 
+    /// <summary>
+    /// Queries the Waypoints list for waypoints of the chosen dimension
+    /// </summary>
+    /// <param name="dimension">Overworld, The Nether, or The End</param>
+    /// <returns>List of waypoints for the dimension</returns>
     public List<Waypoint> GetDimensionWaypoints(string dimension) {
         return Waypoints.Where(x => x.Dimension == dimension).ToList();
     }
-
+    
+    
     public bool WaypointsFull(string dimension) {
         return GetDimensionWaypoints(dimension).Count == MAX_WAYPOINTS;
     }
