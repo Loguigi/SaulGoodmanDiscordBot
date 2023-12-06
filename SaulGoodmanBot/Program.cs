@@ -51,6 +51,7 @@ internal class Program {
         Client.MessageCreated += BirthdayHandler.HandleBirthdayMessage;
         Client.MessageCreated += LevelHandler.HandleExpGain;
         Client.GuildRoleDeleted += RoleHandler.HandleServerRemoveRole;
+        Client.GuildCreated += GeneralHandlers.HandleServerJoin;
 
         // Commands Config
         var commandsConfig = new CommandsNextConfiguration() {
@@ -65,7 +66,7 @@ internal class Program {
 
         // Slash commands registration
         var slash = Client.UseSlashCommands();
-        slash.RegisterCommands<HelpCommands>(270349691147780096);
+        slash.RegisterCommands<HelpCommands>();
         slash.RegisterCommands<MiscCommands>();
         slash.RegisterCommands<WheelPickerCommands>();
         slash.RegisterCommands<ReactionCommands>(270349691147780096);

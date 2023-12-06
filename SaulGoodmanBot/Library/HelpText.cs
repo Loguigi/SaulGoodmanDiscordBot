@@ -108,4 +108,10 @@ public static class HelpText {
             "### Checking people's schedules\n" +
             "There are 2 different ways to check somebody's schedule. Either use </schedule check:1160992042076356688>, or `[right-click]` a user, go to `Apps`, and select `Schedule`."}
     };
+
+    public static readonly string Misc = 
+        "### </flip:1130848702471352332> - flips a coin\n" +
+        "### </8ball:1130853100576583800> - ask the magic 8ball a question\n" +
+        "### </poll:1181736173270478920> - create a poll for the server\n" +
+        "### </dicksize:1134943696496902165> - this one speaks for itself";
 }
