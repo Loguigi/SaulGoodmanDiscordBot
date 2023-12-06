@@ -76,4 +76,27 @@ public static class HelpHandler {
 
         await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown)));
     }
+
+    public static async Task HandleScheduleHelp(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (e.Id != IDHelper.Help.SCHEDULE) {
+            await Task.CompletedTask;
+            return;
+        }
+
+        var page = e.Values.First();
+
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor("Schedules", "", ImageHelper.Images["Finger"])
+            .WithTitle(page)
+            .WithDescription(HelpText.Schedule[page])
+            .WithColor(DiscordColor.DarkBlue);
+        
+        var pages = new List<DiscordSelectComponentOption>();
+        foreach (var p in HelpText.Schedule.Keys) {
+            pages.Add(new DiscordSelectComponentOption(p, p));
+        }
+        var dropdown = new DiscordSelectComponent(IDHelper.Help.SCHEDULE, "Select a page...", pages);
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown)));
+    }
 }
