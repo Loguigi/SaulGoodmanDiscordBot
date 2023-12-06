@@ -72,7 +72,8 @@ public class HelpCommands : ApplicationCommandModule {
 
     [SlashCommand("roles", "Help for the /role commands")]
     public async Task RoleHelp(InteractionContext ctx) {
-
+        // TODO finish role help command
+        await ctx.CreateResponseAsync("Soon to be implemented!");
     }
 
     [SlashCommand("schedule", "Help for the /schedule commands")]
@@ -108,12 +109,14 @@ public class HelpCommands : ApplicationCommandModule {
 
     [SlashCommand("minecraft", "Help for the /mc commands")]
     public async Task MinecraftHelp(InteractionContext ctx) {
-
+        // TODO finish Minecraft help command
+        await ctx.CreateResponseAsync("Soon to be implemented!");
     }
 
     [SlashCommand("secret_santa", "Help for the /santa commands")]
     public async Task SantaHelp(InteractionContext ctx) {
-
+        // TODO finish Secret Santa help command
+        await ctx.CreateResponseAsync("Soon to be implemented!");
     }
 
     [SlashCommand("misc", "List of misc and fun commands to use")]

@@ -5,6 +5,7 @@ using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Library.Birthdays;
 using SaulGoodmanBot.Commands;
 using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Library.Roles;
 
 namespace SaulGoodmanBot.Handlers;
 
@@ -26,6 +27,34 @@ public static class GeneralHandlers {
                 .WithDescription($"## {config.WelcomeMessage} {e.Member.Mention}")
                 .WithColor(DiscordColor.Green))
             .SendAsync(config.DefaultChannel);
+
+        var roles = new ServerRoles(e.Guild, s);
+        if (roles.IsNotSetup() || roles.IsEmpty() || !config.SendRoleMenuOnMemberJoin) {
+            return;
+        }
+
+        var roleOptions = new List<DiscordSelectComponentOption>();
+        roles.Roles.ForEach(r => roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description ?? string.Empty, false, new DiscordComponentEmoji(r.Emoji ?? DiscordEmoji.FromName(s, ":arrow_right:", false)))));
+        DiscordSelectComponent roleDropdown = roles.AllowMultipleRoles ? new(IDHelper.Roles.MENU, "Select roles", roleOptions, false, 1, roleOptions.Count) : new(IDHelper.Roles.MENU, "Select a role", roleOptions, false);
+
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor(e.Guild.Name, "https://youtu.be/dQw4w9WgXcQ", e.Guild.IconUrl)
+            .WithTitle(roles.CategoryName)
+            .WithDescription(roles.CategoryDescription)
+            .WithFooter(roles.AllowMultipleRoles ? "Can have multiple" : "Can only have one")
+            .WithColor(DiscordColor.Turquoise);
+
+        foreach (var r in roles.Roles) {
+            if (r == roles.Roles.First())
+                embed.AddField("Available Roles", r.Role.Mention);
+            else
+                embed.Fields.Where(x => x.Name == "Available Roles").First().Value += $", {r.Role.Mention}";
+        }
+        await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent(e.Member.Mention).AddMention(new UserMention(e.Member)).AddEmbed(embed).AddComponents(roleDropdown));
+
+        // Add handler
+        s.ComponentInteractionCreated -= RoleHandler.HandleMenu;
+        s.ComponentInteractionCreated += RoleHandler.HandleMenu;
     }
 
     public static async Task HandleMemberLeave(DiscordClient s, GuildMemberRemoveEventArgs e) {

@@ -107,12 +107,12 @@ public class RoleCommands : ApplicationCommandModule {
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
 
         if (roles.IsNotSetup()) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use /role setup"), ephemeral:true);
+            await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use </role setup:1137537906966286386>"), ephemeral:true);
             return;
         }
 
         if (roles.IsEmpty()) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("No roles added. Use /role add"), ephemeral:true);
+            await ctx.CreateResponseAsync(StandardOutput.Error("No roles added. Use </role add:1137537906966286386>"), ephemeral:true);
             return;
         }
         
