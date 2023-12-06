@@ -91,12 +91,11 @@ internal class Program {
         slash.SlashCommandErrored += async (s, e) => {
             if (e.Exception is SlashExecutionChecksFailedException slex) {
                 foreach (var check in slex.FailedChecks) {
-                    if (check is SlashRequirePermissionsAttribute att) {
+                    if (check is SlashRequirePermissionsAttribute att)
                         await e.Context.CreateResponseAsync(StandardOutput.Error("Only an admin can run this command!"), ephemeral:true);
-                    } else {
-                        await e.Context.CreateResponseAsync(StandardOutput.Error($"I'm not really sure what happened. Please let @loguigi know!"), ephemeral:true);
-                    }
                 }
+            } else {
+                await e.Context.CreateResponseAsync(StandardOutput.Error($"I'm not really sure what happened. Please let {Client.GetUserAsync(263070689559445504).Result.Mention} know!\nDebug info: `{e.Exception.Message}`"), ephemeral:true);
             }
         };
 
