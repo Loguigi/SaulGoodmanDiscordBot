@@ -118,6 +118,12 @@ public class HelpCommands : ApplicationCommandModule {
 
     [SlashCommand("misc", "List of misc and fun commands to use")]
     public async Task MiscHelp(InteractionContext ctx) {
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor("Misc Commands", "", ImageHelper.Images["8ball"])
+            .WithTitle("List of Misc Commands")
+            .WithDescription(HelpText.Misc)
+            .WithColor(DiscordColor.Violet);
 
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
     }
 }
