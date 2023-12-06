@@ -27,6 +27,11 @@ public class BirthdayCommands : ApplicationCommandModule {
     public async Task CheckBirthday(InteractionContext ctx,
         [Option("user", "Birthday to check")] DiscordUser user) {
 
+        if (user.IsBot) {
+            await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
+            return;
+        }
+
         var birthday = new ServerBirthdays(ctx.Guild).Find(user);
 
         if (birthday.HasNoBirthday()) {
@@ -36,6 +41,28 @@ public class BirthdayCommands : ApplicationCommandModule {
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor($"{user.GlobalName}'s birthday", "", user.AvatarUrl)
+            .WithTitle(birthday.ToString())
+            .WithColor(DiscordColor.Lilac);
+
+        await ctx.CreateResponseAsync(embed, ephemeral:true);
+    }
+
+    [ContextMenu(ApplicationCommandType.UserContextMenu, "Birthday")]
+    public async Task ContextCheckBirthday(ContextMenuContext ctx) {
+        if (ctx.TargetUser.IsBot) {
+            await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
+            return;
+        }
+
+        var birthday = new ServerBirthdays(ctx.Guild).Find(ctx.TargetUser);
+
+        if (birthday.HasNoBirthday()) {
+            await ctx.CreateResponseAsync(StandardOutput.Error($"No birthday found for {ctx.TargetUser.GlobalName}"), ephemeral:true);
+            return;
+        }
+
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor($"{ctx.TargetUser.GlobalName}'s birthday", "", ctx.TargetUser.AvatarUrl)
             .WithTitle(birthday.ToString())
             .WithColor(DiscordColor.Lilac);
 
@@ -70,6 +97,11 @@ public class BirthdayCommands : ApplicationCommandModule {
         [ChoiceProvider(typeof(MonthChoiceProvider))][Option("month", "Month of birthday")] long month,
         [Option("day", "Day of birthday")][Minimum(1)][Maximum(31)] long day,
         [Option("year", "Year of birthday")][Minimum(2023-100)][Maximum(2023)] long year) {
+
+        if (user.IsBot) {
+            await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
+            return;
+        }
         
         var birthdays = new ServerBirthdays(ctx.Guild);
         var date = new DateTime((int)year, (int)month, (int)day);

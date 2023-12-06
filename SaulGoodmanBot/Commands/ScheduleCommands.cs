@@ -54,6 +54,18 @@ public class ScheduleCommands : ApplicationCommandModule {
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(DisplaySchedule(schedule, ctx.Client))));
     }
 
+    [ContextMenu(ApplicationCommandType.UserContextMenu, "Schedule")]
+    public async Task ContextCheckSchedule(ContextMenuContext ctx) {
+        if (ctx.TargetUser.IsBot) {
+            await ctx.CreateResponseAsync(StandardOutput.Error("Joe Biden"), ephemeral:true);
+            return;
+        }
+
+        var schedule = new Schedule(ctx.Guild, ctx.TargetUser);
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(DisplaySchedule(schedule, ctx.Client))));
+    }
+
     [SlashCommand("edit", "Edit a specific day or upload a new schedule picture")]
     public async Task EditSchedule(InteractionContext ctx,
         [Choice("Sunday", (long)DayOfWeek.Sunday)]
@@ -85,36 +97,29 @@ public class ScheduleCommands : ApplicationCommandModule {
 
     [SlashCommand("today", "List the people that work today")]
     public async Task TodaysSchedules(InteractionContext ctx) {
-        try
-        {
-            var schedules = new List<Schedule>();
-            foreach (var user in ctx.Guild.Members) {
-                if (!user.Value.IsBot) {
-                    schedules.Add(new Schedule(ctx.Guild, user.Value));
-                }
+        var schedules = new List<Schedule>();
+        foreach (var user in ctx.Guild.Members) {
+            if (!user.Value.IsBot) {
+                schedules.Add(new Schedule(ctx.Guild, user.Value));
             }
-            var interactivity = new InteractivityHelper<Schedule>(ctx.Client, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, "1", "## Nobody works today");
-
-            var embed = new DiscordEmbedBuilder()
-                .WithTitle(DateTime.Now.ToString("dddd MMMM d, yyyy"))
-                .WithDescription(interactivity.IsEmpty())
-                .WithColor(DiscordColor.DarkBlue)
-                .WithFooter($"Page {interactivity.Page} of {interactivity.PageLimit}");
-
-            foreach (var schedule in interactivity.GetPage()) {
-                embed.Description += $"### {schedule.User.Mention}: {schedule.WorkSchedule[DateTime.Now.DayOfWeek]}\n";
-            }
-
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(
-                interactivity.AddPageButtons().AddEmbed(embed)));
-
-            ctx.Client.ComponentInteractionCreated -= ScheduleHandler.HandleTodaysSchedules;
-            ctx.Client.ComponentInteractionCreated += ScheduleHandler.HandleTodaysSchedules;
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
+        var interactivity = new InteractivityHelper<Schedule>(ctx.Client, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, "1", "## Nobody works today");
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle(DateTime.Now.ToString("dddd MMMM d, yyyy"))
+            .WithDescription(interactivity.IsEmpty())
+            .WithColor(DiscordColor.DarkBlue)
+            .WithFooter($"Page {interactivity.Page} of {interactivity.PageLimit}");
+
+        foreach (var schedule in interactivity.GetPage()) {
+            embed.Description += $"### {schedule.User.Mention}: {schedule.WorkSchedule[DateTime.Now.DayOfWeek]}\n";
         }
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(
+            interactivity.AddPageButtons().AddEmbed(embed)));
+
+        ctx.Client.ComponentInteractionCreated -= ScheduleHandler.HandleTodaysSchedules;
+        ctx.Client.ComponentInteractionCreated += ScheduleHandler.HandleTodaysSchedules;
     }
 
     [SlashCommand("override", "Override another user's schedule")]
@@ -132,7 +137,7 @@ public class ScheduleCommands : ApplicationCommandModule {
         [Option("newschedule", "Change to the schedule")] string newSchedule) {
         
         if (user.IsBot) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("Our programming does not allow the changing of our schedules"), ephemeral:true);
+            await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
             return;
         }
 

@@ -37,4 +37,17 @@ public static class IDHelper {
         public const string GIFTSTATUSES = "SANTAGIFTSTATUSES";
         public const string WISHLISTREMOVE = "SANTAWISHLISTREMOVE";
     }
+
+    public static class Minecraft {
+        public const string WAYPOINTLIST = "MCWAYPOINTLIST";
+        public const string WAYPOINTDELETE = "MCWAYPOINTDELETE";
+        public const string WAYPOINTVIEW = "MCWAYPOINTVIEW";
+    }
+
+    public static class Help {
+        public const string SETUP = "SETUPHELP";
+        public const string WHEELPICKER = "HELPWHEELPICKER";
+        public const string BIRTHDAY = "HELPBIRTHDAYS";
+        public const string SCHEDULE = "HELPSCHEDULE";
+    }
 }

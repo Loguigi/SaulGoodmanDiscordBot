@@ -5,3 +5,9 @@ public enum DataOperations {
     Update,
     Delete
 }
+
+public enum ConfigChangeOption {
+    EnabledToDisabled,
+    DisabledToEnabled,
+    MessageChange,
+}

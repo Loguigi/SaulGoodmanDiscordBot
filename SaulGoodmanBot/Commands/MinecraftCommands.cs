@@ -102,18 +102,19 @@ public class MinecraftCommands : ApplicationCommandModule {
 
         if (minecraft.WaypointsFull(dimension)) {
             await ctx.CreateResponseAsync(StandardOutput.Error($"Too many waypoints in {dimension}"));
-        } else {
-            minecraft.SaveNewWaypoint(waypoint);
-
-            var embed = new DiscordEmbedBuilder()
-                .WithDescription($"### Waypoint Added")
-                .AddField("Name", waypoint.Name, true)
-                .AddField("Dimension", waypoint.Dimension, true)
-                .AddField("Coords", waypoint.PrintCoords(), true)
-                .WithColor(DiscordColor.Green);
-            
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+            return;
         }
+
+        minecraft.SaveNewWaypoint(waypoint);
+
+        var embed = new DiscordEmbedBuilder()
+            .WithDescription($"### Waypoint Added")
+            .AddField("Name", waypoint.Name, true)
+            .AddField("Dimension", waypoint.Dimension, true)
+            .AddField("Coords", waypoint.PrintCoords(), true)
+            .WithColor(DiscordColor.Green);
+        
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
     }
 
     [SlashCommand("delete_waypoint", "Deletes an available waypoint")]
@@ -127,25 +128,26 @@ public class MinecraftCommands : ApplicationCommandModule {
         
         if (minecraft.GetDimensionWaypoints(dimension).Count == 0) {
             await ctx.CreateResponseAsync(StandardOutput.Error($"There are no waypoints in {dimension}"), ephemeral:true);
-        } else {
-            var embed = new DiscordEmbedBuilder()
-                .WithTitle($"Delete {dimension} waypoint")
-                .WithColor(DiscordColor.DarkRed);
-
-            var waypointOptions = new List<DiscordSelectComponentOption>();
-            foreach (var waypoint in minecraft.GetDimensionWaypoints(dimension)) {
-                waypointOptions.Add(new DiscordSelectComponentOption(waypoint.Name, waypoint.Name, waypoint.PrintCoords()));
-            }
-            var waypointDropdown = new DiscordSelectComponent("wpdeletedropdown", "Select a waypoint", waypointOptions, false);
-            var cancelButton = new DiscordButtonComponent(ButtonStyle.Primary, "wpdeletedropdown\\cancel", "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":x:", false)));
-
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(waypointDropdown).AddComponents(cancelButton)));
-
-            ctx.Client.ComponentInteractionCreated -= MinecraftHandler.HandleWaypointDelete;
-            ctx.Client.ComponentInteractionCreated += MinecraftHandler.HandleWaypointDelete;
+            return;
         }
-    }
 
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"Delete {dimension} waypoint")
+            .WithColor(DiscordColor.DarkRed);
+
+        var waypointOptions = new List<DiscordSelectComponentOption>();
+        foreach (var waypoint in minecraft.GetDimensionWaypoints(dimension)) {
+            waypointOptions.Add(new DiscordSelectComponentOption(waypoint.Name, waypoint.Name, waypoint.PrintCoords()));
+        }
+        var waypointDropdown = new DiscordSelectComponent("wpdeletedropdown", "Select a waypoint", waypointOptions, false);
+        var cancelButton = new DiscordButtonComponent(ButtonStyle.Primary, "wpdeletedropdown\\cancel", "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":x:", false)));
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(waypointDropdown).AddComponents(cancelButton)));
+
+        ctx.Client.ComponentInteractionCreated -= MinecraftHandler.HandleWaypointDelete;
+        ctx.Client.ComponentInteractionCreated += MinecraftHandler.HandleWaypointDelete;
+    }
+    
     [SlashCommand("list_waypoints", "Lists all waypoints created")]
     public async Task ListWaypoints(InteractionContext ctx,
         [Choice("Overworld", "overworld")]
@@ -154,10 +156,12 @@ public class MinecraftCommands : ApplicationCommandModule {
         [Option("dimension", "Sort waypoints by dimension")] string dimension="overworld") {
 
         var minecraft = new Minecraft(ctx.Guild);
+        var interactivity = new InteractivityHelper<Waypoint>(ctx.Client, minecraft.GetDimensionWaypoints(dimension), $"{IDHelper.Minecraft.WAYPOINTLIST}\\{dimension}", "1", $"There are no waypoints in {dimension}");
 
         var embed = new DiscordEmbedBuilder()
             .WithTitle($"{minecraft.WorldName} {dimension} waypoints")
-            .WithDescription("");
+            .WithDescription(interactivity.IsEmpty())
+            .WithFooter(interactivity.PageStatus());
         embed.WithColor(dimension switch {
             "overworld" => DiscordColor.SapGreen,
             "nether" => DiscordColor.DarkRed,
@@ -165,14 +169,13 @@ public class MinecraftCommands : ApplicationCommandModule {
             _ => DiscordColor.Black
         });
 
-        if (minecraft.GetDimensionWaypoints(dimension).Count == 0) {
-            embed.Description += $"No waypoints in {dimension}";
-        } else {
-            foreach (var waypoint in minecraft.GetDimensionWaypoints(dimension)) {
-                embed.Description += $"* *{waypoint.Name}* - `{waypoint.PrintCoords()}`\n";
-            }
+        foreach (var w in interactivity.GetPage()) {
+            embed.Description += $"* *{w.Name}* - `{w.PrintCoords()}`\n";
         }
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+
+        ctx.Client.ComponentInteractionCreated -= MinecraftHandler.HandleWaypointList;
+        ctx.Client.ComponentInteractionCreated += MinecraftHandler.HandleWaypointList;
     }
 }
