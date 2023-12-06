@@ -45,6 +45,7 @@ public static class IDHelper {
     }
 
     public static class Help {
+        public const string SETUP = "SETUPHELP";
         public const string WHEELPICKER = "HELPWHEELPICKER";
         public const string BIRTHDAY = "HELPBIRTHDAYS";
     }

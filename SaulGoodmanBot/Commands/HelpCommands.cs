@@ -11,7 +11,23 @@ namespace SaulGoodmanBot.Commands;
 public class HelpCommands : ApplicationCommandModule {
     [SlashCommand("setup", "Help for setting up the bot for the server")]
     public async Task SetupHelp(InteractionContext ctx) {
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor("Saul Goodman", "", ImageHelper.Images["Heisenberg"])
+            .WithTitle(HelpText.Setup.First().Key)
+            .WithDescription(HelpText.Setup.First().Value)
+            .WithThumbnail(ImageHelper.Images["Saul"])
+            .WithColor(DiscordColor.Orange);
+        
+        var pages = new List<DiscordSelectComponentOption>();
+        foreach (var p in HelpText.Setup.Keys) {
+            pages.Add(new DiscordSelectComponentOption(p, p));
+        }
+        var dropdown = new DiscordSelectComponent(IDHelper.Help.SETUP, "Select a page...", pages);
 
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown)));
+
+        ctx.Client.ComponentInteractionCreated -= HelpHandler.HandleSetupHelp;
+        ctx.Client.ComponentInteractionCreated += HelpHandler.HandleSetupHelp;
     }
 
     [SlashCommand("wheel", "Help for the /wheel commands")]
