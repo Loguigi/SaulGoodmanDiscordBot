@@ -54,6 +54,18 @@ public class ScheduleCommands : ApplicationCommandModule {
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(DisplaySchedule(schedule, ctx.Client))));
     }
 
+    [ContextMenu(ApplicationCommandType.UserContextMenu, "Schedule")]
+    public async Task ContextCheckSchedule(ContextMenuContext ctx) {
+        if (ctx.TargetUser.IsBot) {
+            await ctx.CreateResponseAsync(StandardOutput.Error("Joe Biden"), ephemeral:true);
+            return;
+        }
+
+        var schedule = new Schedule(ctx.Guild, ctx.TargetUser);
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(DisplaySchedule(schedule, ctx.Client))));
+    }
+
     [SlashCommand("edit", "Edit a specific day or upload a new schedule picture")]
     public async Task EditSchedule(InteractionContext ctx,
         [Choice("Sunday", (long)DayOfWeek.Sunday)]
@@ -125,7 +137,7 @@ public class ScheduleCommands : ApplicationCommandModule {
         [Option("newschedule", "Change to the schedule")] string newSchedule) {
         
         if (user.IsBot) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("Our programming does not allow the changing of our schedules"), ephemeral:true);
+            await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
             return;
         }
 
