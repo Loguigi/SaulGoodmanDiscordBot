@@ -7,6 +7,30 @@ using SaulGoodmanBot.Library.Helpers;
 namespace SaulGoodmanBot.Handlers;
 
 public static class HelpHandler {
+    public static async Task HandleSetupHelp(DiscordClient s, ComponentInteractionCreateEventArgs e) {
+        if (e.Id != IDHelper.Help.SETUP) {
+            await Task.CompletedTask;
+            return;
+        }
+
+        var page = e.Values.First();
+
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor("Saul Goodman", "", ImageHelper.Images["Heisenberg"])
+            .WithTitle(page)
+            .WithDescription(HelpText.Setup[page])
+            .WithThumbnail(ImageHelper.Images["Saul"])
+            .WithColor(DiscordColor.Orange);
+        
+        var pages = new List<DiscordSelectComponentOption>();
+        foreach (var p in HelpText.Setup.Keys) {
+            pages.Add(new DiscordSelectComponentOption(p, p));
+        }
+        var dropdown = new DiscordSelectComponent(IDHelper.Help.SETUP, "Select a page...", pages);
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown)));
+    }
+
     public static async Task HandleWheelPickerHelp(DiscordClient s, ComponentInteractionCreateEventArgs e) {
         if (e.Id != IDHelper.Help.WHEELPICKER) {
             await Task.CompletedTask;
