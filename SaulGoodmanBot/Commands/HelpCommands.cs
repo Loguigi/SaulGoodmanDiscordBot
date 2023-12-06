@@ -36,7 +36,22 @@ public class HelpCommands : ApplicationCommandModule {
 
     [SlashCommand("birthday", "Help for the /birthday commands")]
     public async Task BirthdayHelp(InteractionContext ctx) {
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor("Birthdays", "", ImageHelper.Images["SmilingGus"])
+            .WithTitle(HelpText.Birthday.First().Key)
+            .WithDescription(HelpText.Birthday.First().Value)
+            .WithColor(DiscordColor.HotPink);
+        
+        var pages = new List<DiscordSelectComponentOption>();
+        foreach (var p in HelpText.Birthday.Keys) {
+            pages.Add(new DiscordSelectComponentOption(p, p));
+        }
+        var dropdown = new DiscordSelectComponent(IDHelper.Help.BIRTHDAY, "Select a page...", pages);
 
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown)));
+
+        ctx.Client.ComponentInteractionCreated -= HelpHandler.HandleBirthdayHelp;
+        ctx.Client.ComponentInteractionCreated += HelpHandler.HandleBirthdayHelp;
     }
 
     [SlashCommand("roles", "Help for the /role commands")]

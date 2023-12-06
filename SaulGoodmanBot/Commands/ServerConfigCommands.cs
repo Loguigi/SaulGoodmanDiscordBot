@@ -12,7 +12,7 @@ namespace SaulGoodmanBot.Commands;
 [SlashRequirePermissions(Permissions.Administrator)]
 [SlashCommandGroup("config", "Bot configuration commands")]
 public class ServerConfigCommands : ApplicationCommandModule {
-    [SlashCommand("messags", "Bot message responses to events")]
+    [SlashCommand("messages", "Bot message responses to events")]
     public async Task GeneralConfig(InteractionContext ctx,
         [Choice("Welcome message", "welcome")]
         [Choice("Leave message", "leave")]
@@ -160,5 +160,19 @@ public class ServerConfigCommands : ApplicationCommandModule {
         config.UpdateConfig();
 
         await ctx.CreateResponseAsync(StandardOutput.Success($"Levels {(config.EnableLevels ? "enabled" : "disabled")} in {ctx.Guild.Name}"));
+    }
+
+    [SlashCommand("birthday_notifications", "Enable or disable all birthday notifications")]
+    public async Task BirthdayNotifications(InteractionContext ctx,
+        [Choice("Enable", "enable")]
+        [Choice("Disable", "disable")]
+        [Option("option", "Option")] string option) {
+
+        var config = new ServerConfig(ctx.Guild) {
+            BirthdayNotifications = option == "enable"
+        };
+        config.UpdateConfig();
+
+        await ctx.CreateResponseAsync(StandardOutput.Success($"Birthday notifications {(config.BirthdayNotifications ? "enabled" : "disabled")} in {ctx.Guild}"));
     }
 }
