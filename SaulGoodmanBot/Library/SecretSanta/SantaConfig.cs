@@ -14,6 +14,7 @@ public class SantaConfig {
             return;
         }
 
+        SantaRole = Guild.GetRole((ulong)config.SantaRoleId);
         ParticipationDeadline = config.ParticipationDeadline;
         ExchangeDate = config.ExchangeDate;
         ExchangeLocation = config.ExchangeLocation;
@@ -36,6 +37,7 @@ public class SantaConfig {
         } else {
             SecretSantaProcessor.StartEvent(new SantaConfigModel() {
                 GuildId = (long)Guild.Id,
+                SantaRoleId = (long)SantaRole.Id,
                 ParticipationDeadline = ParticipationDeadline,
                 ExchangeDate = ExchangeDate,
                 ExchangeLocation = ExchangeLocation,
@@ -46,6 +48,7 @@ public class SantaConfig {
     }
 
     private DiscordGuild Guild { get; set; }
+    public DiscordRole SantaRole { get; set; }
     public bool HasStarted { get; private set; } = true;
     public DateTime ParticipationDeadline { get; set; }
     public DateTime ExchangeDate { get; set; }
