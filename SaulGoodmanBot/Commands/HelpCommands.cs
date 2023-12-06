@@ -77,7 +77,22 @@ public class HelpCommands : ApplicationCommandModule {
 
     [SlashCommand("schedule", "Help for the /schedule commands")]
     public async Task ScheduleHelp(InteractionContext ctx) {
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor("Schedules", "", ImageHelper.Images["Finger"])
+            .WithTitle(HelpText.Schedule.First().Key)
+            .WithDescription(HelpText.Schedule.First().Value)
+            .WithColor(DiscordColor.DarkBlue);
+        
+        var pages = new List<DiscordSelectComponentOption>();
+        foreach (var p in HelpText.Schedule.Keys) {
+            pages.Add(new DiscordSelectComponentOption(p, p));
+        }
+        var dropdown = new DiscordSelectComponent(IDHelper.Help.SCHEDULE, "Select a page...", pages);
 
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown)));
+
+        ctx.Client.ComponentInteractionCreated -= HelpHandler.HandleScheduleHelp;
+        ctx.Client.ComponentInteractionCreated += HelpHandler.HandleScheduleHelp;
     }
 
     [SlashCommand("levels", "Help for the levelling system")]
@@ -87,7 +102,7 @@ public class HelpCommands : ApplicationCommandModule {
             .WithTitle("Server Levelling Help")
             .WithDescription(HelpText.Levels)
             .WithColor(DiscordColor.Green);
-            
+
         await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
     }
 
