@@ -78,4 +78,10 @@ public static class HelpText {
             "The default birthday message is \"Happy birthday! `@user`\"\n\n" +
             "This can be changed to whatever message you want by an admin using </config messages:1134335362681032806>. You can use emojis in the message too!"}
     };
+
+    public static readonly string Levels =
+        "Levels can be enabled with </config levels:1134335362681032806>\n\n" +
+        "Once enabled, you gain `1 EXP` per message sent, with a cooldown of `1 minute`, so you cannot level up by spamming messages\n\n" +
+        "You can check your own or somebody else's level using </level:1139784458619334796>, or by right-clicking a user, going to apps, and selecting `Level`\n\n" +
+        "To check the leaderboard, use </leaderboard:1139784458619334797> to see who is the biggest no-life";
 }

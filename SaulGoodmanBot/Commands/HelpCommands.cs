@@ -82,7 +82,13 @@ public class HelpCommands : ApplicationCommandModule {
 
     [SlashCommand("levels", "Help for the levelling system")]
     public async Task LevelHelp(InteractionContext ctx) {
-        
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor("Levels", "", ImageHelper.Images["Heisenberg"])
+            .WithTitle("Server Levelling Help")
+            .WithDescription(HelpText.Levels)
+            .WithColor(DiscordColor.Green);
+            
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
     }
 
     [SlashCommand("minecraft", "Help for the /mc commands")]
