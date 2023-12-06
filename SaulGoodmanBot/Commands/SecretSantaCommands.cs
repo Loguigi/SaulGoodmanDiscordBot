@@ -413,6 +413,35 @@ public class SecretSantaCommands : ApplicationCommandModule {
 
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
         }
+
+        [ContextMenu(ApplicationCommandType.UserContextMenu, "Secret Santa wishlist")]
+        public async Task ContextWishlistView(ContextMenuContext ctx) {
+            var santa = new Santa(ctx.Client, ctx.Guild);
+
+            if (ctx.TargetUser.IsBot) {
+                await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
+                return;
+            }
+
+            var participant = santa.Find(ctx.TargetUser);
+
+            if (participant == null) {
+                await ctx.CreateResponseAsync(StandardOutput.Error($"{ctx.TargetUser.Mention} has not chosen to participate in the Secret Santa"), ephemeral:true);
+                return;
+            }
+
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(ctx.TargetUser.GlobalName, "", ctx.TargetUser.AvatarUrl)
+                .WithTitle("Secret Santa Wishlist")
+                .WithDescription(participant.Wishlist.Count == 0 ? $"### {ctx.TargetUser.Mention}'s wishlist is empty" : "")
+                .WithColor(DiscordColor.Teal);
+
+            foreach (var i in participant.Wishlist) {
+                embed.Description += $"* {i}\n";
+            }
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
+        }
     }
 
     [SlashCommandGroup("config", "Configuration for the Secret Santa")]

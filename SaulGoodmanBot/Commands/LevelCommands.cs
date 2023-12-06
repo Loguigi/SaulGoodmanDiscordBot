@@ -11,24 +11,54 @@ public class LevelCommands : ApplicationCommandModule {
     [SlashCommand("level", "Check your own level or another user's level")]
     public async Task CheckLevel(InteractionContext ctx,
         [Option("user", "User to check the level of")] DiscordUser? user=null) {
+        if (user! != null! && user.IsBot) {
+            await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
+            return;
+        }
         
         var level = new Levels(ctx.Guild, user ?? ctx.User, DateTime.Now);
 
-        var message = new DiscordEmbedBuilder()
+        var embed = new DiscordEmbedBuilder()
             .AddField("Rank", $"#{level.GetRank()}", true)
             .AddField("Level", level.Level.ToString(), true)
             .AddField("Experience", $"{level.Experience} / {level.ExpNeededForNextLevel()} XP", true)
             .WithThumbnail(level.User.AvatarUrl)
             .WithColor(DiscordColor.Violet);
         
-        switch(level.GetRank()) {
-            case 1: message.WithDescription($"## {DiscordEmoji.FromName(ctx.Client, ":first_place:")} {level.User.Mention}"); break;
-            case 2: message.WithDescription($"## {DiscordEmoji.FromName(ctx.Client, ":second_place:")} {level.User.Mention}"); break;
-            case 3: message.WithDescription($"## {DiscordEmoji.FromName(ctx.Client, ":third_place:")} {level.User.Mention}"); break;
-            default: message.WithDescription($"## {level.User.Mention}"); break;
+        embed.Description += level.GetRank() switch {
+            1 => $"## {DiscordEmoji.FromName(ctx.Client, ":first_place:")} {level.User.Mention}",
+            2 => $"## {DiscordEmoji.FromName(ctx.Client, ":second_place:")} {level.User.Mention}",
+            3 => $"## {DiscordEmoji.FromName(ctx.Client, ":third_place:")} {level.User.Mention}",
+            _ => $"## {level.User.Mention}"
+        };
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+    }
+
+    [ContextMenu(ApplicationCommandType.UserContextMenu, "Level")]
+    public async Task ContextCheckLevel(ContextMenuContext ctx) {
+        if (ctx.TargetUser.IsBot) {
+            await ctx.CreateResponseAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
+            return;
         }
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(message)));
+        var level = new Levels(ctx.Guild, ctx.TargetUser, DateTime.Now);
+
+        var embed = new DiscordEmbedBuilder()
+            .AddField("Rank", $"#{level.GetRank()}", true)
+            .AddField("Level", level.Level.ToString(), true)
+            .AddField("Experience", $"{level.Experience} / {level.ExpNeededForNextLevel()} XP", true)
+            .WithThumbnail(level.User.AvatarUrl)
+            .WithColor(DiscordColor.Violet);
+
+        embed.Description += level.GetRank() switch {
+            1 => $"## {DiscordEmoji.FromName(ctx.Client, ":first_place:")} {level.User.Mention}",
+            2 => $"## {DiscordEmoji.FromName(ctx.Client, ":second_place:")} {level.User.Mention}",
+            3 => $"## {DiscordEmoji.FromName(ctx.Client, ":third_place:")} {level.User.Mention}",
+            _ => $"## {level.User.Mention}"
+        };
+
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
     }
 
     [SlashCommand("leaderboard", "Level ranking of the whole server")]
