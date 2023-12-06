@@ -65,6 +65,7 @@ internal class Program {
 
         // Slash commands registration
         var slash = Client.UseSlashCommands();
+        slash.RegisterCommands<HelpCommands>(270349691147780096);
         slash.RegisterCommands<MiscCommands>();
         slash.RegisterCommands<WheelPickerCommands>();
         slash.RegisterCommands<ReactionCommands>(270349691147780096);
@@ -91,6 +92,8 @@ internal class Program {
                 foreach (var check in slex.FailedChecks) {
                     if (check is SlashRequirePermissionsAttribute att) {
                         await e.Context.CreateResponseAsync(StandardOutput.Error("Only an admin can run this command!"), ephemeral:true);
+                    } else {
+                        await e.Context.CreateResponseAsync(StandardOutput.Error($"I'm not really sure what happened. Please let @loguigi know!"), ephemeral:true);
                     }
                 }
             }

@@ -1,4 +1,9 @@
+using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using SaulGoodmanBot.Handlers;
+using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Library.Helpers;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -11,7 +16,22 @@ public class HelpCommands : ApplicationCommandModule {
 
     [SlashCommand("wheel", "Help for the /wheel commands")]
     public async Task WheelHelp(InteractionContext ctx) {
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor("Wheel Picker", "", ImageHelper.Images["PS2Jesse"])
+            .WithTitle(HelpText.WheelPicker.First().Key)
+            .WithDescription(HelpText.WheelPicker.First().Value)
+            .WithColor(DiscordColor.Gold);
+        
+        var pages = new List<DiscordSelectComponentOption>();
+        foreach (var p in HelpText.WheelPicker.Keys) {
+            pages.Add(new DiscordSelectComponentOption(p, p));
+        }
+        var dropdown = new DiscordSelectComponent(IDHelper.Help.WHEELPICKER, "Select a page...", pages);
 
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown)));
+
+        ctx.Client.ComponentInteractionCreated -= HelpHandler.HandleWheelPickerHelp;
+        ctx.Client.ComponentInteractionCreated += HelpHandler.HandleWheelPickerHelp;
     }
 
     [SlashCommand("birthday", "Help for the /birthday commands")]
