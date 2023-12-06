@@ -43,4 +43,8 @@ public static class IDHelper {
         public const string WAYPOINTDELETE = "MCWAYPOINTDELETE";
         public const string WAYPOINTVIEW = "MCWAYPOINTVIEW";
     }
+
+    public static class Help {
+        public const string WHEELPICKER = "HELPWHEELPICKER";
+    }
 }
