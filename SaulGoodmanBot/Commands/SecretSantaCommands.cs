@@ -4,7 +4,6 @@ using DSharpPlus.Entities;
 using SaulGoodmanBot.Library.SecretSanta;
 using SaulGoodmanBot.Library.Helpers;
 using SaulGoodmanBot.Handlers;
-using System.Security.Cryptography.X509Certificates;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands.Attributes;
 
@@ -46,6 +45,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
             }
 
             santa.StartEvent(new SantaConfig(ctx.Guild) {
+                SantaRole = await ctx.Guild.CreateRoleAsync("Secret Santa", null, DiscordColor.DarkRed, null),
                 ParticipationDeadline = participation_deadline,
                 ExchangeDate = exchange_date,
                 ExchangeLocation = exchange_location,
@@ -63,7 +63,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 .WithColor(DiscordColor.SapGreen)
                 .WithFooter("Merry Christmas!");
 
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(ctx.Guild.EveryoneRole.Mention).AddEmbed(embed)));
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed)));
         }
 
         [SlashCommand("participate", "Participate in the Secret Santa")]
@@ -83,6 +83,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
             }
 
             santa.AddParticipant(ctx.User, name);
+            await ctx.Member.GrantRoleAsync(santa.Config.SantaRole);
 
             var embed = new DiscordEmbedBuilder()
                 .WithTitle("Thank you!")
@@ -118,7 +119,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 .WithColor(DiscordColor.Orange)
                 .WithFooter("(Nobody else will see)");
 
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(ctx.Guild.EveryoneRole.Mention).AddEmbed(embed)));
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed)));
         }
 
         [SlashCommand("end", "End the Secret Santa event")]
@@ -133,7 +134,8 @@ public class SecretSantaCommands : ApplicationCommandModule {
 
             santa.EndEvent();
 
-            await ctx.CreateResponseAsync("Secret Santa has ended");
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent($"{santa.Config.SantaRole.Mention} has ended").AddMention(new RoleMention(santa.Config.SantaRole))));
+            await ctx.Guild.GetRole(santa.Config.SantaRole.Id).DeleteAsync();
         }
     }
 
@@ -516,7 +518,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
 
             santa.AddParticipant(user, name);
 
-            await ctx.CreateResponseAsync($"{user.Mention} has been added to the Secret Santa!");
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent($"{user.Mention} has been added to the Secret Santa!").AddMention(new UserMention(user))));
         }
 
         [SlashCommand("exchange_date", "Change the date of the gift exchange")]
@@ -554,7 +556,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 .WithDescription($"# {santa.Config.ExchangeDate:dddd, MMMM d h:mm tt}")
                 .WithColor(DiscordColor.Yellow);
 
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(ctx.Guild.EveryoneRole.Mention).AddEmbed(embed)));
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(santa.Config.SantaRole.Mention).AddMention(new RoleMention(santa.Config.SantaRole)).AddEmbed(embed)));
         }
 
         [SlashCommand("exchange_location", "Change the location of the gift exchange")]
@@ -583,7 +585,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 embed.AddField("Address", santa.Config.ExchangeAddress);
             }
 
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(ctx.Guild.EveryoneRole.Mention).AddEmbed(embed)));
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(santa.Config.SantaRole.Mention).AddMention(new RoleMention(santa.Config.SantaRole)).AddEmbed(embed)));
         }
 
         [SlashCommand("participation_deadline_date", "Change the date of the participation deadline")]
@@ -619,7 +621,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 .WithDescription($"# {santa.Config.ParticipationDeadline:dddd, MMMM d}")
                 .WithColor(DiscordColor.Yellow);
 
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(ctx.Guild.EveryoneRole.Mention).AddEmbed(embed)));
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent(santa.Config.SantaRole.Mention).AddMention(new RoleMention(santa.Config.SantaRole)).AddEmbed(embed)));
         }
     }
 

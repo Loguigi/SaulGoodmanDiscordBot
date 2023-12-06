@@ -20,11 +20,11 @@ public static class LevelHandler {
         }
 
         if (user.LevelledUp) {
-            var message = new DiscordEmbedBuilder()
+            var embed = new DiscordEmbedBuilder()
                 .WithDescription($"### {DiscordEmoji.FromName(s, ":arrow_up:")} {e.Author.Mention} {config.LevelUpMessage}")
                 .WithFooter($"Level {user.Level - 1} {DiscordEmoji.FromName(s, ":arrow_right:")} Level {user.Level}", e.Author.AvatarUrl)
                 .WithColor(DiscordColor.Cyan);
-            await config.DefaultChannel.SendMessageAsync(message);
+            await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent(e.Author.Mention).AddMention(new UserMention(e.Author)).AddEmbed(embed));
         }
     }
 
