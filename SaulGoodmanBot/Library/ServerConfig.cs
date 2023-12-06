@@ -6,34 +6,34 @@ namespace SaulGoodmanBot.Library;
 public class ServerConfig {
     public ServerConfig(DiscordGuild guild) {
         Guild = guild;
-        var data = ConfigProcessor.LoadConfig(Guild.Id);
+        var config = ConfigProcessor.LoadConfig(Guild.Id);
         DefaultChannel = Guild.GetDefaultChannel();
         
-        if (data.Count == 0) {
+        if (config == null) {
             SaveNewServerConfig();
-        } else {
-            foreach (var row in data) {
-                WelcomeMessage = row.WelcomeMessage;
-                LeaveMessage = row.LeaveMessage;
-                DefaultChannel = Guild.GetChannel((ulong)row.DefaultChannel);
-                BirthdayNotifications = row.BirthdayNotifications == 1;
-                PauseBdayNotifsTimer = row.PauseBdayNotifsTimer;
-                BirthdayMessage = row.BirthdayMessage;
-                ServerRolesName = row.ServerRolesName;
-                ServerRolesDescription = row.ServerRolesDescription;
-                AllowMultipleRoles = row.AllowMultipleRoles == 1;
-                EnableLevels = row.EnableLevels == 1;
-                LevelUpMessage = row.LevelUpMessage;
-            }
+            return;
         }
+
+        WelcomeMessage = config.WelcomeMessage;
+        LeaveMessage = config.LeaveMessage;
+        DefaultChannel = Guild.GetChannel((ulong)config.DefaultChannel);
+        BirthdayNotifications = config.BirthdayNotifications == 1;
+        PauseBdayNotifsTimer = config.PauseBdayNotifsTimer;
+        BirthdayMessage = config.BirthdayMessage;
+        ServerRolesName = config.ServerRolesName;
+        ServerRolesDescription = config.ServerRolesDescription;
+        AllowMultipleRoles = config.AllowMultipleRoles == 1;
+        SendRoleMenuOnMemberJoin = config.SendRoleMenuOnMemberJoin == 1;
+        EnableLevels = config.EnableLevels == 1;
+        LevelUpMessage = config.LevelUpMessage;
     }
 
     private void SaveNewServerConfig() {
-        ConfigProcessor.SaveConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, BirthdayMessage, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0, EnableLevels ? 1 : 0, LevelUpMessage);
+        ConfigProcessor.SaveConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, BirthdayMessage, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0, SendRoleMenuOnMemberJoin ? 1 : 0, EnableLevels ? 1 : 0, LevelUpMessage);
     }
 
     public void UpdateConfig() {
-        ConfigProcessor.UpdateConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, BirthdayMessage, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0, EnableLevels ? 1 : 0, LevelUpMessage);
+        ConfigProcessor.UpdateConfig(Guild.Id, WelcomeMessage, LeaveMessage, DefaultChannel.Id, BirthdayNotifications ? 1 : 0, PauseBdayNotifsTimer, BirthdayMessage, ServerRolesName, ServerRolesDescription, AllowMultipleRoles ? 1 : 0, SendRoleMenuOnMemberJoin ? 1 : 0, EnableLevels ? 1 : 0, LevelUpMessage);
     }
 
     // Config Properties
@@ -54,6 +54,7 @@ public class ServerConfig {
     public string? ServerRolesName { get; set; } = null;
     public string? ServerRolesDescription { get; set; } = null;
     public bool AllowMultipleRoles { get; set; } = false;
+    public bool SendRoleMenuOnMemberJoin { get; set; } = false;
 
     // Levels Config
     public bool EnableLevels { get; set; } = false;

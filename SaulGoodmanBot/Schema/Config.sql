@@ -15,6 +15,7 @@ CREATE TABLE [dbo].[Config] (
     [ServerRolesName] NVARCHAR(100) NULL,
     [ServerRolesDescription] NVARCHAR(1000) NULL,
     [AllowMultipleRoles] BIT NOT NULL,
+    [SendRoleMenuOnMemberJoin] BIT NOT NULL,
 
     -- Level Config
     [EnableLevels] BIT NOT NULL,
