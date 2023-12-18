@@ -53,15 +53,10 @@ public class MiscCommands : ApplicationCommandModule {
     [SlashCommand("poll", "Starts a poll in the server")]
     public async Task PollCommand(InteractionContext ctx,
         [Option("question", "Question to ask the server")][MaximumLength(256)] string question,
-        [Choice("1 minute", 1)]
-        [Choice("5 minutes", 5)]
-        [Choice("10 minutes", 10)]
-        [Choice("30 minutes", 30)]
-        [Choice("1 hour", 60)]
-        [Option("time_limit", "Time limit to set for the poll")] long time_limit,
+        [Option("time_limit", "Time limit to set for the poll *IN SECONDS*")][Minimum(5)][Maximum(1800)] long time_limit,
         [Option("options", "Number of options to add (can be up to 10)")][Minimum(2)][Maximum(10)] long num_options) {
 
-        var poll = new Poll(ctx.Client, question, TimeSpan.FromMinutes(time_limit), (int)num_options);
+        var poll = new Poll(ctx.Client, question, TimeSpan.FromSeconds(time_limit), (int)num_options);
         var interactivity = ctx.Client.GetInteractivity();
 
         var embed = new DiscordEmbedBuilder()
@@ -101,7 +96,7 @@ public class MiscCommands : ApplicationCommandModule {
             embed.Description += $"### {o.Emoji} - {o.Name}\n";
         }
 
-        embed.WithColor(DiscordColor.Cyan).WithFooter($"Accepting responses for {time_limit} minutes");
+        embed.WithColor(DiscordColor.Cyan).WithFooter($"Accepting responses for {time_limit} seconds");
 
         var sent_poll = await ctx.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
         foreach (var emoji in poll.GetEmojis()) {
@@ -129,6 +124,60 @@ public class MiscCommands : ApplicationCommandModule {
         }
 
         await ctx.Interaction.EditOriginalResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
+    }
+
+    [SlashCommand("rng", "Random number generator")]
+    public async Task RNGCommand(InteractionContext ctx,
+        [Option("minimum", "Minimum number")][Minimum(0)] long minimum,
+        [Option("maximum", "Maximum number")][Minimum(0)] long maximum) {
+        
+        var result = RandomHelper.RNG.Next((int)minimum, (int)maximum + 1);
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Random Number")
+            .WithDescription($"# `{result}`")
+            .AddField("Minimum", minimum.ToString(), true)
+            .AddField("Maximum", maximum.ToString(), true)
+            .WithColor(DiscordColor.Lilac);
+
+        await ctx.CreateResponseAsync(embed);
+    }
+
+    [SlashCommand("roll", "Roll a dice or multiple dice")]
+    public async Task DiceRoll(InteractionContext ctx, 
+        [Option("dice_type", "Type of dice to roll")] DiceTypes type=DiceTypes.D6,
+        [Option("dice_count", "Number of dice to roll")][Minimum(1)][Maximum(10)] long dice_count=1) {
+        
+        var dice = new Dice(type);
+
+        var embed = new DiscordEmbedBuilder()
+            .WithColor(DiscordColor.White)
+            .WithFooter("Total Roll: ");
+        
+        embed.WithTitle(dice.Type switch {
+            DiceTypes.D4 => "D4 Roll",
+            DiceTypes.D6 => "D6 Roll",
+            DiceTypes.D8 => "D8 Roll",
+            DiceTypes.D10 => "D10 Roll",
+            DiceTypes.D100 => "D100 Roll",
+            DiceTypes.D12 => "D12 Roll",
+            DiceTypes.D20 => "D20 Roll",
+            _ => ""
+        });
+
+        if (dice_count == 1) {
+            var roll = dice.RollOnce();
+            embed.WithDescription($"## `{roll}`");
+            embed.Footer.Text += roll.ToString();
+        } else {
+            var rolls = dice.RollMultiple((int)dice_count);
+            for (var i = 0; i < rolls.Count; ++i) {
+                embed.AddField($"Dice #{i + 1}", $"`{rolls[i]}`", true);
+            }
+            embed.Footer.Text += dice.GetRollTotal(rolls).ToString();
+        }
+
+        await ctx.CreateResponseAsync(embed);
     }
 
     [SlashCommand("dicksize", "Finds the penis size of the specified user")]
