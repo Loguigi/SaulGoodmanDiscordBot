@@ -91,7 +91,7 @@ public class RoleCommands : ApplicationCommandModule {
         var roleOptions = new List<DiscordSelectComponentOption>();
         roles.Roles.ForEach(r => roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), "", false)));
         var roleDropdown = new DiscordSelectComponent(IDHelper.Roles.REMOVE, "Select a role", roleOptions);
-        var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, IDHelper.Roles.REMOVE, "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_left:, false")));
+        var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, IDHelper.Roles.REMOVE, "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_left:", false)));
 
         var embed = new DiscordEmbedBuilder()
             .WithTitle("Remove Role")
@@ -158,7 +158,7 @@ public class RoleCommands : ApplicationCommandModule {
         var roleOptions = new List<DiscordSelectComponentOption>();
         roles.Roles.ForEach(r => roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description ?? string.Empty, false, new DiscordComponentEmoji(r.Emoji ?? DiscordEmoji.FromName(ctx.Client, ":arrow_right:", false)))));
         var roleDropdown = new DiscordSelectComponent(IDHelper.Roles.ASSIGN, "Select a role", roleOptions);
-        var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, IDHelper.Roles.ASSIGN, "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_left:, false")));
+        var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, IDHelper.Roles.ASSIGN, "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_left:", false)));
         
         var embed = new DiscordEmbedBuilder()
             .WithTitle(roles.CategoryName)
