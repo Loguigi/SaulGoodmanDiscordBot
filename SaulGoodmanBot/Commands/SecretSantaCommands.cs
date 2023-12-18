@@ -255,8 +255,8 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 .WithTitle("Gift Exchange Details")
                 .WithColor(DiscordColor.Rose)
                 .WithThumbnail(ImageHelper.Images["WalterChristmas"])
-                .AddField("Date/Time", santa.Config.HasStarted ? $"# {santa.Config.ExchangeDate:dddd, MMMM d h:mm tt}" : "Undecided")
-                .AddField("Location", santa.Config.HasStarted ? $"### {santa.Config.ExchangeLocation}" : "Undecided");
+                .AddField("Date/Time", santa.Config.HasStarted ? $"{santa.Config.ExchangeDate:dddd, MMMM d h:mm tt}" : "Undecided")
+                .AddField("Location", santa.Config.HasStarted ? $"{santa.Config.ExchangeLocation}" : "Undecided");
 
             if (santa.Config.ExchangeAddress != null)
                 embed.AddField("Address", santa.Config.ExchangeAddress);
