@@ -128,7 +128,7 @@ public class BirthdayCommands : ApplicationCommandModule {
             return;
         }
 
-        var interactivity = new InteractivityHelper<Birthday>(ctx.Client, birthdays.GetBirthdays(), IDHelper.Birthdays.LIST, "1", "There are no birthdays");
+        var interactivity = new InteractivityHelper<Birthday>(ctx.Client, birthdays.GetBirthdays(), IDHelper.Birthdays.LIST, "1", 10, "There are no birthdays");
         
         // print all birthdays
         var embed = new DiscordEmbedBuilder()
@@ -136,7 +136,7 @@ public class BirthdayCommands : ApplicationCommandModule {
             .WithTitle("Birthdays")
             .WithDescription(interactivity.IsEmpty())
             .WithColor(DiscordColor.Magenta)
-            .WithFooter(interactivity.PageStatus());
+            .WithFooter(interactivity.PageStatus);
 
         foreach (var birthday in interactivity.GetPage()) {
             embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.GetAge() + 1})`\n";

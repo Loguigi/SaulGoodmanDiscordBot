@@ -44,16 +44,16 @@ public static class BirthdayHandler {
         }
 
         var birthdays = new ServerBirthdays(e.Guild);
-        var interactivity = new InteractivityHelper<Birthday>(s, birthdays.GetBirthdays(), IDHelper.Birthdays.LIST, e.Id.Split('\\')[PAGE_INDEX]);
+        var interactivity = new InteractivityHelper<Birthday>(s, birthdays.GetBirthdays(), IDHelper.Birthdays.LIST, e.Id.Split('\\')[PAGE_INDEX], 10);
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
             .WithTitle("Birthdays")
             .WithDescription(interactivity.IsEmpty())
             .WithColor(DiscordColor.Magenta)
-            .WithFooter(interactivity.PageStatus());
+            .WithFooter(interactivity.PageStatus);
 
-        foreach (var birthday in interactivity.GetPage()) {
+        foreach (var birthday in interactivity) {
             embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.GetAge() + 1})`\n";
         }
 

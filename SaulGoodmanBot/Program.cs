@@ -15,21 +15,23 @@ using SaulGoodmanBot.Library.Helpers;
 namespace SaulGoodmanBot;
 
 internal class Program {
-    // Discord Client Properties
+    #region Discord Client Properties
     public static DiscordClient? Client { get; private set; }
     public static InteractivityExtension? Interactivity { get; private set; }
     public static CommandsNextExtension? Commands { get; private set; }
+    #endregion
 
     internal async Task MainAsync() {
-        // Json Config Reader
+        #region Json Config Reader
         var json = string.Empty;
         using (var fs = File.OpenRead("Config/config.json"))
         using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
             json = await sr.ReadToEndAsync();
 
         var configJSON = JsonConvert.DeserializeObject<ConfigJSON>(json);
+        #endregion
 
-        // Discord Client Config
+        #region Discord Client Config
         var discordConfig = new DiscordConfiguration() {
             Intents = DiscordIntents.All,
             Token = configJSON.Token,
@@ -43,8 +45,9 @@ internal class Program {
         Client.UseInteractivity(new InteractivityConfiguration() {
             Timeout = TimeSpan.FromMinutes(2)
         });
+        #endregion
 
-        // Event Handlers
+        #region Event Handler Registration
         Client.SessionCreated += GeneralHandlers.HandleOnReady;
         Client.GuildMemberAdded += GeneralHandlers.HandleMemberJoin;
         Client.GuildMemberRemoved += GeneralHandlers.HandleMemberLeave;
@@ -52,19 +55,9 @@ internal class Program {
         Client.MessageCreated += LevelHandler.HandleExpGain;
         Client.GuildRoleDeleted += RoleHandler.HandleServerRemoveRole;
         Client.GuildCreated += GeneralHandlers.HandleServerJoin;
+        #endregion
 
-        // Commands Config
-        var commandsConfig = new CommandsNextConfiguration() {
-            StringPrefixes = new string[] { configJSON.Prefix },
-            EnableMentionPrefix = true,
-            EnableDms = true,
-            EnableDefaultHelp = false,
-        };
-
-        // Prefix commands registration
-        Commands = Client.UseCommandsNext(commandsConfig);
-
-        // Slash commands registration
+        #region Slash Commands
         var slash = Client.UseSlashCommands();
         slash.RegisterCommands<HelpCommands>();
         slash.RegisterCommands<MiscCommands>();
@@ -98,6 +91,7 @@ internal class Program {
                 await e.Context.CreateResponseAsync(StandardOutput.Error($"I'm not really sure what happened. Please let {Client.GetUserAsync(263070689559445504).Result.Mention} know!\nDebug info: `{e.Exception.Message}`"), ephemeral:true);
             }
         };
+        #endregion
 
         await Client.ConnectAsync();
         await Task.Delay(-1);

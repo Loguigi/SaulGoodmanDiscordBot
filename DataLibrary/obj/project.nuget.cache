@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ewZtevgXGYqspZNiQ/lkBrluXBd1/F970civAftQwU6mFBTEjBD5zkW/uS2l9eEiIRvrWfhK9sbiJVpYFuqmJA==",
+  "dgSpecHash": "WRYSuHTcsXBkiQiD3VPHGuH/iA3GkVKsQ7QCE24AGz2tbE9MrmZ33TC6AAkggH3B1uVhyNvRbu9saysDEO7URQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\logan\\git\\SaulGoodmanDiscordBot\\DataLibrary\\DataLibrary.csproj",
+  "projectFilePath": "C:\\Users\\logan\\git\\saulgoodmanbot\\DataLibrary\\DataLibrary.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\logan\\.nuget\\packages\\dapper\\2.0.143\\dapper.2.0.143.nupkg.sha512",
     "C:\\Users\\logan\\.nuget\\packages\\microsoft.netcore.platforms\\3.1.0\\microsoft.netcore.platforms.3.1.0.nupkg.sha512",

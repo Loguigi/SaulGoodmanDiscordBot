@@ -16,16 +16,16 @@ public class LevelCommands : ApplicationCommandModule {
             return;
         }
         
-        var level = new Levels(ctx.Guild, user ?? ctx.User, DateTime.Now);
+        var level = new Levels(ctx.Guild, user ?? ctx.User);
 
         var embed = new DiscordEmbedBuilder()
-            .AddField("Rank", $"#{level.GetRank()}", true)
+            .AddField("Rank", $"#{level.Rank}", true)
             .AddField("Level", level.Level.ToString(), true)
-            .AddField("Experience", $"{level.Experience} / {level.ExpNeededForNextLevel()} XP", true)
+            .AddField("Experience", $"{level.Experience} / {level.ExpNeededForNextLevel} XP", true)
             .WithThumbnail(level.User.AvatarUrl)
             .WithColor(DiscordColor.Violet);
         
-        embed.Description += level.GetRank() switch {
+        embed.Description += level.Rank switch {
             1 => $"## {DiscordEmoji.FromName(ctx.Client, ":first_place:")} {level.User.Mention}",
             2 => $"## {DiscordEmoji.FromName(ctx.Client, ":second_place:")} {level.User.Mention}",
             3 => $"## {DiscordEmoji.FromName(ctx.Client, ":third_place:")} {level.User.Mention}",
@@ -42,16 +42,16 @@ public class LevelCommands : ApplicationCommandModule {
             return;
         }
 
-        var level = new Levels(ctx.Guild, ctx.TargetUser, DateTime.Now);
+        var level = new Levels(ctx.Guild, ctx.TargetUser);
 
         var embed = new DiscordEmbedBuilder()
-            .AddField("Rank", $"#{level.GetRank()}", true)
+            .AddField("Rank", $"#{level.Rank}", true)
             .AddField("Level", level.Level.ToString(), true)
-            .AddField("Experience", $"{level.Experience} / {level.ExpNeededForNextLevel()} XP", true)
+            .AddField("Experience", $"{level.Experience} / {level.ExpNeededForNextLevel} XP", true)
             .WithThumbnail(level.User.AvatarUrl)
             .WithColor(DiscordColor.Violet);
 
-        embed.Description += level.GetRank() switch {
+        embed.Description += level.Rank switch {
             1 => $"## {DiscordEmoji.FromName(ctx.Client, ":first_place:")} {level.User.Mention}",
             2 => $"## {DiscordEmoji.FromName(ctx.Client, ":second_place:")} {level.User.Mention}",
             3 => $"## {DiscordEmoji.FromName(ctx.Client, ":third_place:")} {level.User.Mention}",
@@ -65,23 +65,23 @@ public class LevelCommands : ApplicationCommandModule {
     public async Task LevelLeaderboard(InteractionContext ctx) {
         var leaderboard = new List<Levels>();
         foreach (var user in await ctx.Guild.GetAllMembersAsync()) {
-            if (!user.IsBot) leaderboard.Add(new Levels(ctx.Guild, user, DateTime.Now));
+            if (!user.IsBot) leaderboard.Add(new Levels(ctx.Guild, user));
         }
-        leaderboard.Sort(delegate(Levels x, Levels y) {return x.GetRank().CompareTo(y.GetRank());});
-        var interactivity = new InteractivityHelper<Levels>(ctx.Client, leaderboard, IDHelper.Levels.LEADERBOARD, "1");
+        leaderboard.Sort(delegate(Levels x, Levels y) {return x.Rank.CompareTo(y.Rank);});
+        var interactivity = new InteractivityHelper<Levels>(ctx.Client, leaderboard, IDHelper.Levels.LEADERBOARD, "1", 10);
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(ctx.Guild.Name, "https://youtu.be/nQGodNKogEI", ctx.Guild.IconUrl)
             .WithTitle("Server Leaderboard")
             .WithDescription("")
-            .WithFooter(interactivity.PageStatus())
+            .WithFooter(interactivity.PageStatus)
             .WithColor(DiscordColor.Orange);
         foreach (var user in interactivity.GetPage()) {
-            embed.Description += user.GetRank() switch {
+            embed.Description += user.Rank switch {
                 1 => $"### {DiscordEmoji.FromName(ctx.Client, ":first_place:")} {user.User.Mention} `LVL {user.Level}` `EXP {user.Experience}`\n",
                 2 => $"### {DiscordEmoji.FromName(ctx.Client, ":second_place:")} {user.User.Mention} `LVL {user.Level}` `EXP {user.Experience}`\n",
                 3 => $"### {DiscordEmoji.FromName(ctx.Client, ":third_place:")} {user.User.Mention} `LVL {user.Level}` `EXP {user.Experience}`\n",
-                _ => $"### **__#{user.GetRank()}__** {user.User.Mention} `LVL {user.Level}` `EXP {user.Experience}`\n",
+                _ => $"### **__#{user.Rank}__** {user.User.Mention} `LVL {user.Level}` `EXP {user.Experience}`\n",
             };
         }
 

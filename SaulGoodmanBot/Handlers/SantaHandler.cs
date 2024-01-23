@@ -44,7 +44,7 @@ public static class SantaHandler {
         }
 
         var santa = new Santa(s, e.Guild);
-        var interactivity = new InteractivityHelper<SantaParticipant>(s, santa.Participants, IDHelper.Santa.PARTICIPANTS, e.Id.Split('\\')[PAGE_INDEX], "There are no participants yet");
+        var interactivity = new InteractivityHelper<SantaParticipant>(s, santa.Participants, IDHelper.Santa.PARTICIPANTS, e.Id.Split('\\')[PAGE_INDEX], 10, "There are no participants yet");
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
@@ -52,9 +52,9 @@ public static class SantaHandler {
             .WithDescription(interactivity.IsEmpty())
             .WithThumbnail(ImageHelper.Images["BetterCallSanta"])
             .WithColor(DiscordColor.SapGreen)
-            .WithFooter(interactivity.PageStatus());
+            .WithFooter(interactivity.PageStatus);
 
-        foreach (var p in interactivity.GetPage()) {
+        foreach (var p in interactivity) {
             embed.Description += $"{p.User.Mention} ({p.FirstName})\n";
         }
 
@@ -68,16 +68,16 @@ public static class SantaHandler {
         }
 
         var santa = new Santa(s, e.Guild);
-        var interactivity = new InteractivityHelper<SantaParticipant>(s, santa.Participants, IDHelper.Santa.GIFTSTATUSES, e.Id.Split('\\')[PAGE_INDEX]);
+        var interactivity = new InteractivityHelper<SantaParticipant>(s, santa.Participants, IDHelper.Santa.GIFTSTATUSES, e.Id.Split('\\')[PAGE_INDEX], 10);
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
             .WithTitle("Secret Santa Gift Statuses")
             .WithDescription("List of people that have gifts ready for their Secret Santa\n\n")
             .WithColor(DiscordColor.Rose)
-            .WithFooter(interactivity.PageStatus());
+            .WithFooter(interactivity.PageStatus);
 
-        foreach (var p in interactivity.GetPage()) {
+        foreach (var p in interactivity) {
             embed.Description += $"{(p.GiftReady ? DiscordEmoji.FromName(s, ":white_check_mark:", false) : DiscordEmoji.FromName(s, ":x:", false))} {p.User.Mention} ({p.FirstName}) {(p.GiftReady ? "`READY`" : "`NOT READY`")}\n";
         }
 

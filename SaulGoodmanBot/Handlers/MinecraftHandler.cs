@@ -90,12 +90,12 @@ public static class MinecraftHandler {
 
         var minecraft = new Minecraft(e.Guild);
         var dimension = e.Id.Split('\\')[DIMENSION_INDEX];
-        var interactivity = new InteractivityHelper<Waypoint>(s, minecraft.GetDimensionWaypoints(dimension), $"{IDHelper.Minecraft.WAYPOINTLIST}\\{dimension}", e.Id.Split('\\')[PAGE_INDEX], $"There are no waypoints in {dimension}");
+        var interactivity = new InteractivityHelper<Waypoint>(s, minecraft.GetDimensionWaypoints(dimension), $"{IDHelper.Minecraft.WAYPOINTLIST}\\{dimension}", e.Id.Split('\\')[PAGE_INDEX], 10, $"There are no waypoints in {dimension}");
 
         var embed = new DiscordEmbedBuilder()
             .WithTitle($"{minecraft.WorldName} {dimension} waypoints")
             .WithDescription(interactivity.IsEmpty())
-            .WithFooter(interactivity.PageStatus());
+            .WithFooter(interactivity.PageStatus);
         embed.WithColor(dimension switch {
             "overworld" => DiscordColor.SapGreen,
             "nether" => DiscordColor.DarkRed,
@@ -103,7 +103,7 @@ public static class MinecraftHandler {
             _ => DiscordColor.Black
         });
 
-        foreach (var w in interactivity.GetPage()) {
+        foreach (var w in interactivity) {
             embed.Description += $"* *{w.Name}* - `{w.PrintCoords()}`\n";
         }
 

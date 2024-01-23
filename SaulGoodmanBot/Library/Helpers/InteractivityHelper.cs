@@ -1,28 +1,34 @@
+using System.Collections;
 using System.Data;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity;
 
 namespace SaulGoodmanBot.Library.Helpers;
 
-public class InteractivityHelper<T> {
-    public InteractivityHelper(DiscordClient client, List<T> data, string customid, string page, string emptyMessage="") {
+public class InteractivityHelper<T> : IEnumerable<T> {
+    public InteractivityHelper(DiscordClient client, List<T> data, string customid, string page, int countPerPage, string emptyMessage="") {
         Client = client;
         Data = data;
+        PerPageCount = countPerPage;
         CustomId = customid;
-        PageLimit = Data.Count == 0 ? 1 : (int)Math.Ceiling((double)Data.Count / MAX_ENTIRES_PER_PAGE);
-        Page = ParsePage(page);
+        PageLimit = Data.Count == 0 ? 1 : (int)Math.Ceiling((double)Data.Count / PerPageCount);
+        PageNum = ParsePage(page);
         EmptyMessage = emptyMessage;
     }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public IEnumerator<T> GetEnumerator() => GetPage().GetEnumerator();
 
     public List<T> GetPage() {
         if (Data.Count == 0)
             return new List<T>();
 
         var after_indexing = new List<T>();
-        int lower_limit = (Page - 1) * MAX_ENTIRES_PER_PAGE;
-        int upper_limit = Page * MAX_ENTIRES_PER_PAGE - 1;
+        int lower_limit = (PageNum - 1) * PerPageCount;
+        int upper_limit = PageNum * PerPageCount - 1;
 
-        if (Page == PageLimit && Data.Count - 1 < upper_limit) {
+        if (PageNum == PageLimit && Data.Count - 1 < upper_limit) {
             upper_limit = Data.Count - 1;
         }
 
@@ -33,17 +39,17 @@ public class InteractivityHelper<T> {
         return after_indexing;
     }
 
-    public DiscordMessageBuilder AddPageButtons() {
-        return new DiscordMessageBuilder().AddComponents(new List<DiscordButtonComponent>() {
-            new(ButtonStyle.Primary, $"{CustomId}\\{FIRST_PAGE}", "", Page == 1, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":track_previous:", false))),
-            new(ButtonStyle.Primary, $"{CustomId}\\{Page - 1}", "", Page - 1 < 1, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":rewind:", false))),
-            new(ButtonStyle.Primary, $"{CustomId}\\{Page + 1}", "", Page + 1 > PageLimit, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":fast_forward:", false))),
-            new(ButtonStyle.Primary, $"{CustomId}\\{LAST_PAGE}", "", Page == PageLimit, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":track_next:", false)))
-        });
+    public T this[int index] {
+        get => GetPage()[index];
     }
 
-    public string PageStatus() {
-        return $"Page {Page} of {PageLimit}";
+    public DiscordMessageBuilder AddPageButtons() {
+        return new DiscordMessageBuilder().AddComponents(new List<DiscordButtonComponent>() {
+            new(ButtonStyle.Primary, $"{CustomId}\\{FIRST_PAGE}", "", PageNum == 1, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":track_previous:", false))),
+            new(ButtonStyle.Primary, $"{CustomId}\\{PageNum - 1}", "", PageNum - 1 < 1, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":rewind:", false))),
+            new(ButtonStyle.Primary, $"{CustomId}\\{PageNum + 1}", "", PageNum + 1 > PageLimit, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":fast_forward:", false))),
+            new(ButtonStyle.Primary, $"{CustomId}\\{LAST_PAGE}", "", PageNum == PageLimit, new DiscordComponentEmoji(DiscordEmoji.FromName(Client, ":track_next:", false)))
+        });
     }
 
     // intended for Discord embed description. empty string return signals data exists and ready to be added to description
@@ -60,10 +66,13 @@ public class InteractivityHelper<T> {
     private DiscordClient Client { get; set; }
     public List<T> Data { get; private set; }
     public string CustomId { get; set; }
-    public int Page { get; set; }
+    public int PageNum { get; set; }
+    public int PerPageCount { get; set; }
     public int PageLimit { get; set; }
+    public string PageStatus {
+        get => $"Page {PageNum} of {PageLimit}";
+    }
     private string EmptyMessage { get; set; }
     private const string FIRST_PAGE = "FIRSTPAGE";
     private const string LAST_PAGE = "LASTPAGE";
-    private const int MAX_ENTIRES_PER_PAGE = 10;
 }

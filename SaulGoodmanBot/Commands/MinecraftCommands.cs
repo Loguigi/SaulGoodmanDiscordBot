@@ -156,12 +156,12 @@ public class MinecraftCommands : ApplicationCommandModule {
         [Option("dimension", "Sort waypoints by dimension")] string dimension="overworld") {
 
         var minecraft = new Minecraft(ctx.Guild);
-        var interactivity = new InteractivityHelper<Waypoint>(ctx.Client, minecraft.GetDimensionWaypoints(dimension), $"{IDHelper.Minecraft.WAYPOINTLIST}\\{dimension}", "1", $"There are no waypoints in {dimension}");
+        var interactivity = new InteractivityHelper<Waypoint>(ctx.Client, minecraft.GetDimensionWaypoints(dimension), $"{IDHelper.Minecraft.WAYPOINTLIST}\\{dimension}", "1", 10, $"There are no waypoints in {dimension}");
 
         var embed = new DiscordEmbedBuilder()
             .WithTitle($"{minecraft.WorldName} {dimension} waypoints")
             .WithDescription(interactivity.IsEmpty())
-            .WithFooter(interactivity.PageStatus());
+            .WithFooter(interactivity.PageStatus);
         embed.WithColor(dimension switch {
             "overworld" => DiscordColor.SapGreen,
             "nether" => DiscordColor.DarkRed,

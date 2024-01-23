@@ -1,6 +1,7 @@
 namespace SaulGoodmanBot.Library.Helpers;
 
 public static class IDHelper {
+    public static string GetId(string id, int index) => id.Split('\\')[index];
     public static class WheelPicker {
         public const string Add = "ADDOPTIONS";
         public const string List = "LISTWHEELS";

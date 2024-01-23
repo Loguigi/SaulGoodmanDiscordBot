@@ -176,15 +176,15 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 return;
             }
 
-            var interactivity = new InteractivityHelper<SantaParticipant>(ctx.Client, santa.Participants, IDHelper.Santa.GIFTSTATUSES, "1");
+            var interactivity = new InteractivityHelper<SantaParticipant>(ctx.Client, santa.Participants, IDHelper.Santa.GIFTSTATUSES, "1", 10);
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
                 .WithTitle("Secret Santa Gift Statuses")
                 .WithDescription("List of people that have gifts ready for their Secret Santa\n\n")
                 .WithColor(DiscordColor.Rose)
-                .WithFooter(interactivity.PageStatus());
+                .WithFooter(interactivity.PageStatus);
 
-            foreach (var p in interactivity.GetPage()) {
+            foreach (var p in interactivity) {
                 embed.Description += $"{(p.GiftReady ? DiscordEmoji.FromName(ctx.Client, ":white_check_mark:", false) : DiscordEmoji.FromName(ctx.Client, ":x:", false))} {p.User.Mention} ({p.FirstName}) {(p.GiftReady ? "`READY`" : "`NOT READY`")}\n";
             }
 
@@ -227,7 +227,7 @@ public class SecretSantaCommands : ApplicationCommandModule {
         [SlashCommand("participants", "View everyone that is participating in the Secret Santa")]
         public async Task ViewParticipants(InteractionContext ctx) {
             var santa = new Santa(ctx.Client, ctx.Guild);
-            var interactivity = new InteractivityHelper<SantaParticipant>(ctx.Client, santa.Participants, IDHelper.Santa.PARTICIPANTS, "1", "There are no participants yet");
+            var interactivity = new InteractivityHelper<SantaParticipant>(ctx.Client, santa.Participants, IDHelper.Santa.PARTICIPANTS, "1", 10, "There are no participants yet");
 
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
@@ -235,9 +235,9 @@ public class SecretSantaCommands : ApplicationCommandModule {
                 .WithDescription(interactivity.IsEmpty())
                 .WithThumbnail(ImageHelper.Images["BetterCallSanta"])
                 .WithColor(DiscordColor.SapGreen)
-                .WithFooter(interactivity.PageStatus());
+                .WithFooter(interactivity.PageStatus);
 
-            foreach (var p in interactivity.GetPage()) {
+            foreach (var p in interactivity) {
                 embed.Description += $"{p.User.Mention} ({p.FirstName})\n";
             }
 

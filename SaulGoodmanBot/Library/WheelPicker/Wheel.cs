@@ -5,64 +5,24 @@ using SaulGoodmanBot.Library.Helpers;
 
 namespace SaulGoodmanBot.Library.WheelPicker;
 
-public class Wheel {
-    public Wheel(DiscordGuild guild, string name, List<string> options, List<string> removedOptions, string? imgurl=null) {
-        Guild = guild;
+internal class Wheel {
+    public Wheel(string name, string imgurl) {
         Name = name;
-        Options = options;
-        RemovedOptions = removedOptions;
         Image = imgurl;
     }
 
     public string Spin() {
-        var i = RandomHelper.RNG.Next(Options.Count);
-        return Options[i];
+        var i = RandomHelper.RNG.Next(AvailableOptions.Count);
+        return AvailableOptions[i];
     }
 
-    public void AddOption(string option) {
-        WheelPickerProcessor.AddWheelOption(new WheelPickerModel() {
-            GuildId = (long)Guild.Id,
-            WheelName = Name,
-            WheelOption = option,
-            ImageUrl = Image
-        });
-        Options.Add(option);
-    }
 
-    public void DeleteOption(string option) {
-        WheelPickerProcessor.DeleteWheelOption(new WheelPickerModel() {
-            GuildId = (long)Guild.Id,
-            WheelName = Name,
-            WheelOption = option
-        });
-    }
 
-    public void TemporarilyRemoveOption(string option) {
-        WheelPickerProcessor.TemporarilyRemoveOption(new WheelPickerModel() {
-            GuildId = (long)Guild.Id,
-            WheelName = Name,
-            WheelOption = option,
-            TempRemoved = 1
-        });
-        Options.Remove(option);
-        RemovedOptions.Add(option);
-    }
-
-    public void Reload() {
-        WheelPickerProcessor.ReloadWheel(new WheelPickerModel() {
-            GuildId = (long)Guild.Id,
-            WheelName = Name,
-            TempRemoved = 0
-        });
-    }
-
-    public List<string> GetAllOptions() {
-        return Options.Concat(RemovedOptions).ToList();
-    }
-
-    private DiscordGuild Guild { get; set; }
     public string Name { get; private set; }
-    public List<string> Options { get; private set; }
-    public List<string> RemovedOptions { get; private set; }
-    public string? Image { get; set; } = null;
+    public List<string> AvailableOptions { get; private set; } = new();
+    public List<string> RemovedOptions { get; private set; } = new();
+    public List<string> Options {
+        get => AvailableOptions.Concat(RemovedOptions).ToList();
+    }
+    public string Image { get; set; } = string.Empty;
 }

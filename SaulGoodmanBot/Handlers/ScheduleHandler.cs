@@ -18,15 +18,15 @@ public static class ScheduleHandler {
                 schedules.Add(new Schedule(e.Guild, user));
             }
         }
-        var interactivity = new InteractivityHelper<Schedule>(s, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, e.Id.Split('\\')[PAGE_INDEX]);
+        var interactivity = new InteractivityHelper<Schedule>(s, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, e.Id.Split('\\')[PAGE_INDEX], 5);
 
         var embed = new DiscordEmbedBuilder()
             .WithTitle(DateTime.Now.ToString("dddd MMMM d, yyyy"))
             .WithDescription("")
             .WithColor(DiscordColor.DarkBlue)
-            .WithFooter(interactivity.PageStatus());
+            .WithFooter(interactivity.PageStatus);
 
-        foreach (var schedule in interactivity.GetPage()) {
+        foreach (var schedule in interactivity) {
             embed.Description += $"### {schedule.User.Mention}: {schedule.WorkSchedule[DateTime.Now.DayOfWeek]}";
         }
 
