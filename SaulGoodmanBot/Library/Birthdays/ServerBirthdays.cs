@@ -1,57 +1,238 @@
 using DSharpPlus.Entities;
-using DataLibrary.Logic;
-using DataLibrary.Models;
+using System.Collections;
+using System.Data.SqlClient;
+using System.Data;
+using System.Reflection;
 
 namespace SaulGoodmanBot.Library.Birthdays;
 
-public class ServerBirthdays {
+internal class ServerBirthdays : DbBase, IEnumerable<Birthday> {
     public ServerBirthdays(DiscordGuild guild) {
         Guild = guild;
-        var data = BirthdayProcessor.LoadBirthdays(Guild.Id);
-        foreach (var row in data) {
-            _ = GetUsers((ulong)row.UserId, row.Birthday);
+        
+        try {
+            var result = DBGetData();
+            if (result.Result != 0)
+                throw new Exception(result.Message);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
     }
 
-    public async Task GetUsers(ulong userid, DateTime bday) {
-        var user = await Guild.GetMemberAsync(userid);
-        Birthdays.Add(new Birthday(user, bday));
+    #region DB Methods
+    private enum DataMode {
+        ADD,
+        CHANGE,
+        REMOVE
     }
 
-    public List<Birthday> GetBirthdays() {
-        return Birthdays;
-    }
+    private ResultArgs DBGetData() {
+        try {
+            #region Parameters
+            SqlParameter guildId;
+            SqlParameter status;
+            SqlParameter errMsg;
+            #endregion
 
-    public int Edit(DataOperations operation, Birthday birthday) => operation switch {
-        DataOperations.Add => BirthdayProcessor.AddBirthday(new BirthdayModel(Guild.Id, birthday.User.Id, birthday.BDay)),
-        DataOperations.Update => BirthdayProcessor.UpdateBirthday(new BirthdayModel(Guild.Id, birthday.User.Id, birthday.BDay)),
-        DataOperations.Delete => BirthdayProcessor.RemoveBirthday(new BirthdayModel(Guild.Id, birthday.User.Id, birthday.BDay)),
-        _ => -1
-    };
+            using SqlConnection cnn = new(ConnectionString);
+            cnn.Open();
+            var cmd = cnn.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            // TODO sp
 
-    public Birthday Find(DiscordUser user) {
-        return Birthdays.Where(x => x.User == user).FirstOrDefault() ?? new Birthday(user, NO_BIRTHDAY);
-    }
+            guildId = new SqlParameter() {
+                ParameterName = "@p_GuildId",
+                SqlDbType = SqlDbType.BigInt,
+                Direction = ParameterDirection.Input,
+                Value = Guild.Id
+            };
+            cmd.Parameters.Add(guildId);
 
-    public Birthday Next() {
-        var nextBirthdays = Birthdays;
+            status = new SqlParameter() {
+                ParameterName = "@p_Status",
+                SqlDbType = SqlDbType.Int,
+                Direction = ParameterDirection.Output
+            };
+            cmd.Parameters.Add(status);
 
-        // change birthday years to next birthday
-        foreach (var birthday in nextBirthdays) {
-            birthday.BDay = birthday.BDay.AddYears(birthday.GetAge() + 1);
+            errMsg = new SqlParameter() {
+                ParameterName = "@p_ErrMsg",
+                SqlDbType = SqlDbType.VarChar,
+                Size = 500,
+                Direction = ParameterDirection.Output
+            };
+
+            var result = new ResultArgs((int)status.Value, errMsg.Value.ToString()!);
+            var da = new SqlDataAdapter() { SelectCommand = cmd };
+            var ds = new DataSet();
+            da.Fill(ds);
+
+            if (result.Result != 0)
+                return result;
+
+            var dtr = ds.CreateDataReader();
+            if (!dtr.HasRows)
+                return result;
+
+            while (dtr.Read()) {
+                Birthdays.Add(new Birthday(GetUser(DeNull<ulong>(dtr["UserId"], 0)).Result, DeNull(dtr["Birthday"], DateTime.MinValue)));
+            }
+
+            return result;
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
+    }
 
-        // sort to find next birthday
-        nextBirthdays.Sort((d1, d2) => DateTime.Compare(d1.BDay, d2.BDay));
+    private ResultArgs DBProcess(Birthday bday, DataMode mode) {
+        try {
+            #region Parameters
+            SqlParameter guildId;
+            SqlParameter param;
+            SqlParameter status;
+            SqlParameter errMsg;
+            #endregion
 
-        return nextBirthdays.First();
+            using SqlConnection cnn = new(ConnectionString);
+            cnn.Open();
+            var cmd = cnn.CreateCommand();
+            cmd.CommandType = CommandType.StoredProcedure;
+            // TODO sp
+
+            guildId = new SqlParameter() {
+                ParameterName = "@p_GuildId",
+                SqlDbType = SqlDbType.BigInt,
+                Direction = ParameterDirection.Input,
+                Value = Guild.Id
+            };
+            cmd.Parameters.Add(guildId);
+
+            param = new SqlParameter() {
+                ParameterName = "@p_UserId",
+                SqlDbType = SqlDbType.BigInt,
+                Direction = ParameterDirection.Input,
+                Value = bday.User.Id
+            };
+            cmd.Parameters.Add(param);
+
+            param = new SqlParameter() {
+                ParameterName = "@p_Birthday",
+                SqlDbType = SqlDbType.DateTime,
+                Direction = ParameterDirection.Input,
+                Value = bday.BDay
+            };
+            cmd.Parameters.Add(param);
+
+            param = new SqlParameter() {
+                ParameterName = "@p_Mode",
+                SqlDbType = SqlDbType.Int,
+                Direction = ParameterDirection.Input,
+                Value = (int)mode
+            };
+            cmd.Parameters.Add(param);
+
+            status = new SqlParameter() {
+                ParameterName = "@p_Status",
+                SqlDbType = SqlDbType.Int,
+                Direction = ParameterDirection.Output
+            };
+            cmd.Parameters.Add(status);
+
+            errMsg = new SqlParameter() {
+                ParameterName = "@p_ErrMsg",
+                SqlDbType = SqlDbType.VarChar,
+                Size = 500,
+                Direction = ParameterDirection.Output
+            };
+            cmd.Parameters.Add(errMsg);
+
+            cmd.ExecuteNonQuery();
+            return new ResultArgs((int)status.Value, errMsg.Value.ToString()!);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
+    }
+
+    private async Task<DiscordUser> GetUser(ulong userid) => await Guild.GetMemberAsync(userid);
+    #endregion
+
+    #region Public Methods
+    public Birthday this[DiscordUser user] {
+        get => Birthdays.Where(x => x.User == user).FirstOrDefault() ?? throw new Exception($"{user.Mention} has not input their birthday");
+        set {
+            try {
+                if (Birthdays.Contains(Birthdays.Where(x => x.User == user).First()))
+                    Add(value);
+                else
+                    Change(value);
+            } catch (Exception ex) {
+                ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+                throw;
+            }
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    public IEnumerator<Birthday> GetEnumerator() => Birthdays.GetEnumerator();
+
+    public void Add(Birthday bday) {
+        try {
+            var result = DBProcess(bday, DataMode.ADD);
+            if (result.Result != 0)
+                throw new Exception(result.Message);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
+    }
+
+    public void Change(Birthday bday) {
+        try {
+            var result = DBProcess(bday, DataMode.CHANGE);
+            if (result.Result != 0)
+                throw new Exception(result.Message);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
+    }
+
+    public void Remove(Birthday bday) {
+        try {
+            var result = DBProcess(bday, DataMode.REMOVE);
+            if (result.Result != 0)
+                throw new Exception(result.Message);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     public bool IsEmpty() {
         return Birthdays.Count == 0;
     }
+    #endregion
 
+    #region Properties
     private DiscordGuild Guild { get; set; }
-    private List<Birthday> Birthdays { get; set; } = new();
-    public static readonly DateTime NO_BIRTHDAY = DateTime.Parse("1/1/1800");
+    public List<Birthday> Birthdays { get; private set; } = new();
+    public Birthday Next {
+        get {
+            var nextBirthdays = Birthdays;
+
+            // change birthday years to next birthday
+            foreach (var birthday in nextBirthdays) {
+                birthday.BDay = birthday.BDay.AddYears(birthday.Age + 1);
+            }
+
+            // sort to find next birthday
+            nextBirthdays.Sort((d1, d2) => DateTime.Compare(d1.BDay, d2.BDay));
+
+            return nextBirthdays.FirstOrDefault() ?? throw new Exception($"No birthdays in {Guild.Name}");
+        }
+    }
+    #endregion
 }

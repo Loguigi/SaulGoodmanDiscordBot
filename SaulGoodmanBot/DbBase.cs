@@ -5,9 +5,11 @@ namespace SaulGoodmanBot;
 
 internal class DbBase {
     public class ResultArgs {
-        public int Result { get; set; }
+        public int Result { get; set; } = -1;
         public string Message { get; set; } = string.Empty;
         public string ExtraData { get; set; } = string.Empty;
+
+        public ResultArgs() {}
 
         public ResultArgs(int result, string message) {
             Result = result;
