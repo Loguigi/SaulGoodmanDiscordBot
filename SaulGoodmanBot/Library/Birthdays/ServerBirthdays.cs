@@ -161,10 +161,10 @@ internal class ServerBirthdays : DbBase, IEnumerable<Birthday> {
 
     #region Public Methods
     public Birthday this[DiscordUser user] {
-        get => Birthdays.Where(x => x.User == user).FirstOrDefault() ?? throw new Exception($"{user.Mention} has not input their birthday");
+        get => Birthdays.Where(x => x.User == user).FirstOrDefault()!;
         set {
             try {
-                if (Birthdays.Contains(Birthdays.Where(x => x.User == user).First()))
+                if (this[value.User] == null)
                     Add(value);
                 else
                     Change(value);

@@ -32,7 +32,7 @@ public class BirthdayCommands : ApplicationCommandModule {
             return;
         }
 
-        var birthday = new ServerBirthdays(ctx.Guild)[user];
+        var birthday = new ServerBirthdays(ctx.Guild)[user] ?? throw new Exception($"{user.Mention} has not input their birthday");
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor($"{birthday.User.GlobalName}'s birthday", "", birthday.User.AvatarUrl)
@@ -49,7 +49,7 @@ public class BirthdayCommands : ApplicationCommandModule {
             return;
         }
 
-        var birthday = new ServerBirthdays(ctx.Guild)[ctx.TargetUser];
+        var birthday = new ServerBirthdays(ctx.Guild)[ctx.TargetUser]  ?? throw new Exception($"{ctx.TargetUser.Mention} has not input their birthday");
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor($"{birthday.User.GlobalName}'s birthday", "", birthday.User.AvatarUrl)

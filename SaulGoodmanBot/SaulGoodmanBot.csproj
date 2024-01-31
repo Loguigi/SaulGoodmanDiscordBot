@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.28" />
     <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01685" />
     <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01685" />
     <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-01685" />

@@ -1,6 +1,8 @@
-namespace DataLibrary.Models;
+using SaulGoodmanBot.Data;
 
-public class ScheduleModel {
+namespace SaulGoodmanBot.DTO;
+
+public class ScheduleDTO : DbCommonParams {
     public long GuildId { get; set; }
     public long UserId { get; set; }
     public DateTime? LastUpdated { get; set; } = null;

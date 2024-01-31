@@ -1,22 +1,23 @@
 using DSharpPlus.Entities;
-using DataLibrary.Logic;
-using DataLibrary.Models;
 using System.Reflection;
-using System.Data.SqlClient;
 using System.Data;
-using System.ComponentModel.DataAnnotations.Schema;
-using Dapper;
 using System.Collections;
+using SaulGoodmanBot.Data;
+using SaulGoodmanBot.DTO;
+using Dapper;
 
 namespace SaulGoodmanBot.Library.WheelPicker;
 
-internal class WheelPickers : DbBase, IEnumerable<Wheel> {
+internal class WheelPickers : DbBase<WheelsDTO, Wheel>, IEnumerable<Wheel> {
     public WheelPickers(DiscordGuild guild) {
         Guild = guild;
         try {
-            var result = DBGetData();
-            if (result.Result != 0)
+            var result = GetData();
+            if (result.Status == ResultArgs<List<WheelsDTO>>.StatusCodes.ERROR)
                 throw new Exception(result.Message);
+            else if (result.Status == ResultArgs<List<WheelsDTO>>.StatusCodes.NEEDS_SETUP)
+                IsEmpty = true;
+            MapData(result.Result);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
@@ -35,8 +36,13 @@ internal class WheelPickers : DbBase, IEnumerable<Wheel> {
 
     public void AddWheel(Wheel wheel, string first_option) {
         try {
-            var result = DBProcess(wheel, DataMode.ADD_WHEEL, first_option);
-            if (result.Result != 0)
+            var result = SaveData("soon", new WheelsDTO() {
+                GuildId = (long)Guild.Id,
+                WheelName = wheel.Name,
+                WheelOption = first_option,
+                ImageUrl = wheel.Image == string.Empty ? null : wheel.Image
+            });
+            if (result.Status != 0)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -102,6 +108,59 @@ internal class WheelPickers : DbBase, IEnumerable<Wheel> {
     #endregion
 
     #region DB Methods
+    protected override ResultArgs<List<WheelsDTO>> GetData(string sp=StoredProcedures.GET_DATA) {
+        try {
+            using IDbConnection cnn = Connection;
+            var sql = sp + " @Status, @ErrMsg";
+            var result = new DbCommonParams();
+            var data = cnn.Query<WheelsDTO>(sp, result).ToList();
+            return new ResultArgs<List<WheelsDTO>>(data, result.Status, result.ErrMsg);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
+    }
+
+    protected override ResultArgs<int> SaveData(string sp, WheelsDTO data)
+    {
+        try {
+            using IDbConnection cnn = Connection;
+            var sql = sp + 
+                @" @GuildId,
+                @WheelName,
+                @WheelOption,
+                @ImageUrl,
+                @TempRemoved,
+                @Mode,
+                @Status,
+                @ErrMsg";
+            return new ResultArgs<int>(cnn.Execute(sp, data), data.Status, data.ErrMsg);
+            
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
+    }
+
+    protected override List<Wheel> MapData(List<WheelsDTO> data) {
+        try {
+            foreach (var w in data) {
+                if (!Contains(w.WheelName)) {
+                    Wheels.Add(new Wheel(w.WheelName, w.ImageUrl ?? string.Empty));
+                }
+                
+                if (w.TempRemoved == 1) {
+                    this[w.WheelName].RemovedOptions.Add(w.WheelOption);
+                } else {
+                    this[w.WheelName].AvailableOptions.Add(w.WheelOption);
+                }
+            }
+            return Wheels;
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
+    }
     private enum DataMode {
         ADD_WHEEL = 0,
         ADD_OPTION = 1,
@@ -110,163 +169,15 @@ internal class WheelPickers : DbBase, IEnumerable<Wheel> {
         TEMP_REMOVE = 4,
         RESTORE = 5
     }
-
-    private ResultArgs DBGetData() {
-        try
-        {
-            var ds = new DataSet();
-            SqlParameter pGuild;
-            SqlParameter pStatus;
-            SqlParameter pErrMsg;
-
-            using (SqlConnection cnn = new(ConnectionString)) {
-                cnn.Open();
-                var cmd = cnn.CreateCommand();
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.CommandText = StoredProcedures.GET_WHEELS;
-
-                pGuild = new SqlParameter("@p_GuildId", SqlDbType.BigInt) {
-                    Value = Guild.Id,
-                    Direction = ParameterDirection.Input
-                };
-                cmd.Parameters.Add(pGuild);
-
-                pStatus = new SqlParameter("@p_Status", SqlDbType.Int);
-                pStatus.Direction = ParameterDirection.Output;
-                cmd.Parameters.Add(pStatus);
-
-                pErrMsg = new SqlParameter("@p_ErrMsg", SqlDbType.VarChar, 500);
-                pStatus.Direction = ParameterDirection.Output;
-                cmd.Parameters.Add(pStatus);
-
-                var da = new SqlDataAdapter() { SelectCommand = cmd };
-                da.Fill(ds);
-                var result = new ResultArgs((int)pStatus.Value, (string)pErrMsg.Value);
-
-                if (result.Result > 0) {
-                    return result;
-                }
-
-                var dtr = ds.CreateDataReader();
-                if (dtr.HasRows) {
-                    Wheels.Clear();
-                    while (dtr.Read()) {
-                        string wheelName = DeNull(dtr["WheelName"].ToString(), string.Empty);
-                        bool tempDelete = DeNull((bool)dtr["TempRemoved"], false);
-                        string option = DeNull(dtr["WheelOption"].ToString(), string.Empty);
-                        if (!Contains(wheelName)) {
-                            Wheels.Add(new Wheel(wheelName, DeNull(dtr["ImageUrl"].ToString(), string.Empty)));
-                        }
-                        
-                        if (tempDelete) {
-                            this[wheelName].RemovedOptions.Add(option);
-                        } else {
-                            this[wheelName].AvailableOptions.Add(option);
-                        }
-                    }
-                }
-                return result;
-            }
-        }
-        catch (Exception ex)
-        {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
-    private ResultArgs DBProcess(Wheel wheel, DataMode mode, string option="") {
-        try {
-            SqlParameter param;
-            SqlParameter pStatus;
-            SqlParameter pErrMsg;
-
-            using (SqlConnection cnn = new(ConnectionString)) {
-                cnn.Open();
-                var cmd = cnn.CreateCommand();
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.CommandText = StoredProcedures.WHEEL_PROCESS;
-
-                param = new SqlParameter() {
-                    ParameterName = "@p_GuildId",
-                    SqlDbType = SqlDbType.BigInt,
-                    Direction = ParameterDirection.Input,
-                    Value = Guild.Id
-                };
-                cmd.Parameters.Add(param);
-
-                param = new SqlParameter() {
-                    ParameterName = "@p_WheelName",
-                    SqlDbType = SqlDbType.VarChar,
-                    Size = 100,
-                    Direction = ParameterDirection.Input,
-                    Value = wheel.Name
-                };
-                cmd.Parameters.Add(param);
-
-                param = new SqlParameter() {
-                    ParameterName = "@p_WheelOption",
-                    SqlDbType = SqlDbType.VarChar,
-                    Size = 100,
-                    Direction = ParameterDirection.Input,
-                    Value = option
-                };
-                cmd.Parameters.Add(param);
-
-                param = new SqlParameter() {
-                    ParameterName = "@p_ImageUrl",
-                    SqlDbType = SqlDbType.VarChar,
-                    Size = 1000,
-                    Direction = ParameterDirection.Input,
-                    Value = wheel.Image
-                };
-                cmd.Parameters.Add(param);
-
-                param = new SqlParameter() {
-                    ParameterName = "@p_TempRemoved",
-                    SqlDbType = SqlDbType.Bit,
-                    Direction = ParameterDirection.Input,
-                    Value = wheel.RemovedOptions.Contains(option) ? 1 : 0
-                };
-                cmd.Parameters.Add(param);
-
-                param = new SqlParameter() {
-                    ParameterName = "@p_Mode",
-                    SqlDbType = SqlDbType.Int,
-                    Direction = ParameterDirection.Input,
-                    Value = (int)mode
-                };
-                cmd.Parameters.Add(param);
-
-                pStatus = new SqlParameter() {
-                    ParameterName = "@p_Status",
-                    SqlDbType = SqlDbType.Int,
-                    Direction = ParameterDirection.Output
-                };
-                cmd.Parameters.Add(pStatus);
-
-                pErrMsg = new SqlParameter() {
-                    ParameterName = "@p_ErrMsg",
-                    SqlDbType = SqlDbType.VarChar,
-                    Size = 500,
-                    Direction = ParameterDirection.Output
-                };
-                cmd.Parameters.Add(pErrMsg);
-
-                cmd.ExecuteNonQuery();
-                var result = new ResultArgs((int)pStatus.Value, pErrMsg.Value.ToString() ?? throw new Exception());
-                return result;
-            }
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
+    private struct StoredProcedures {
+        public const string GET_DATA = "Wheels_GetData";
     }
     #endregion
 
     #region Properties
     private DiscordGuild Guild { get; set; }
-    public List<Wheel> Wheels = new();
+    public List<Wheel> Wheels { get; private set; } = new();
+    public bool IsEmpty { get; private set; } = false;
     private const int WHEEL_LIMIT = 25;
     #endregion
 }

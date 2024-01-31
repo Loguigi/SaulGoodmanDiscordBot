@@ -1,6 +1,8 @@
-namespace DataLibrary.Models;
+using SaulGoodmanBot.Data;
 
-public class SantaConfigModel {
+namespace SaulGoodmanBot.DTO;
+
+public class SantaConfigDTO : DbCommonParams {
     public long GuildId { get; set; }
     public long SantaRoleId { get; set; }
     public DateTime ParticipationDeadline { get; set; }

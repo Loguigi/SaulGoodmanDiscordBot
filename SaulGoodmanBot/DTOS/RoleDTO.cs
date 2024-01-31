@@ -1,8 +1,8 @@
-using System.Numerics;
+using SaulGoodmanBot.Data;
 
-namespace DataLibrary.Models;
+namespace SaulGoodmanBot.DTO;
 
-public class RoleModel {
+public class RoleDTO : DbCommonParams {
     public long GuildId { get; set; } = 0;
     public long RoleId { get; set; } = 0;
     public string? Description { get; set; } = null;

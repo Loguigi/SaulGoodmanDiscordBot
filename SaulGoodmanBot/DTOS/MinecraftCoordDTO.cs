@@ -1,6 +1,8 @@
-namespace DataLibrary.Models;
+using SaulGoodmanBot.Data;
 
-public class MinecraftWaypointModel {
+namespace SaulGoodmanBot.DTO;
+
+public class MinecraftWaypointDTO : DbCommonParams {
     public long GuildId { get; set; }
     public string Dimension { get; set; } = "overworld";
     public string Name { get; set; } = string.Empty;

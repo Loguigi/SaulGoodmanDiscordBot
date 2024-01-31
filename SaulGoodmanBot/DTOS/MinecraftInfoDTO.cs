@@ -1,6 +1,8 @@
-namespace DataLibrary.Models;
+using SaulGoodmanBot.Data;
 
-public class MinecraftInfoModel {
+namespace SaulGoodmanBot.DTO;
+
+public class MinecraftInfoDTO : DbCommonParams {
     public long GuildId { get; set; }
     public string WorldName { get; set; } = string.Empty;
     public string? WorldDescription { get; set; } = null;

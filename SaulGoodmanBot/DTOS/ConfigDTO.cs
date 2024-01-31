@@ -1,6 +1,8 @@
-namespace DataLibrary.Models;
+using SaulGoodmanBot.Data;
 
-public class ConfigModel {
+namespace SaulGoodmanBot.DTO;
+
+public class ConfigDTO : DbCommonParams {
     public long GuildId { get; set; }
     public string? WelcomeMessage { get; set; } = null;
     public string? LeaveMessage { get; set; } = null;

@@ -11,30 +11,22 @@ using SaulGoodmanBot.Handlers;
 using Microsoft.Extensions.Logging;
 using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.Library.Helpers;
+using DSharpPlus.Entities;
 
 namespace SaulGoodmanBot;
 
-internal class Program {
+internal class Bot {
     #region Discord Client Properties
     public static DiscordClient? Client { get; private set; }
     public static InteractivityExtension? Interactivity { get; private set; }
-    public static CommandsNextExtension? Commands { get; private set; }
+    public static SlashCommandsExtension? Slash { get; private set; }
     #endregion
 
     internal async Task MainAsync() {
-        #region Json Config Reader
-        var json = string.Empty;
-        using (var fs = File.OpenRead("Config/config.json"))
-        using (var sr = new StreamReader(fs, new UTF8Encoding(false)))
-            json = await sr.ReadToEndAsync();
-
-        var configJSON = JsonConvert.DeserializeObject<ConfigJSON>(json);
-        #endregion
-
         #region Discord Client Config
         var discordConfig = new DiscordConfiguration() {
             Intents = DiscordIntents.All,
-            Token = configJSON.Token,
+            Token = Env.Token ?? throw new Exception("No token"),
             TokenType = TokenType.Bot,
             AutoReconnect = true,
             LogTimestampFormat = "MMM dd yyyy - hh:mm:ss tt",
@@ -58,37 +50,46 @@ internal class Program {
         #endregion
 
         #region Slash Commands
-        var slash = Client.UseSlashCommands();
-        slash.RegisterCommands<HelpCommands>();
-        slash.RegisterCommands<MiscCommands>();
-        slash.RegisterCommands<WheelPickerCommands>();
-        slash.RegisterCommands<ReactionCommands>(270349691147780096);
-        slash.RegisterCommands<BirthdayCommands>();
-        slash.RegisterCommands<ServerConfigCommands>();
-        slash.RegisterCommands<RoleCommands>();
-        slash.RegisterCommands<LevelCommands>();
-        slash.RegisterCommands<MinecraftCommands>();
-        slash.RegisterCommands<ScheduleCommands>();
+        Slash = Client.UseSlashCommands();
+        Slash.RegisterCommands<HelpCommands>();
+        Slash.RegisterCommands<MiscCommands>();
+        Slash.RegisterCommands<WheelPickerCommands>();
+        Slash.RegisterCommands<ReactionCommands>(270349691147780096);
+        Slash.RegisterCommands<BirthdayCommands>();
+        Slash.RegisterCommands<ServerConfigCommands>();
+        Slash.RegisterCommands<RoleCommands>();
+        Slash.RegisterCommands<LevelCommands>();
+        Slash.RegisterCommands<MinecraftCommands>();
+        Slash.RegisterCommands<ScheduleCommands>();
 
         // Secret Santa seasonal commands/handlers
         if (DateTime.Now.Month == 11 || DateTime.Now.Month == 12 || DateTime.Now.Month == 1) {
             Client.MessageCreated += SantaHandler.HandleParticipationDeadlineCheck;
-            slash.RegisterCommands<SecretSantaCommands>();
+            Slash.RegisterCommands<SecretSantaCommands>();
         }
 
-        slash.SlashCommandInvoked += async (s, e) => {
+        Slash.SlashCommandInvoked += async (s, e) => {
             Console.WriteLine($"{e.Context.CommandName} invoked by {e.Context.User} in {e.Context.Channel}/{e.Context.Guild}");
             await Task.CompletedTask;
         };
 
-        slash.SlashCommandErrored += async (s, e) => {
+        Slash.SlashCommandErrored += async (s, e) => {
             if (e.Exception is SlashExecutionChecksFailedException slex) {
                 foreach (var check in slex.FailedChecks) {
                     if (check is SlashRequirePermissionsAttribute att)
                         await e.Context.CreateResponseAsync(StandardOutput.Error("Only an admin can run this command!"), ephemeral:true);
                 }
-            } else {
-                await e.Context.CreateResponseAsync(StandardOutput.Error($"I'm not really sure what happened. Please let {Client.GetUserAsync(263070689559445504).Result.Mention} know!\nDebug info: `{e.Exception.Message}`"), ephemeral:true);
+            }
+
+            if (e.Exception is Exception ex) {
+                var embed = new DiscordEmbedBuilder()
+                    .WithAuthor("Error", "", ImageHelper.Images["Error"])
+                    .AddField("Message", ex.Message)
+                    .AddField("Source", ex.Source ?? "Unknown")
+                    .WithColor(DiscordColor.Red)
+                    .WithThumbnail(ImageHelper.Images["Finger"]);
+
+                await e.Context.CreateResponseAsync(embed, ephemeral:true);
             }
         };
         #endregion
@@ -97,5 +98,5 @@ internal class Program {
         await Task.Delay(-1);
     }
 
-    internal static void Main() => new Program().MainAsync().GetAwaiter().GetResult();
+    internal static void Main() => new Bot().MainAsync().GetAwaiter().GetResult();
 }

@@ -13,14 +13,6 @@ public class Birthday {
         BDay = bday.BDay;
     }
 
-    public bool HasBirthdayToday() {
-        return BDay.Month == DateTime.Now.Month && BDay.Day == DateTime.Now.Day;
-    }
-
-    public bool HasUpcomingBirthday() {
-        return BDay.Month == DateTime.Now.Month && BDay.Day == DateTime.Now.AddDays(5).Day;
-    }
-
     public override string ToString() {
         return BDay.ToString("MMMM d, yyyy");
     }
@@ -45,5 +37,13 @@ public class Birthday {
 
             return age;
         }
+    }
+
+    public bool HasBirthdayToday {
+        get => BDay.Month == DateTime.Now.Month && BDay.Day == DateTime.Now.Day;
+    }
+
+    public bool HasUpcomingBirthday {
+        get => BDay.Month == DateTime.Now.Month && BDay.Day == DateTime.Now.AddDays(5).Day;
     }
 }

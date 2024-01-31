@@ -1,6 +1,8 @@
-namespace DataLibrary.Models;
+using SaulGoodmanBot.Data;
 
-public class LevelModel {
+namespace SaulGoodmanBot.DTO;
+
+public class LevelDTO : DbCommonParams {
     public long GuildId { get; set; }
     public long UserId { get; set; }
     public int Level { get; set; } = 0;

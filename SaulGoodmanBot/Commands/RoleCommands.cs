@@ -38,26 +38,19 @@ public class RoleCommands : ApplicationCommandModule {
         
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
 
-        // ERROR: roles not setup
-        if (roles.IsNotSetup()) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use /role setup"), ephemeral:true);
-            return;
-        }
-
-        if (roles.AlreadyExists(role)) {
-            await ctx.CreateResponseAsync(StandardOutput.Error($"{role.Mention} already added to {roles.CategoryName}"), ephemeral:true);
-            return;
-        }
+        if (roles.Contains(role))
+            throw new Exception($"{role.Mention} already added to {roles.CategoryName}");
 
         if (emoji == null) {
-            roles.Add(new RoleComponent(role, description, null));
+            roles.Add(new RoleComponent(role, description ?? string.Empty, roles.DEFAULT_EMOJI));
             await ctx.CreateResponseAsync(StandardOutput.Success($"Added {role.Mention} to {roles.CategoryName}"), ephemeral:true);
             return;
         }
 
+        #region Emoji Parsing
         // Standard unicode emoji
         if (DiscordEmoji.TryFromUnicode(ctx.Client, emoji, out DiscordEmoji normalEmoji)) {
-            roles.Add(new RoleComponent(role, description, normalEmoji));
+            roles.Add(new RoleComponent(role, description ?? string.Empty, normalEmoji));
             await ctx.CreateResponseAsync(StandardOutput.Success($"Added {role.Mention} to {roles.CategoryName}"), ephemeral:true);
 
         // Not standard unicode emoji; possible guild emoji
@@ -65,16 +58,17 @@ public class RoleCommands : ApplicationCommandModule {
             var tryEmoji = ":" + string.Join("", emoji.SkipWhile(x => x != ':').Skip(1).TakeWhile(x => x != ':')) + ":";
 
             if (DiscordEmoji.TryFromName(ctx.Client, tryEmoji, true, out DiscordEmoji guildEmoji)) {
-                roles.Add(new RoleComponent(role, description, guildEmoji));
+                roles.Add(new RoleComponent(role, description ?? string.Empty, guildEmoji));
                 await ctx.CreateResponseAsync(StandardOutput.Success($"Added {role.Mention} to {roles.CategoryName}"), ephemeral:true);
 
             // ERROR: emoji error
             } else
-                await ctx.CreateResponseAsync(StandardOutput.Error("Invalid emoji"), ephemeral:true);
+                throw new Exception("Invalid emoji");
 
         // ERROR: emoji error
         } else 
-            await ctx.CreateResponseAsync(StandardOutput.Error("Invalid emoji"), ephemeral:true);
+            throw new Exception("Invalid emoji");
+        #endregion
     }
 
     [SlashCommand("remove", "Remove a role from the list of self-assignable roles")]
@@ -82,16 +76,13 @@ public class RoleCommands : ApplicationCommandModule {
     public async Task RemoveRole(InteractionContext ctx) {
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
 
-        if (roles.IsNotSetup()) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use /role setup"), ephemeral:true);
-            return;
-        }
-
         // Create dropdown
         var roleOptions = new List<DiscordSelectComponentOption>();
-        roles.Roles.ForEach(r => roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), "", false)));
+        foreach (var r in roles) {
+            roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), "", false));
+        }
         var roleDropdown = new DiscordSelectComponent(IDHelper.Roles.REMOVE, "Select a role", roleOptions);
-        var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, IDHelper.Roles.REMOVE, "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_left:, false")));
+        var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, IDHelper.Roles.REMOVE, "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_left:", false)));
 
         var embed = new DiscordEmbedBuilder()
             .WithTitle("Remove Role")
@@ -105,19 +96,11 @@ public class RoleCommands : ApplicationCommandModule {
     [SlashCommand("menu", "Creates a menu for assigning and unassigning roles")]
     public async Task RoleMenu(InteractionContext ctx) {
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
-
-        if (roles.IsNotSetup()) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use </role setup:1137537906966286386>"), ephemeral:true);
-            return;
-        }
-
-        if (roles.IsEmpty()) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("No roles added. Use </role add:1137537906966286386>"), ephemeral:true);
-            return;
-        }
         
         var roleOptions = new List<DiscordSelectComponentOption>();
-        roles.Roles.ForEach(r => roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description ?? string.Empty, false, new DiscordComponentEmoji(r.Emoji ?? DiscordEmoji.FromName(ctx.Client, ":arrow_right:", false)))));
+        foreach (var r in roles) {
+            roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description, false, new DiscordComponentEmoji(r.Emoji)));
+        }
         DiscordSelectComponent roleDropdown = roles.AllowMultipleRoles ? new(IDHelper.Roles.MENU, "Select roles", roleOptions, false, 1, roleOptions.Count) : new(IDHelper.Roles.MENU, "Select a role", roleOptions, false);
 
         var embed = new DiscordEmbedBuilder()
@@ -144,21 +127,13 @@ public class RoleCommands : ApplicationCommandModule {
     public async Task AssignRole(InteractionContext ctx) {
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
 
-        if (roles.IsNotSetup()) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("Self-assignable roles not setup yet. Use /role setup"), ephemeral:true);
-            return;
-        }
-
-        if (roles.IsEmpty()) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("No roles added. Use /role add"), ephemeral:true);
-            return;
-        }
-
         // Create role options and dropdowns
         var roleOptions = new List<DiscordSelectComponentOption>();
-        roles.Roles.ForEach(r => roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description ?? string.Empty, false, new DiscordComponentEmoji(r.Emoji ?? DiscordEmoji.FromName(ctx.Client, ":arrow_right:", false)))));
+        foreach (var r in roles) {
+            roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description, false, new DiscordComponentEmoji(r.Emoji)));
+        }
         var roleDropdown = new DiscordSelectComponent(IDHelper.Roles.ASSIGN, "Select a role", roleOptions);
-        var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, IDHelper.Roles.ASSIGN, "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_left:, false")));
+        var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, IDHelper.Roles.ASSIGN, "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_left:", false)));
         
         var embed = new DiscordEmbedBuilder()
             .WithTitle(roles.CategoryName)

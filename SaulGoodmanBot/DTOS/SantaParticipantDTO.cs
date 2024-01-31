@@ -1,6 +1,8 @@
-namespace DataLibrary.Models;
+using SaulGoodmanBot.Data;
 
-public class SantaParticipantModel {
+namespace SaulGoodmanBot.DTO;
+
+public class SantaParticipantDTO : DbCommonParams {
     public long GuildId { get; set; }
     public long UserId { get; set; }
     public string FirstName { get; set; } = string.Empty;

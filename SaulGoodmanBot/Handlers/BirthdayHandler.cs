@@ -17,24 +17,22 @@ public static class BirthdayHandler {
             return;
         }
 
-        config.PauseBdayNotifsTimer = ServerBirthdays.NO_BIRTHDAY;
+        config.PauseBdayNotifsTimer = DateTime.MinValue;
         var embed = new DiscordEmbedBuilder()
             .WithColor(DiscordColor.HotPink);
         
-        foreach (var birthday in birthdays.GetBirthdays()) {
-            if (birthday.IsBirthdayToday()) {
-                embed.WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} {config.BirthdayMessage} {birthday.User.Mention} ({birthday.GetAge()})");
+        foreach (var birthday in birthdays) {
+            if (birthday.HasBirthdayToday) {
+                embed.WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} {config.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
                 config.PauseBdayNotifsTimer = DateTime.Now;
                 await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
-            } else if (birthday.HasUpcomingBirthday()) {
+            } else if (birthday.HasUpcomingBirthday) {
                 embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__5__** days!").WithFooter($"{DiscordEmoji.FromName(s, ":birthday:", false)} {birthday} {DiscordEmoji.FromName(s, ":birthday:", false)}");
                 config.PauseBdayNotifsTimer = DateTime.Now;
                 await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
             }
         }
         config.UpdateConfig();
-
-        
     }
 
     public static async Task HandleBirthdayList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
@@ -44,7 +42,7 @@ public static class BirthdayHandler {
         }
 
         var birthdays = new ServerBirthdays(e.Guild);
-        var interactivity = new InteractivityHelper<Birthday>(s, birthdays.GetBirthdays(), IDHelper.Birthdays.LIST, e.Id.Split('\\')[PAGE_INDEX], 10);
+        var interactivity = new InteractivityHelper<Birthday>(s, birthdays.Birthdays, IDHelper.Birthdays.LIST, IDHelper.GetId(e.Id, PAGE_INDEX), 10);
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
@@ -54,7 +52,7 @@ public static class BirthdayHandler {
             .WithFooter(interactivity.PageStatus);
 
         foreach (var birthday in interactivity) {
-            embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.GetAge() + 1})`\n";
+            embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.Age + 1})`\n";
         }
 
         await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
