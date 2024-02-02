@@ -1,7 +1,7 @@
-SaulGoodmanBot/Config/
-SaulGoodmanBot/Data/
-SaulGoodmanBot/Schema/
-SaulGoodmanBot/obj/
-SaulGoodmanBot/bin/
-SaulGoodmanBot/.vscode/
-.vscode/
+SaulGoodmanBot/Config/**
+SaulGoodmanBot/Data/**
+SaulGoodmanBot/Schema/**
+SaulGoodmanBot/obj/**
+SaulGoodmanBot/bin/**
+SaulGoodmanBot/.vscode/**
+.vscode/**
