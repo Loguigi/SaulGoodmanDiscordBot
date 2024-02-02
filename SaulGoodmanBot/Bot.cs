@@ -10,12 +10,12 @@ using SaulGoodmanBot.Commands;
 using SaulGoodmanBot.Handlers;
 using Microsoft.Extensions.Logging;
 using DSharpPlus.SlashCommands.Attributes;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Helpers;
 using DSharpPlus.Entities;
 
 namespace SaulGoodmanBot;
 
-internal class Bot {
+public class Bot {
     #region Discord Client Properties
     public static DiscordClient? Client { get; private set; }
     public static InteractivityExtension? Interactivity { get; private set; }
@@ -23,6 +23,8 @@ internal class Bot {
     #endregion
 
     internal async Task MainAsync() {
+        Env.SetContext();
+
         #region Discord Client Config
         var discordConfig = new DiscordConfiguration() {
             Intents = DiscordIntents.All,

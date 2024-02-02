@@ -1,1 +1,7 @@
-SaulGoodmanBot/Config/Env.cs
+SaulGoodmanBot/Config/
+SaulGoodmanBot/Data/
+SaulGoodmanBot/Schema/
+SaulGoodmanBot/obj/
+SaulGoodmanBot/bin/
+SaulGoodmanBot/.vscode/
+.vscode/

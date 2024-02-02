@@ -1,12 +1,10 @@
 using DSharpPlus.Entities;
-using DataLibrary.Logic;
 
 namespace SaulGoodmanBot.Library;
 
 public class ServerConfig {
     public ServerConfig(DiscordGuild guild) {
         Guild = guild;
-        var config = ConfigProcessor.LoadConfig(Guild.Id);
         DefaultChannel = Guild.GetDefaultChannel();
         
         if (config == null) {

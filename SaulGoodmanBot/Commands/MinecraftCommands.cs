@@ -1,7 +1,8 @@
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
-using SaulGoodmanBot.Library.Minecraft;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Controllers;
+using SaulGoodmanBot.Helpers;
 using SaulGoodmanBot.Handlers;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands.Attributes;

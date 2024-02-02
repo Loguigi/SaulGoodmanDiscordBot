@@ -10,11 +10,11 @@ using System.Reflection.Metadata.Ecma335;
 
 namespace SaulGoodmanBot.Data;
 
-internal abstract class DbBase<TDTO, TModel> {
+public abstract class DbBase<TModel, TDomain> {
     protected SqlConnection Connection { get => new(_connectionString); }
-    protected abstract ResultArgs<List<TDTO>> GetData(string sp);
-    protected abstract ResultArgs<int> SaveData(string sp, TDTO data);
-    protected abstract List<TModel> MapData(List<TDTO> data);
+    protected abstract ResultArgs<List<TModel>> GetData(string sp);
+    protected abstract ResultArgs<int> SaveData(string sp, TModel data);
+    protected abstract List<TDomain> MapData(List<TModel> data);
     protected T DeNull<T>(object? data, T defaultValue) => data == null ? defaultValue : (T)data;
     private string? _connectionString = Env.CnnVal;
 }

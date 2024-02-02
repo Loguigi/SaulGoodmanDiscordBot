@@ -1,10 +1,10 @@
 using DSharpPlus.Entities;
-using DataLibrary.Logic;
-using DataLibrary.Models;
+using SaulGoodmanBot.Models;
+using SaulGoodmanBot.Data;
 
 namespace SaulGoodmanBot.Library;
 
-public class Schedule {
+internal class Schedule : DbBase<ScheduleModel, Schedule> {
     public Schedule(DiscordGuild guild, DiscordUser user) {
         Guild = guild;
         User = user;
@@ -18,7 +18,7 @@ public class Schedule {
         for (var i = DayOfWeek.Sunday; i <= DayOfWeek.Saturday; ++i) {
             WorkSchedule[i] = data.ToList()[(int)i];
         }
-        LastUpdated = data.LastUpdated ?? NO_DATE;
+        //LastUpdated = data.LastUpdated ?? NO_DATE;
         RecurringSchedule = data.RecurringSchedule == 1;
         PictureUrl = data.PictureUrl;
     }
@@ -49,6 +49,24 @@ public class Schedule {
         });
     }
 
+    #region DB Methods
+    protected override ResultArgs<List<ScheduleModel>> GetData(string sp)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override ResultArgs<int> SaveData(string sp, ScheduleModel data)
+    {
+        throw new NotImplementedException();
+    }
+
+    protected override List<Schedule> MapData(List<ScheduleModel> data)
+    {
+        throw new NotImplementedException();
+    }
+    #endregion
+
+    #region Properties
     private DiscordGuild Guild { get; set; }
     public DiscordUser User { get; private set; }
     public DateTime LastUpdated { get; set; }
@@ -62,6 +80,6 @@ public class Schedule {
         {DayOfWeek.Friday, null},
         {DayOfWeek.Saturday, null}
     };
-    public string? PictureUrl { get; set; } = null;
-    public readonly DateTime NO_DATE = DateTime.Parse("1/1/2000");
+    public string PictureUrl { get; set; } = string.Empty;
+    #endregion
 }

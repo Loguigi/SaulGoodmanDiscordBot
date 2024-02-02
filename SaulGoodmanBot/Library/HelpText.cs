@@ -12,7 +12,7 @@ public static class HelpText {
             "* Schedule inputting to help planning\n" +
             "* Minecraft commands for saving waypoints\n" +
             "* Secret Santa management for the holidays\n\n" +
-            $"For any problems or questions, please DM {Program.Client!.GetUserAsync(263070689559445504).Result.Mention}, the creator of the bot"},
+            $"For any problems or questions, please DM {Bot.Client!.GetUserAsync(263070689559445504).Result.Mention}, the creator of the bot"},
         {"Bot setup and customization",
             "### Custom messages\n" +
                 "Set all custom messages using </config messages:1134335362681032806>\n" +

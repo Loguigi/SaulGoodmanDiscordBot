@@ -15,8 +15,9 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.Handlers;
-using SaulGoodmanBot.Library.Birthdays;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Controllers;
+using SaulGoodmanBot.Helpers;
 
 namespace SaulGoodmanBot.Commands;
 
