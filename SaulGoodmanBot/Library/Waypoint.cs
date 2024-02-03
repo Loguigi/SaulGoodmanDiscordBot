@@ -1,4 +1,4 @@
-namespace SaulGoodmanBot.Library.Minecraft;
+namespace SaulGoodmanBot.Library;
 
 public class Waypoint {
     public Waypoint(string dimension, string name, int x, int y, int z) {

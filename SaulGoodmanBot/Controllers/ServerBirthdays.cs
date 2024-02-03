@@ -5,176 +5,24 @@ using System.Reflection;
 using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Models;
 using SaulGoodmanBot.Data;
+using Dapper;
 
 namespace SaulGoodmanBot.Controllers;
 
-internal class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birthday> {
+public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birthday> {
     public ServerBirthdays(DiscordGuild guild) {
         Guild = guild;
         
         try {
-            var result = DBGetData();
-            if (result.Result != 0)
+            var result = GetData("");
+            if (result.Status != ResultArgs<List<BirthdayModel>>.StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
+            Birthdays = MapData(result.Result);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
         }
     }
-
-    #region DB Methods
-    private enum DataMode {
-        ADD,
-        CHANGE,
-        REMOVE
-    }
-
-    protected override ResultArgs<List<BirthdayModel>> GetData(string sp)
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override ResultArgs<int> SaveData(string sp, BirthdayModel data)
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override List<Birthday> MapData(List<BirthdayModel> data)
-    {
-        throw new NotImplementedException();
-    }
-
-    private ResultArgs DBGetData() {
-        try {
-            #region Parameters
-            SqlParameter guildId;
-            SqlParameter status;
-            SqlParameter errMsg;
-            #endregion
-
-            using SqlConnection cnn = new(ConnectionString);
-            cnn.Open();
-            var cmd = cnn.CreateCommand();
-            cmd.CommandType = CommandType.StoredProcedure;
-            // TODO sp
-
-            guildId = new SqlParameter() {
-                ParameterName = "@p_GuildId",
-                SqlDbType = SqlDbType.BigInt,
-                Direction = ParameterDirection.Input,
-                Value = Guild.Id
-            };
-            cmd.Parameters.Add(guildId);
-
-            status = new SqlParameter() {
-                ParameterName = "@p_Status",
-                SqlDbType = SqlDbType.Int,
-                Direction = ParameterDirection.Output
-            };
-            cmd.Parameters.Add(status);
-
-            errMsg = new SqlParameter() {
-                ParameterName = "@p_ErrMsg",
-                SqlDbType = SqlDbType.VarChar,
-                Size = 500,
-                Direction = ParameterDirection.Output
-            };
-
-            var result = new ResultArgs((int)status.Value, errMsg.Value.ToString()!);
-            var da = new SqlDataAdapter() { SelectCommand = cmd };
-            var ds = new DataSet();
-            da.Fill(ds);
-
-            if (result.Result != 0)
-                return result;
-
-            var dtr = ds.CreateDataReader();
-            if (!dtr.HasRows)
-                return result;
-
-            while (dtr.Read()) {
-                Birthdays.Add(new Birthday(GetUser(DeNull<ulong>(dtr["UserId"], 0)).Result, DeNull(dtr["Birthday"], DateTime.MinValue)));
-            }
-
-            return result;
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
-    private ResultArgs DBProcess(Birthday bday, DataMode mode) {
-        try {
-            #region Parameters
-            SqlParameter guildId;
-            SqlParameter param;
-            SqlParameter status;
-            SqlParameter errMsg;
-            #endregion
-
-            using SqlConnection cnn = new(ConnectionString);
-            cnn.Open();
-            var cmd = cnn.CreateCommand();
-            cmd.CommandType = CommandType.StoredProcedure;
-            // TODO sp
-
-            guildId = new SqlParameter() {
-                ParameterName = "@p_GuildId",
-                SqlDbType = SqlDbType.BigInt,
-                Direction = ParameterDirection.Input,
-                Value = Guild.Id
-            };
-            cmd.Parameters.Add(guildId);
-
-            param = new SqlParameter() {
-                ParameterName = "@p_UserId",
-                SqlDbType = SqlDbType.BigInt,
-                Direction = ParameterDirection.Input,
-                Value = bday.User.Id
-            };
-            cmd.Parameters.Add(param);
-
-            param = new SqlParameter() {
-                ParameterName = "@p_Birthday",
-                SqlDbType = SqlDbType.DateTime,
-                Direction = ParameterDirection.Input,
-                Value = bday.BDay
-            };
-            cmd.Parameters.Add(param);
-
-            param = new SqlParameter() {
-                ParameterName = "@p_Mode",
-                SqlDbType = SqlDbType.Int,
-                Direction = ParameterDirection.Input,
-                Value = (int)mode
-            };
-            cmd.Parameters.Add(param);
-
-            status = new SqlParameter() {
-                ParameterName = "@p_Status",
-                SqlDbType = SqlDbType.Int,
-                Direction = ParameterDirection.Output
-            };
-            cmd.Parameters.Add(status);
-
-            errMsg = new SqlParameter() {
-                ParameterName = "@p_ErrMsg",
-                SqlDbType = SqlDbType.VarChar,
-                Size = 500,
-                Direction = ParameterDirection.Output
-            };
-            cmd.Parameters.Add(errMsg);
-
-            cmd.ExecuteNonQuery();
-            return new ResultArgs((int)status.Value, errMsg.Value.ToString()!);
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
-    private async Task<DiscordUser> GetUser(ulong userid) => await Guild.GetMemberAsync(userid);
-    #endregion
 
     #region Public Methods
     public Birthday this[DiscordUser user] {
@@ -197,8 +45,13 @@ internal class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Bi
 
     public void Add(Birthday bday) {
         try {
-            var result = DBProcess(bday, DataMode.ADD);
-            if (result.Result != 0)
+            var result = SaveData("", new BirthdayModel() {
+                GuildId = (long)Guild.Id,
+                UserId = (long)bday.User.Id,
+                Birthday = bday.BDay,
+                Mode = (int)DataMode.ADD
+            });
+            if (result.Status != ResultArgs<int>.StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -208,7 +61,12 @@ internal class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Bi
 
     public void Change(Birthday bday) {
         try {
-            var result = DBProcess(bday, DataMode.CHANGE);
+            var result = SaveData("", new BirthdayModel() {
+                GuildId = (long)Guild.Id,
+                UserId = (long)bday.User.Id,
+                Birthday = bday.BDay,
+                Mode = (int)DataMode.CHANGE
+            });
             if (result.Result != 0)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
@@ -219,7 +77,12 @@ internal class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Bi
 
     public void Remove(Birthday bday) {
         try {
-            var result = DBProcess(bday, DataMode.REMOVE);
+            var result = SaveData("", new BirthdayModel() {
+                GuildId = (long)Guild.Id,
+                UserId = (long)bday.User.Id,
+                Birthday = bday.BDay,
+                Mode = (int)DataMode.REMOVE
+            });
             if (result.Result != 0)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
@@ -227,15 +90,66 @@ internal class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Bi
             throw;
         }
     }
+    #endregion
 
-    public bool IsEmpty() {
-        return Birthdays.Count == 0;
+    #region DB Methods
+    protected override ResultArgs<List<BirthdayModel>> GetData(string sp)
+    {
+        try {
+            using IDbConnection cnn = Connection;
+            var sql = sp + " @GuildId, @Status, @ErrMsg";
+            var param = new BirthdayModel() { GuildId = (long)Guild.Id };
+            var data = cnn.Query<BirthdayModel>(sql, param).ToList();
+
+            return new ResultArgs<List<BirthdayModel>>(data, param.Status, param.ErrMsg);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
+
+    protected override ResultArgs<int> SaveData(string sp, BirthdayModel data)
+    {
+        try {
+            using IDbConnection cnn = Connection;
+            var sql = sp + @" @GuildId,
+                @UserId,
+                @Birthday,
+                @Mode,
+                @Status,
+                @ErrMsg";
+            var result = cnn.Execute(sql, data);
+
+            return new ResultArgs<int>(result, data.Status, data.ErrMsg);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
+    }
+
+    protected override List<Birthday> MapData(List<BirthdayModel> data)
+    {
+        var birthdays = new List<Birthday>();
+        foreach (var b in data) {
+            birthdays.Add(new Birthday(GetUser((ulong)b.UserId).Result, b.Birthday));
+        }
+
+        return birthdays;
+    }
+
+    private enum DataMode {
+        ADD,
+        CHANGE,
+        REMOVE
+    }
+
+    private async Task<DiscordUser> GetUser(ulong userid) => await Guild.GetMemberAsync(userid);
     #endregion
 
     #region Properties
     private DiscordGuild Guild { get; set; }
     public List<Birthday> Birthdays { get; private set; } = new();
+    public bool IsEmpty { get => Birthdays.Count == 0; }
     public Birthday Next {
         get {
             var nextBirthdays = Birthdays;

@@ -2,7 +2,6 @@ using DSharpPlus.Entities;
 using SaulGoodmanBot.Data;
 using SaulGoodmanBot.Models;
 using SaulGoodmanBot.Library;
-
 namespace SaulGoodmanBot.Controllers;
 
 public class Minecraft : DbBase<MinecraftWaypointModel, Waypoint> {
