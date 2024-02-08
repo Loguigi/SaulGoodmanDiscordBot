@@ -2,7 +2,7 @@ using SaulGoodmanBot.Library;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Helpers;
 
 namespace SaulGoodmanBot.Handlers;
 

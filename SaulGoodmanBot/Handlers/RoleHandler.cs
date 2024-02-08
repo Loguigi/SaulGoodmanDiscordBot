@@ -2,8 +2,9 @@ using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using SaulGoodmanBot.Library.Helpers;
-using SaulGoodmanBot.Library.Roles;
+using SaulGoodmanBot.Helpers;
+using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Controllers;
 
 namespace SaulGoodmanBot.Handlers;
 

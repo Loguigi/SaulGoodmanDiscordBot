@@ -5,6 +5,12 @@ using SaulGoodmanBot.Library;
 namespace SaulGoodmanBot.Controllers;
 
 public class Poll {
+    private DiscordClient Client { get; set; }
+    public string Title { get; set; }
+    public TimeSpan TimeLimit { get; set; }
+    public List<PollOption> Options { get; set; }
+    public Queue<DiscordEmoji> Emojis { get; }
+
     public Poll(DiscordClient client, string question, TimeSpan time_limit, int num_options) {
         Client = client;
         Title = question;
@@ -47,10 +53,4 @@ public class Poll {
     public string FormatPercent(PollOption option) {
         return string.Format("{0:P1}", option.Votes / GetTotalVotes());
     }
-
-    public DiscordClient Client { get; set; }
-    public string Title { get; set; }
-    public TimeSpan TimeLimit { get; set; }
-    public List<PollOption> Options { get; set; }
-    public Queue<DiscordEmoji> Emojis { get; }
 }

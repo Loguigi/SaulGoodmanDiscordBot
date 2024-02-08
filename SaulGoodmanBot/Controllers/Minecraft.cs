@@ -1,99 +1,128 @@
-using DSharpPlus.Entities;
-using SaulGoodmanBot.Data;
-using SaulGoodmanBot.Models;
-using SaulGoodmanBot.Library;
-namespace SaulGoodmanBot.Controllers;
+// using DSharpPlus.Entities;
+// using SaulGoodmanBot.Data;
+// using SaulGoodmanBot.Models;
+// using SaulGoodmanBot.Library;
+// using System.Data;
+// using Dapper;
+// namespace SaulGoodmanBot.Controllers;
 
-public class Minecraft : DbBase<MinecraftWaypointModel, Waypoint> {
-    public Minecraft(DiscordGuild guild) {
-        Guild = guild;
-        Config = new McConfig(Guild);
-        var wps = MinecraftProcessor.LoadAllWaypoints(Guild.Id);
-        var info = MinecraftProcessor.LoadMcInfo(Guild.Id).FirstOrDefault();
+// public class Minecraft : DbBase<MinecraftWaypointModel, Waypoint> {
+//     #region Properties
+//     public DiscordGuild Guild { get; private set; }
+//     public McConfig Config { get; set; }
+//     public List<Waypoint> Waypoints { get; set; } = new();
+//     #endregion
 
-        foreach (var wp in wps) {
-            Waypoints.Add(new Waypoint(wp.Dimension, wp.Name, wp.XCord, wp.YCord, wp.ZCord));
-        }
-    }
+//     public Minecraft(DiscordGuild guild) {
+//         Guild = guild;
+//         Config = new McConfig(Guild);
+        
+//         try {
+//             var result = GetData("");
+//             if (result.Status != ResultArgs<List<MinecraftWaypointModel>>.StatusCodes.SUCCESS)
+//                 throw new Exception(result.Message);
+//             Waypoints = MapData(result.Result);
+//         } catch (Exception ex) {
 
-    public void SaveNewWaypoint(Waypoint wp) {
-        Waypoints.Add(wp);
-        MinecraftProcessor.SaveWaypoint(new MinecraftWaypointModel {
-            GuildId = (long)Guild.Id,
-            Dimension = wp.Dimension,
-            Name = wp.Name,
-            XCord = wp.X,
-            YCord = wp.Y,
-            ZCord = wp.Z
-        });
-    }
+//         }
+//     }
 
-    public void DeleteWaypoint(Waypoint wp) {
-        Waypoints.Remove(wp);
-        MinecraftProcessor.DeleteWaypoint(new MinecraftWaypointModel {
-            GuildId = (long)Guild.Id,
-            Dimension = wp.Dimension,
-            Name = wp.Name
-        });
-    }
+//     public void SaveNewWaypoint(Waypoint wp) {
+//         try {
+//             var result = SaveData("", new MinecraftWaypointModel {
+//                 GuildId = (long)Guild.Id,
+//                 Dimension = wp.Dimension,
+//                 Name = wp.Name,
+//                 XCord = wp.X,
+//                 YCord = wp.Y,
+//                 ZCord = wp.Z,
+//                 Mode = (int)DataMode.SAVE
+//             });
+//         } catch (Exception ex) {
+//             throw;
+//         }
+//     }
 
-    public void SaveServerInfo() {
-        MinecraftProcessor.SaveMcInfo(new MinecraftInfoModel {
-            GuildId = (long)Guild.Id,
-            WorldName = WorldName,
-            WorldDescription = WorldDescription,
-            IPAddress = IPAddress,
-            MaxPlayers = MaxPlayers,
-            Whitelist = Whitelist ? 1 : 0
-        });
-    }
+//     public void DeleteWaypoint(Waypoint wp) {
+//         try {
+//             var result = SaveData("", new MinecraftWaypointModel {
+//                 GuildId = (long)Guild.Id,
+//                 Dimension = wp.Dimension,
+//                 Name = wp.Name,
+//                 XCord = wp.X,
+//                 YCord = wp.Y,
+//                 ZCord = wp.Z,
+//                 Mode = (int)DataMode.DELETE
+//             });
+//         } catch (Exception ex) {
+//             throw;
+//         }
+//     }
 
-    public void UpdateServerInfo() {
-        MinecraftProcessor.UpdateMcInfo(new MinecraftInfoModel {
-            GuildId = (long)Guild.Id,
-            WorldName = WorldName,
-            WorldDescription = WorldDescription,
-            IPAddress = IPAddress,
-            MaxPlayers = MaxPlayers,
-            Whitelist = Whitelist ? 1 : 0
-        });
-    }
+//     /// <summary>
+//     /// Queries the Waypoints list for waypoints of the chosen dimension
+//     /// </summary>
+//     /// <param name="dimension">Overworld, The Nether, or The End</param>
+//     /// <returns>List of waypoints for the dimension</returns>
+//     public List<Waypoint> GetDimensionWaypoints(string dimension) {
+//         return Waypoints.Where(x => x.Dimension == dimension).ToList();
+//     }
 
-    /// <summary>
-    /// Queries the Waypoints list for waypoints of the chosen dimension
-    /// </summary>
-    /// <param name="dimension">Overworld, The Nether, or The End</param>
-    /// <returns>List of waypoints for the dimension</returns>
-    public List<Waypoint> GetDimensionWaypoints(string dimension) {
-        return Waypoints.Where(x => x.Dimension == dimension).ToList();
-    }
-    
-    
-    public bool WaypointsFull(string dimension) {
-        return GetDimensionWaypoints(dimension).Count == MAX_WAYPOINTS;
-    }
+//     #region DB Methods
+//     protected override ResultArgs<List<MinecraftWaypointModel>> GetData(string sp)
+//     {
+//         try {
+//             using IDbConnection cnn = Connection;
+//             var sql = sp + " @GuildId, @Status, @ErrMsg";
+//             var param = new MinecraftWaypointModel() { GuildId = (long)Guild.Id };
+//             var data = cnn.Query<MinecraftWaypointModel>(sql, param).ToList();
 
-    #region DB Methods
-    protected override ResultArgs<List<MinecraftWaypointModel>> GetData(string sp)
-    {
-        throw new NotImplementedException();
-    }
+//             return new ResultArgs<List<MinecraftWaypointModel>>(data, param.Status, param.ErrMsg);
+//         } catch (Exception ex) {
+//             throw;
+//         }
+//     }
 
-    protected override ResultArgs<int> SaveData(string sp, MinecraftWaypointModel data)
-    {
-        throw new NotImplementedException();
-    }
+//     protected override ResultArgs<int> SaveData(string sp, MinecraftWaypointModel data)
+//     {
+//         try {
+//             using IDbConnection cnn = Connection;
+//             var sql = sp + @" @GuildId,
+//                 @Dimension,
+//                 @Name,
+//                 @XCord,
+//                 @YCord,
+//                 @ZCord,
+//                 @Mode,
+//                 @Status,
+//                 @ErrMsg";
+//             var result = cnn.Execute(sql, data);
+            
+//             return new ResultArgs<int>(result, data.Status, data.ErrMsg);
+//         } catch (Exception ex) {
+//             throw;
+//         }
+//     }
 
-    protected override List<Waypoint> MapData(List<MinecraftWaypointModel> data)
-    {
-        throw new NotImplementedException();
-    }
-    #endregion
+//     protected override List<Waypoint> MapData(List<MinecraftWaypointModel> data)
+//     {
+//         var waypoints = new List<Waypoint>();
+//         foreach (var w in data) {
+//             waypoints.Add(new Waypoint() {
+//                 Dimension = w.Dimension,
+//                 Name = w.Name,
+//                 X = w.XCord,
+//                 Y = w.YCord,
+//                 Z = w.ZCord
+//             });
+//         }
 
-    #region Properties
-    public DiscordGuild Guild { get; private set; }
-    public McConfig Config { get; private set; }
-    public List<Waypoint> Waypoints { get; set; } = new();
-    public const int MAX_WAYPOINTS = 25;
-    #endregion
-}
+//         return waypoints;
+//     }
+
+//     private enum DataMode {
+//         SAVE = 0,
+//         DELETE = 1
+//     }
+//     #endregion
+// }

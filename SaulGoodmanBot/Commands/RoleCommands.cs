@@ -1,10 +1,10 @@
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
-using SaulGoodmanBot.Library.Roles;
 using SaulGoodmanBot.Library;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Helpers;
 using SaulGoodmanBot.Handlers;
+using SaulGoodmanBot.Controllers;
 using DSharpPlus.SlashCommands.Attributes;
 
 namespace SaulGoodmanBot.Commands;
@@ -24,7 +24,7 @@ public class RoleCommands : ApplicationCommandModule {
             ServerRolesDescription = description,
             AllowMultipleRoles = allowmultipleroles
         };
-        config.UpdateConfig();
+        config.Save();
 
         await ctx.CreateResponseAsync(StandardOutput.Success("Role setup complete. Add roles to finish using /role add"), ephemeral:true);
     }

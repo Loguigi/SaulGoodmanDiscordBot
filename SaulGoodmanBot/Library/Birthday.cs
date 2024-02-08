@@ -3,20 +3,7 @@ using DSharpPlus.Entities;
 namespace SaulGoodmanBot.Library;
 
 public class Birthday {
-    public Birthday(DiscordUser user, DateTime bday) {
-        User = user;
-        BDay = bday;
-    }
-
-    public Birthday(Birthday bday) {
-        User = bday.User;
-        BDay = bday.BDay;
-    }
-
-    public override string ToString() {
-        return BDay.ToString("MMMM d, yyyy");
-    }
-
+    #region Properties
     public DiscordUser User { get; private set; }
     public DateTime BDay { get; set; }
     public int Age {
@@ -46,4 +33,21 @@ public class Birthday {
     public bool HasUpcomingBirthday {
         get => BDay.Month == DateTime.Now.Month && BDay.Day == DateTime.Now.AddDays(5).Day;
     }
+    #endregion
+
+    #region Public Methods
+    public Birthday(DiscordUser user, DateTime bday) {
+        User = user;
+        BDay = bday;
+    }
+
+    public Birthday(Birthday bday) {
+        User = bday.User;
+        BDay = bday.BDay;
+    }
+
+    public override string ToString() {
+        return BDay.ToString("MMMM d, yyyy");
+    }
+    #endregion
 }

@@ -4,7 +4,8 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.Library;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Helpers;
+using SaulGoodmanBot.Controllers;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -26,7 +27,7 @@ public class ScheduleCommands : ApplicationCommandModule {
         var schedule = new Schedule(ctx.Guild, ctx.User) {
             LastUpdated = ctx.Interaction.CreationTimestamp.LocalDateTime,
             RecurringSchedule = recurring,
-            PictureUrl = picture?.Url
+            PictureUrl = picture?.Url ?? string.Empty
         };
         schedule.WorkSchedule[DayOfWeek.Sunday] = sunday;
         schedule.WorkSchedule[DayOfWeek.Monday] = monday;
@@ -162,7 +163,7 @@ public class ScheduleCommands : ApplicationCommandModule {
             .WithTitle("Work Schedule")
             .WithDescription(schedule.RecurringSchedule ? "Schedule does not change" : "Schedule changes weekly")
             .WithImageUrl(schedule.PictureUrl ?? "")
-            .WithFooter($"Last updated {(schedule.LastUpdated != schedule.NO_DATE ? schedule.LastUpdated : "never")}")
+            .WithFooter($"Last updated {(schedule.LastUpdated != DateTime.MinValue ? schedule.LastUpdated : "never")}")
             .WithColor(DiscordColor.Teal);
 
         foreach (var day in schedule.WorkSchedule) {
@@ -172,7 +173,7 @@ public class ScheduleCommands : ApplicationCommandModule {
         }
 
         if (!schedule.RecurringSchedule && DateTime.Now > schedule.LastUpdated.AddDays(7)) {
-            embed.WithFooter($"{DiscordEmoji.FromName(client, ":warning:", false)} Last updated {(schedule.LastUpdated != schedule.NO_DATE ? schedule.LastUpdated : "never")}, may be inaccurate");
+            embed.WithFooter($"{DiscordEmoji.FromName(client, ":warning:", false)} Last updated {(schedule.LastUpdated != DateTime.MinValue ? schedule.LastUpdated : "never")}, may be inaccurate");
         }
 
         return embed;

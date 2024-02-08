@@ -2,8 +2,8 @@ using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
 using SaulGoodmanBot.Library;
-using SaulGoodmanBot.Library.Birthdays;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Helpers;
+using SaulGoodmanBot.Controllers;
 
 namespace SaulGoodmanBot.Handlers;
 
@@ -32,7 +32,7 @@ public static class BirthdayHandler {
                 await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
             }
         }
-        config.UpdateConfig();
+        config.Save();
     }
 
     public static async Task HandleBirthdayList(DiscordClient s, ComponentInteractionCreateEventArgs e) {

@@ -2,10 +2,8 @@ using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
 using SaulGoodmanBot.Library;
-using SaulGoodmanBot.Library.Birthdays;
-using SaulGoodmanBot.Commands;
-using SaulGoodmanBot.Library.Helpers;
-using SaulGoodmanBot.Library.Roles;
+using SaulGoodmanBot.Helpers;
+using SaulGoodmanBot.Controllers;
 
 namespace SaulGoodmanBot.Handlers;
 

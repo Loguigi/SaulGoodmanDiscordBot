@@ -5,7 +5,7 @@ namespace SaulGoodmanBot.Models;
 public class ScheduleModel : DbCommonParams {
     public long GuildId { get; set; }
     public long UserId { get; set; }
-    public DateTime? LastUpdated { get; set; } = null;
+    public DateTime LastUpdated { get; set; } = DateTime.MinValue;
     public int RecurringSchedule { get; set; } = 0;
     public string? Sunday { get; set; } = null;
     public string? Monday { get; set; } = null;

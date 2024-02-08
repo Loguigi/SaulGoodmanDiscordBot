@@ -9,8 +9,9 @@
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
-using SaulGoodmanBot.Library.WheelPicker;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Helpers;
+using SaulGoodmanBot.Controllers;
 using SaulGoodmanBot.Handlers;
 
 namespace SaulGoodmanBot.Commands;

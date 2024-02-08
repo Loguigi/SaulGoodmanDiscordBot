@@ -8,7 +8,21 @@ using Dapper;
 
 namespace SaulGoodmanBot.Library;
 
-internal class Levels : DbBase<LevelModel, Levels> {
+public class Levels : DbBase<LevelModel, Levels> {
+    #region Properties
+    private DiscordGuild Guild { get; set; }
+    public DiscordUser User { get; private set; }
+    public int Level { get; private set; }
+    public int Experience { get; private set; }
+    public int Rank { get; private set; }
+    public int ExpNeededForNextLevel { get => 2 * (int)Math.Pow(Level + 1, 2) - 2; }
+    public DateTime MsgLastSent { get; private set; }
+    public DateTime NewMsgSent { get; set; }
+    public bool LevelledUp { get; set; } = false;
+    private const int EXP_GAIN = 1;
+    #endregion
+
+    #region Public Methods
     public Levels(DiscordGuild guild, DiscordUser user) {
         Guild = guild;
         User = user;
@@ -46,6 +60,7 @@ internal class Levels : DbBase<LevelModel, Levels> {
             throw;
         }
     }
+    #endregion
 
     #region DB Methods
     protected override ResultArgs<List<LevelModel>> GetData(string sp)
@@ -105,18 +120,5 @@ internal class Levels : DbBase<LevelModel, Levels> {
             throw;
         }
     }
-    #endregion
-
-    #region Properties
-    private DiscordGuild Guild { get; set; }
-    public DiscordUser User { get; private set; }
-    public int Level { get; private set; }
-    public int Experience { get; private set; }
-    public int Rank { get; private set; }
-    public int ExpNeededForNextLevel { get => 2 * (int)Math.Pow(Level + 1, 2) - 2; }
-    public DateTime MsgLastSent { get; private set; }
-    public DateTime NewMsgSent { get; set; }
-    public bool LevelledUp { get; set; } = false;
-    private const int EXP_GAIN = 1;
     #endregion
 }

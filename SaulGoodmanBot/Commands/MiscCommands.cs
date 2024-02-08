@@ -11,11 +11,11 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using SaulGoodmanBot.Library.Misc;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Helpers;
 using SaulGoodmanBot.Handlers;
+using SaulGoodmanBot.Controllers;
 using DSharpPlus.Interactivity.Extensions;
-using System.Security.Cryptography.X509Certificates;
 
 namespace SaulGoodmanBot.Commands;
 

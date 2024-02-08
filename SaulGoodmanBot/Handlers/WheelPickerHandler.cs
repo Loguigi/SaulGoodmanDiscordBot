@@ -2,8 +2,9 @@ using DSharpPlus;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
-using SaulGoodmanBot.Library.WheelPicker;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Helpers;
+using SaulGoodmanBot.Controllers;
 
 namespace SaulGoodmanBot.Handlers;
 

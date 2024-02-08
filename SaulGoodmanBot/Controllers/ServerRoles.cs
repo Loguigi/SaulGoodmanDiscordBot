@@ -2,24 +2,26 @@ using DSharpPlus.Entities;
 using DSharpPlus;
 using System.Collections;
 using System.Reflection;
-using System.Data.SqlClient;
 using System.Data;
 using SaulGoodmanBot.Models;
 using SaulGoodmanBot.Data;
 using SaulGoodmanBot.Library;
+using Dapper;
 
 namespace SaulGoodmanBot.Controllers;
 
 public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleComponent> {
+    #region Public Methods
     public ServerRoles(DiscordGuild guild, DiscordClient client) {
         Guild = guild;
         Client = client;
 
         try {
-            var result = DBGetData();
-            if (result.Result == ResultArgs.ResultCodes.ERROR)
+            var result = GetData("");
+            if (result.Status != ResultArgs<List<RoleModel>>.StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
 
+            Roles = MapData(result.Result);
             var config = new ServerConfig(Guild);
             CategoryName = config.ServerRolesName ?? string.Empty;
             CategoryDescription = config.ServerRolesDescription ?? string.Empty;
@@ -46,10 +48,15 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
 
     public void Add(RoleComponent role) {
         try {
-            var result = DBProcess(role, DataMode.ADD);
-            if (result.Result != 0) {
+            var result = SaveData("", new RoleModel() {
+                GuildId = (long)Guild.Id,
+                RoleId = (long)role.Role.Id,
+                Description = role.Description == string.Empty ? null : role.Description,
+                RoleEmoji = role.Emoji.GetDiscordName(),
+                Mode = (int)DataMode.ADD
+            });
+            if (result.Status == ResultArgs<int>.StatusCodes.ERROR)
                 throw new Exception(result.Message);
-            }
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
@@ -58,10 +65,13 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
 
     public void Remove(RoleComponent role) {
         try {
-            var result = DBProcess(role, DataMode.DELETE);
-            if (result.Result != 0) {
+            var result = SaveData("", new RoleModel() {
+                GuildId = (long)Guild.Id,
+                RoleId = (long)role.Role.Id,
+                Mode = (int)DataMode.DELETE
+            });
+            if (result.Status == ResultArgs<int>.StatusCodes.ERROR)
                 throw new Exception(result.Message);
-            }
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
@@ -69,165 +79,61 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
     }
 
     public bool HasRole(DiscordMember member, RoleComponent role) => member.Roles.Contains(role.Role);
+    #endregion
 
     #region DB Methods
     protected override ResultArgs<List<RoleModel>> GetData(string sp)
     {
-        throw new NotImplementedException();
+        try {
+            using IDbConnection cnn = Connection;
+            var sql = sp + " @GuildId, @Status, @ErrMsg";
+            var param = new RoleModel() { GuildId = (long)Guild.Id };
+            var data = cnn.Query<RoleModel>(sql, param).ToList();
+
+            return new ResultArgs<List<RoleModel>>(data, param.Status, param.ErrMsg);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     protected override ResultArgs<int> SaveData(string sp, RoleModel data)
     {
-        throw new NotImplementedException();
+        try {
+            using IDbConnection cnn = Connection;
+            var sql = sp + @" @GuildId,
+                @RoleId,
+                @Description,
+                @RoleEmoji,
+                @Mode,
+                @Status,
+                @ErrMsg";
+            var result = cnn.Execute(sql, data);
+
+            return new ResultArgs<int>(result, data.Status, data.ErrMsg);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     protected override List<RoleComponent> MapData(List<RoleModel> data)
     {
-        throw new NotImplementedException();
+        var roles = new List<RoleComponent>();
+        foreach (var r in data) {
+            roles.Add(new RoleComponent(Guild.GetRole((ulong)r.RoleId), r.Description ?? string.Empty, DiscordEmoji.FromName(Client, r.RoleEmoji ?? DEFAULT_EMOJI.Name, true)));
+        }
+
+        return roles;
     }
 
     private enum DataMode {
         ADD,
         DELETE
     }
-
-    private ResultArgs DBGetData() {
-        try {
-            #region Parameters
-            SqlParameter guildId;
-            SqlParameter status;
-            SqlParameter errMsg;
-            #endregion
-
-            using SqlConnection cnn = new(ConnectionString);
-            cnn.Open();
-            var cmd = cnn.CreateCommand();
-            cmd.CommandType = CommandType.StoredProcedure;
-            // TODO sp
-
-            guildId = new SqlParameter() {
-                ParameterName = "@p_GuildId",
-                SqlDbType = SqlDbType.BigInt,
-                Direction = ParameterDirection.Input,
-                Value = Guild.Id
-            };
-            cmd.Parameters.Add(guildId);
-
-            status = new SqlParameter() {
-                ParameterName = "@p_Status",
-                SqlDbType = SqlDbType.Int,
-                Direction = ParameterDirection.Output
-            };
-            cmd.Parameters.Add(status);
-
-            errMsg = new SqlParameter() {
-                ParameterName = "@p_ErrMsg",
-                SqlDbType = SqlDbType.VarChar,
-                Size = 500,
-                Direction = ParameterDirection.Output
-            };
-            cmd.Parameters.Add(errMsg);
-
-            var result = new ResultArgs((int)status.Value, errMsg.Value.ToString()!);
-            var da = new SqlDataAdapter() { SelectCommand = cmd };
-            var ds = new DataSet();
-            da.Fill(ds);
-
-            if (result.Result != 0)
-                return result;
-
-            var dtr = ds.CreateDataReader();
-            if (!dtr.HasRows)
-                return result;
-
-            while (dtr.Read()) {
-                Roles.Add(new RoleComponent(
-                    role:Guild.GetRole(DeNull<ulong>(dtr["GuildId"], 0)),
-                    desc:DeNull(dtr["Description"], string.Empty),
-                    emoji:DiscordEmoji.FromName(Client, DeNull(dtr["Emoji"], ":blue_circle:"), true)
-                ));
-            }
-
-            return result;
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
-    private ResultArgs DBProcess(RoleComponent role, DataMode mode) {
-        try {
-            #region Parameters
-            SqlParameter guildId;
-            SqlParameter param;
-            SqlParameter status;
-            SqlParameter errMsg;
-            #endregion
-
-            using SqlConnection cnn = new(ConnectionString);
-            cnn.Open();
-            var cmd = cnn.CreateCommand();
-            cmd.CommandType = CommandType.StoredProcedure;
-            // TODO sp
-
-            guildId = new SqlParameter() {
-                ParameterName = "@p_GuildId",
-                SqlDbType = SqlDbType.BigInt,
-                Direction = ParameterDirection.Input,
-                Value = Guild.Id
-            };
-            cmd.Parameters.Add(guildId);
-
-            param = new SqlParameter() {
-                ParameterName = "@p_RoleId",
-                SqlDbType = SqlDbType.BigInt,
-                Direction = ParameterDirection.Input,
-                Value = role.Role.Id
-            };
-            cmd.Parameters.Add(param);
-
-            param = new SqlParameter() {
-                ParameterName = "@p_Description",
-                SqlDbType = SqlDbType.VarChar,
-                Size = 200,
-                Direction = ParameterDirection.Input,
-                Value = role.Description == string.Empty ? null : role.Description
-            };
-            cmd.Parameters.Add(param);
-
-            param = new SqlParameter() {
-                ParameterName = "@p_RoleEmoji",
-                SqlDbType = SqlDbType.VarChar,
-                Size = 100,
-                Direction = ParameterDirection.Input,
-                Value = role.Emoji.GetDiscordName() == ":blue_circle:" ? null : role.Emoji.GetDiscordName()
-            };
-            cmd.Parameters.Add(param);
-
-            status = new SqlParameter() {
-                ParameterName = "@p_Status",
-                SqlDbType = SqlDbType.Int,
-                Direction = ParameterDirection.Output
-            };
-            cmd.Parameters.Add(status);
-
-            errMsg = new SqlParameter() {
-                ParameterName = "@p_ErrMsg",
-                SqlDbType = SqlDbType.VarChar,
-                Size = 500,
-                Direction = ParameterDirection.Output
-            };
-            cmd.Parameters.Add(errMsg);
-
-            cmd.ExecuteNonQuery();
-            return new ResultArgs((int)status.Value, errMsg.Value.ToString()!);
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
     #endregion
 
+    #region Properties
     private DiscordGuild Guild { get; }
     private DiscordClient Client { get; }
     public string CategoryName { get; private set; }
@@ -236,4 +142,5 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
     public bool IsNotSetup { get => CategoryName == string.Empty && Roles.Count == 0; }
     public List<RoleComponent> Roles { get; private set; } = new();
     public DiscordEmoji DEFAULT_EMOJI { get => DiscordEmoji.FromName(Client, ":blue_circle:", false); }
+    #endregion
 }

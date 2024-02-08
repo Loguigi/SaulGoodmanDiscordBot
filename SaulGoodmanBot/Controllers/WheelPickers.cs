@@ -7,9 +7,16 @@ using SaulGoodmanBot.Models;
 using SaulGoodmanBot.Library;
 using Dapper;
 
-namespace SaulGoodmanBot.Library.WheelPicker;
+namespace SaulGoodmanBot.Controllers;
 
-internal class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
+public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
+    #region Properties
+    private DiscordGuild Guild { get; set; }
+    public List<Wheel> Wheels { get; private set; } = new();
+    public bool IsEmpty { get; private set; } = false;
+    #endregion
+
+    #region Public Methods
     public WheelPickers(DiscordGuild guild) {
         Guild = guild;
         try {
@@ -25,7 +32,6 @@ internal class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
         }
     }
 
-    #region Public Methods
     public Wheel this[string key] {
         get => Wheels.Where(x => x.Name == key).FirstOrDefault() ?? throw new Exception("Wheel does not exist");
     }
@@ -198,12 +204,5 @@ internal class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
     private struct StoredProcedures {
         public const string GET_DATA = "Wheels_GetData";
     }
-    #endregion
-
-    #region Properties
-    private DiscordGuild Guild { get; set; }
-    public List<Wheel> Wheels { get; private set; } = new();
-    public bool IsEmpty { get; private set; } = false;
-    private const int WHEEL_LIMIT = 25;
     #endregion
 }

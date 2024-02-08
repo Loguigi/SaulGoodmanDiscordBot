@@ -3,7 +3,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Interactivity.Extensions;
 using SaulGoodmanBot.Library;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Helpers;
 using DSharpPlus.SlashCommands.Attributes;
 
 namespace SaulGoodmanBot.Commands;
@@ -45,7 +45,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
                 config.WelcomeMessage = response.Result.Content;
             }
 
-            config.UpdateConfig();
+            config.Save();
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
             await ctx.Channel.DeleteMessageAsync(response.Result);
         
@@ -71,7 +71,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
                 config.LeaveMessage = response.Result.Content;
             }
 
-            config.UpdateConfig();
+            config.Save();
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
             await ctx.Channel.DeleteMessageAsync(response.Result);
 
@@ -103,7 +103,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
                 config.BirthdayMessage = response.Result.Content;
             }
 
-            config.UpdateConfig();
+            config.Save();
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
             await ctx.Channel.DeleteMessageAsync(response.Result);
 
@@ -129,7 +129,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
                 config.LevelUpMessage = response.Result.Content;
             }
 
-            config.UpdateConfig();
+            config.Save();
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(embed));
             await ctx.Channel.DeleteMessageAsync(response.Result);
         }
@@ -140,7 +140,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
         [Option("channel", "Channel to select as default")] DiscordChannel channel) {
 
         var config = new ServerConfig(ctx.Guild) {DefaultChannel = channel};
-        config.UpdateConfig();
+        config.Save();
 
         await ctx.CreateResponseAsync(StandardOutput.ConfigChange(ctx.Client, ctx.Guild, ConfigChangeOption.MessageChange, "Default channel changed", "", channel.Mention));
     }
@@ -154,7 +154,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
         var config = new ServerConfig(ctx.Guild) {
             EnableLevels = option == "enable"
         };
-        config.UpdateConfig();
+        config.Save();
 
         await ctx.CreateResponseAsync(StandardOutput.ConfigChange(ctx.Client, ctx.Guild, config.EnableLevels ? ConfigChangeOption.DisabledToEnabled : ConfigChangeOption.EnabledToDisabled, "Server levels"));
     }
@@ -168,7 +168,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
         var config = new ServerConfig(ctx.Guild) {
             BirthdayNotifications = option == "enable"
         };
-        config.UpdateConfig();
+        config.Save();
 
         await ctx.CreateResponseAsync(StandardOutput.ConfigChange(ctx.Client, ctx.Guild, config.BirthdayNotifications ? ConfigChangeOption.DisabledToEnabled : ConfigChangeOption.EnabledToDisabled, "Birthday notifications"));
     }
@@ -182,7 +182,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
         var config = new ServerConfig(ctx.Guild) {
             SendRoleMenuOnMemberJoin = option == "enable"
         };
-        config.UpdateConfig();
+        config.Save();
 
         await ctx.CreateResponseAsync(StandardOutput.ConfigChange(ctx.Client, ctx.Guild, config.SendRoleMenuOnMemberJoin ? ConfigChangeOption.DisabledToEnabled : ConfigChangeOption.EnabledToDisabled, "Send role menu on member join"));
     }

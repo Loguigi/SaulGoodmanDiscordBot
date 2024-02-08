@@ -10,6 +10,28 @@ using Dapper;
 namespace SaulGoodmanBot.Controllers;
 
 public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birthday> {
+    #region Properties
+    private DiscordGuild Guild { get; set; }
+    public List<Birthday> Birthdays { get; private set; } = new();
+    public bool IsEmpty { get => Birthdays.Count == 0; }
+    public Birthday Next {
+        get {
+            var nextBirthdays = Birthdays;
+
+            // change birthday years to next birthday
+            foreach (var birthday in nextBirthdays) {
+                birthday.BDay = birthday.BDay.AddYears(birthday.Age + 1);
+            }
+
+            // sort to find next birthday
+            nextBirthdays.Sort((d1, d2) => DateTime.Compare(d1.BDay, d2.BDay));
+
+            return nextBirthdays.FirstOrDefault() ?? throw new Exception($"No birthdays in {Guild.Name}");
+        }
+    }
+    #endregion
+    
+    #region Public Methods
     public ServerBirthdays(DiscordGuild guild) {
         Guild = guild;
         
@@ -24,7 +46,6 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
         }
     }
 
-    #region Public Methods
     public Birthday this[DiscordUser user] {
         get => Birthdays.Where(x => x.User == user).FirstOrDefault()!;
         set {
@@ -144,26 +165,5 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
     }
 
     private async Task<DiscordUser> GetUser(ulong userid) => await Guild.GetMemberAsync(userid);
-    #endregion
-
-    #region Properties
-    private DiscordGuild Guild { get; set; }
-    public List<Birthday> Birthdays { get; private set; } = new();
-    public bool IsEmpty { get => Birthdays.Count == 0; }
-    public Birthday Next {
-        get {
-            var nextBirthdays = Birthdays;
-
-            // change birthday years to next birthday
-            foreach (var birthday in nextBirthdays) {
-                birthday.BDay = birthday.BDay.AddYears(birthday.Age + 1);
-            }
-
-            // sort to find next birthday
-            nextBirthdays.Sort((d1, d2) => DateTime.Compare(d1.BDay, d2.BDay));
-
-            return nextBirthdays.FirstOrDefault() ?? throw new Exception($"No birthdays in {Guild.Name}");
-        }
-    }
     #endregion
 }

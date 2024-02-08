@@ -1,7 +1,8 @@
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Helpers;
+using SaulGoodmanBot.Library;
 
 namespace SaulGoodmanBot.Handlers;
 

@@ -8,6 +8,33 @@ using SaulGoodmanBot.Models;
 namespace SaulGoodmanBot.Library;
 
 public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
+    #region Properties
+    // Config Properties
+    private DiscordGuild Guild { get; set; }
+
+    // General Config
+    public string? WelcomeMessage { get; set; } = null;
+    public string? LeaveMessage { get; set; } = null;
+    public DiscordChannel DefaultChannel { get; set; }
+
+    // Birthday Config
+    public static DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1800");
+    public bool BirthdayNotifications { get; set; } = true;
+    public string BirthdayMessage { get; set; } = "Happy Birthday!";
+    public DateTime PauseBdayNotifsTimer { get; set; } = DATE_ERROR;
+
+    // Role Config
+    public string? ServerRolesName { get; set; } = null;
+    public string? ServerRolesDescription { get; set; } = null;
+    public bool AllowMultipleRoles { get; set; } = false;
+    public bool SendRoleMenuOnMemberJoin { get; set; } = false;
+
+    // Levels Config
+    public bool EnableLevels { get; set; } = false;
+    public string LevelUpMessage { get; set; } = "has levelled up!";
+    #endregion
+
+    #region Public Methods
     public ServerConfig(DiscordGuild guild) {
         Guild = guild;
         DefaultChannel = Guild.GetDefaultChannel();
@@ -48,6 +75,7 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
             throw;
         }
     }
+    #endregion
 
     #region DB Methods
     protected override ResultArgs<List<ConfigModel>> GetData(string sp)
@@ -113,31 +141,5 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
 
         return new List<ServerConfig>();
     }
-    #endregion
-
-    #region Properties
-    // Config Properties
-    private DiscordGuild Guild { get; set; }
-
-    // General Config
-    public string? WelcomeMessage { get; set; } = null;
-    public string? LeaveMessage { get; set; } = null;
-    public DiscordChannel DefaultChannel { get; set; }
-
-    // Birthday Config
-    public static DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1800");
-    public bool BirthdayNotifications { get; set; } = true;
-    public string BirthdayMessage { get; set; } = "Happy Birthday!";
-    public DateTime PauseBdayNotifsTimer { get; set; } = DATE_ERROR;
-
-    // Role Config
-    public string? ServerRolesName { get; set; } = null;
-    public string? ServerRolesDescription { get; set; } = null;
-    public bool AllowMultipleRoles { get; set; } = false;
-    public bool SendRoleMenuOnMemberJoin { get; set; } = false;
-
-    // Levels Config
-    public bool EnableLevels { get; set; } = false;
-    public string LevelUpMessage { get; set; } = "has levelled up!";
     #endregion
 }

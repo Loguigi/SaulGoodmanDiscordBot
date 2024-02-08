@@ -1,10 +1,7 @@
-﻿using System.Text;
-using DSharpPlus;
-using DSharpPlus.CommandsNext;
+﻿using DSharpPlus;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
-using Newtonsoft.Json;
 using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
 using SaulGoodmanBot.Handlers;
@@ -61,13 +58,13 @@ public class Bot {
         Slash.RegisterCommands<ServerConfigCommands>();
         Slash.RegisterCommands<RoleCommands>();
         Slash.RegisterCommands<LevelCommands>();
-        Slash.RegisterCommands<MinecraftCommands>();
+        //Slash.RegisterCommands<MinecraftCommands>();
         Slash.RegisterCommands<ScheduleCommands>();
 
         // Secret Santa seasonal commands/handlers
         if (DateTime.Now.Month == 11 || DateTime.Now.Month == 12 || DateTime.Now.Month == 1) {
-            Client.MessageCreated += SantaHandler.HandleParticipationDeadlineCheck;
-            Slash.RegisterCommands<SecretSantaCommands>();
+            //Client.MessageCreated += SantaHandler.HandleParticipationDeadlineCheck;
+            //Slash.RegisterCommands<SecretSantaCommands>();
         }
 
         Slash.SlashCommandInvoked += async (s, e) => {
