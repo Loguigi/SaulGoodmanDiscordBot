@@ -39,3 +39,9 @@ public static class StandardOutput {
             });
     }
 }
+
+public enum ConfigChangeOption {
+    EnabledToDisabled,
+    DisabledToEnabled,
+    MessageChange,
+}

@@ -28,7 +28,7 @@ public class Levels : DbBase<LevelModel, Levels> {
         User = user;
 
         try {
-            var result = GetData("");
+            var result = GetData();
             if (result.Status != ResultArgs<List<LevelModel>>.StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
             MapData(result.Result);
@@ -46,7 +46,7 @@ public class Levels : DbBase<LevelModel, Levels> {
                 Level++;
                 LevelledUp = true;
             }
-            var result = SaveData("", new LevelModel() {
+            var result = SaveData(new LevelModel() {
                 GuildId = (long)Guild.Id,
                 UserId = (long)User.Id,
                 Experience = Experience,
@@ -63,14 +63,14 @@ public class Levels : DbBase<LevelModel, Levels> {
     #endregion
 
     #region DB Methods
-    protected override ResultArgs<List<LevelModel>> GetData(string sp)
+    protected override ResultArgs<List<LevelModel>> GetData(string sp="Levels_GetData")
     {
         try
         {
             using IDbConnection cnn = Connection;
-            var param = new DbCommonParams();
-            sp += " @Status, @ErrMsg";
-            var result = cnn.Query<LevelModel>(sp, param).ToList();
+            var sql = sp += " @GuildId, @UserId, @Status, @ErrMsg";
+            var param = new LevelModel() { GuildId = (long)Guild.Id, UserId = (long)User.Id };
+            var result = cnn.Query<LevelModel>(sql, param).ToList();
             return new ResultArgs<List<LevelModel>>(result, param.Status, param.ErrMsg);
         }
         catch (Exception ex)
@@ -80,12 +80,12 @@ public class Levels : DbBase<LevelModel, Levels> {
         }
     }
 
-    protected override ResultArgs<int> SaveData(string sp, LevelModel data)
+    protected override ResultArgs<int> SaveData(LevelModel data, string sp="Levels_Process")
     {
         try
         {
             using IDbConnection cnn = Connection;
-            var param = sp + @" @GuildId,
+            var param = sp + @" @GuildId, 
                 @UserId,
                 @Experience,
                 @Level,

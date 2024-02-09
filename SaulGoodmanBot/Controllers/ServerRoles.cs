@@ -17,7 +17,7 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
         Client = client;
 
         try {
-            var result = GetData("");
+            var result = GetData();
             if (result.Status != ResultArgs<List<RoleModel>>.StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
 
@@ -48,7 +48,7 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
 
     public void Add(RoleComponent role) {
         try {
-            var result = SaveData("", new RoleModel() {
+            var result = SaveData(new RoleModel() {
                 GuildId = (long)Guild.Id,
                 RoleId = (long)role.Role.Id,
                 Description = role.Description == string.Empty ? null : role.Description,
@@ -65,7 +65,7 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
 
     public void Remove(RoleComponent role) {
         try {
-            var result = SaveData("", new RoleModel() {
+            var result = SaveData(new RoleModel() {
                 GuildId = (long)Guild.Id,
                 RoleId = (long)role.Role.Id,
                 Mode = (int)DataMode.DELETE
@@ -82,7 +82,7 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
     #endregion
 
     #region DB Methods
-    protected override ResultArgs<List<RoleModel>> GetData(string sp)
+    protected override ResultArgs<List<RoleModel>> GetData(string sp="Roles_GetData")
     {
         try {
             using IDbConnection cnn = Connection;
@@ -97,7 +97,7 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
         }
     }
 
-    protected override ResultArgs<int> SaveData(string sp, RoleModel data)
+    protected override ResultArgs<int> SaveData(RoleModel data, string sp="Roles_Process")
     {
         try {
             using IDbConnection cnn = Connection;

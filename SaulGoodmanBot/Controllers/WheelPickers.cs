@@ -43,7 +43,7 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void AddWheel(Wheel wheel, string first_option) {
         try {
-            var result = SaveData("soon", new WheelsModel() {
+            var result = SaveData(new WheelsModel() {
                 GuildId = (long)Guild.Id,
                 WheelName = wheel.Name,
                 WheelOption = first_option,
@@ -60,7 +60,7 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void AddOption(Wheel wheel, string option) {
         try {
-            var result = SaveData("", new WheelsModel() {
+            var result = SaveData(new WheelsModel() {
                 GuildId = (long)Guild.Id,
                 WheelName = wheel.Name,
                 WheelOption = option,
@@ -77,7 +77,7 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void DeleteWheel(Wheel wheel) {
         try {
-            var result = SaveData("soon", new WheelsModel() {
+            var result = SaveData(new WheelsModel() {
                 GuildId = (long)Guild.Id,
                 WheelName = wheel.Name,
                 Mode = (int)DataMode.DELETE_WHEEL
@@ -92,7 +92,7 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void DeleteOption(Wheel wheel, string option) {
         try {
-            var result = SaveData("", new WheelsModel() {
+            var result = SaveData(new WheelsModel() {
                 GuildId = (long)Guild.Id,
                 WheelName = wheel.Name,
                 WheelOption = option,
@@ -108,7 +108,7 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void TemporarilyRemoveOption(Wheel wheel, string option) {
         try {
-            var result = SaveData("", new WheelsModel() {
+            var result = SaveData(new WheelsModel() {
                 GuildId = (long)Guild.Id,
                 WheelName = wheel.Name,
                 WheelOption = option,
@@ -125,7 +125,7 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void Restore(Wheel wheel) {
         try {
-            var result = SaveData("", new WheelsModel() {
+            var result = SaveData(new WheelsModel() {
                 GuildId = (long)Guild.Id,
                 WheelName = wheel.Name,
                 Mode = (int)DataMode.RESTORE
@@ -140,7 +140,7 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
     #endregion
 
     #region DB Methods
-    protected override ResultArgs<List<WheelsModel>> GetData(string sp=StoredProcedures.GET_DATA) {
+    protected override ResultArgs<List<WheelsModel>> GetData(string sp="Wheels_GetData") {
         try {
             using IDbConnection cnn = Connection;
             var sql = sp + " @Status, @ErrMsg";
@@ -153,7 +153,7 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
         }
     }
 
-    protected override ResultArgs<int> SaveData(string sp, WheelsModel data)
+    protected override ResultArgs<int> SaveData(WheelsModel data, string sp="Wheels_Process")
     {
         try {
             using IDbConnection cnn = Connection;
@@ -200,9 +200,6 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
         DELETE_OPTION = 3,
         TEMP_REMOVE = 4,
         RESTORE = 5
-    }
-    private struct StoredProcedures {
-        public const string GET_DATA = "Wheels_GetData";
     }
     #endregion
 }

@@ -16,6 +16,7 @@ public static class BirthdayHandler {
             await Task.CompletedTask;
             return;
         }
+        Thread.Sleep(100);
 
         config.PauseBdayNotifsTimer = DateTime.MinValue;
         var embed = new DiscordEmbedBuilder()

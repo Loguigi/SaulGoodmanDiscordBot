@@ -69,7 +69,6 @@ public class BirthdayCommands : ApplicationCommandModule {
         var birthdays = new ServerBirthdays(ctx.Guild);
         if (!DateTime.TryParse($"{year}, {month} {day}", out DateTime date))
             throw new Exception("Invalid date");
-        birthdays[ctx.User] = new Birthday(ctx.User, date);
 
         await ctx.CreateResponseAsync(StandardOutput.Success($"Your birthday is changed to {month}/{day}/{year}"));
     }
@@ -90,7 +89,6 @@ public class BirthdayCommands : ApplicationCommandModule {
         var birthdays = new ServerBirthdays(ctx.Guild);
         if (!DateTime.TryParse($"{year}, {month} {day}", out DateTime date))
             throw new Exception("Invalid date");
-        birthdays[user] = new Birthday(user, date);
 
         await ctx.CreateResponseAsync(StandardOutput.Success($"{user.Mention}'s birthday changed to {month}/{day}/{year}"));
     }

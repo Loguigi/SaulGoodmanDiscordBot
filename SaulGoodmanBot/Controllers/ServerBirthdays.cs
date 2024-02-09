@@ -36,7 +36,7 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
         Guild = guild;
         
         try {
-            var result = GetData("");
+            var result = GetData();
             if (result.Status != ResultArgs<List<BirthdayModel>>.StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
             Birthdays = MapData(result.Result);
@@ -48,29 +48,18 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
 
     public Birthday this[DiscordUser user] {
         get => Birthdays.Where(x => x.User == user).FirstOrDefault()!;
-        set {
-            try {
-                if (this[value.User] == null)
-                    Add(value);
-                else
-                    Change(value);
-            } catch (Exception ex) {
-                ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-                throw;
-            }
-        }
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     public IEnumerator<Birthday> GetEnumerator() => Birthdays.GetEnumerator();
 
-    public void Add(Birthday bday) {
+    public void Save(Birthday bday) {
         try {
-            var result = SaveData("", new BirthdayModel() {
+            var result = SaveData(new BirthdayModel() {
                 GuildId = (long)Guild.Id,
                 UserId = (long)bday.User.Id,
                 Birthday = bday.BDay,
-                Mode = (int)DataMode.ADD
+                Mode = (int)DataMode.SAVE
             });
             if (result.Status != ResultArgs<int>.StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
@@ -80,31 +69,15 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
         }
     }
 
-    public void Change(Birthday bday) {
-        try {
-            var result = SaveData("", new BirthdayModel() {
-                GuildId = (long)Guild.Id,
-                UserId = (long)bday.User.Id,
-                Birthday = bday.BDay,
-                Mode = (int)DataMode.CHANGE
-            });
-            if (result.Result != 0)
-                throw new Exception(result.Message);
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
     public void Remove(Birthday bday) {
         try {
-            var result = SaveData("", new BirthdayModel() {
+            var result = SaveData(new BirthdayModel() {
                 GuildId = (long)Guild.Id,
                 UserId = (long)bday.User.Id,
                 Birthday = bday.BDay,
                 Mode = (int)DataMode.REMOVE
             });
-            if (result.Result != 0)
+            if (result.Status != ResultArgs<int>.StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -114,7 +87,7 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
     #endregion
 
     #region DB Methods
-    protected override ResultArgs<List<BirthdayModel>> GetData(string sp)
+    protected override ResultArgs<List<BirthdayModel>> GetData(string sp="Birthdays_GetData")
     {
         try {
             using IDbConnection cnn = Connection;
@@ -129,7 +102,7 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
         }
     }
 
-    protected override ResultArgs<int> SaveData(string sp, BirthdayModel data)
+    protected override ResultArgs<int> SaveData(BirthdayModel data, string sp="Birthdays_Process")
     {
         try {
             using IDbConnection cnn = Connection;
@@ -159,9 +132,8 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
     }
 
     private enum DataMode {
-        ADD,
-        CHANGE,
-        REMOVE
+        SAVE = 0,
+        REMOVE = 1
     }
 
     private async Task<DiscordUser> GetUser(ulong userid) => await Guild.GetMemberAsync(userid);

@@ -30,7 +30,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
         User = user;
         
         try {
-            var result = GetData("");
+            var result = GetData();
             if (result.Status != ResultArgs<List<ScheduleModel>>.StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
@@ -41,7 +41,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
 
     public void Update() {
         try {
-            var result = SaveData("", new ScheduleModel() {
+            var result = SaveData(new ScheduleModel() {
                 GuildId = (long)Guild.Id,
                 UserId = (long)User.Id,
                 LastUpdated = LastUpdated,
@@ -67,7 +67,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
 
     public void Clear() {
         try {
-            var result = SaveData("", new ScheduleModel() {
+            var result = SaveData(new ScheduleModel() {
                 GuildId = (long)Guild.Id,
                 UserId = (long)User.Id,
                 LastUpdated = LastUpdated,
@@ -80,7 +80,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
     }
 
     #region DB Methods
-    protected override ResultArgs<List<ScheduleModel>> GetData(string sp)
+    protected override ResultArgs<List<ScheduleModel>> GetData(string sp="Schedule_GetData")
     {
         try {
             using IDbConnection cnn = Connection;
@@ -95,7 +95,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
         }
     }
 
-    protected override ResultArgs<int> SaveData(string sp, ScheduleModel data)
+    protected override ResultArgs<int> SaveData(ScheduleModel data, string sp="Schedule_Process")
     {
         try {
             using IDbConnection cnn = Connection;
@@ -142,7 +142,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
     private enum DataMode {
         SAVE = 0,
         CLEAR = 1,
-        REMOTE = 2
+        REMOVE = 2
     }
     #endregion
 }

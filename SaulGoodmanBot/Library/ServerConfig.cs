@@ -9,29 +9,32 @@ namespace SaulGoodmanBot.Library;
 
 public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
     #region Properties
-    // Config Properties
     private DiscordGuild Guild { get; set; }
 
-    // General Config
+    #region General Config
     public string? WelcomeMessage { get; set; } = null;
     public string? LeaveMessage { get; set; } = null;
     public DiscordChannel DefaultChannel { get; set; }
+    #endregion
 
-    // Birthday Config
+    #region Birthday Config
     public static DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1800");
     public bool BirthdayNotifications { get; set; } = true;
     public string BirthdayMessage { get; set; } = "Happy Birthday!";
     public DateTime PauseBdayNotifsTimer { get; set; } = DATE_ERROR;
+    #endregion
 
-    // Role Config
+    #region Role Config
     public string? ServerRolesName { get; set; } = null;
     public string? ServerRolesDescription { get; set; } = null;
     public bool AllowMultipleRoles { get; set; } = false;
     public bool SendRoleMenuOnMemberJoin { get; set; } = false;
+    #endregion
 
-    // Levels Config
+    #region Levels Config
     public bool EnableLevels { get; set; } = false;
     public string LevelUpMessage { get; set; } = "has levelled up!";
+    #endregion
     #endregion
 
     #region Public Methods
@@ -40,7 +43,7 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
         DefaultChannel = Guild.GetDefaultChannel();
         
         try {
-            var result = GetData("");
+            var result = GetData();
             if (result.Status != ResultArgs<List<ConfigModel>>.StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
             MapData(result.Result);
@@ -52,7 +55,7 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
 
     public void Save() {
         try {
-            var result = SaveData("", new ConfigModel() {
+            var result = SaveData(new ConfigModel() {
                 GuildId = (long)Guild.Id,
                 WelcomeMessage = WelcomeMessage,
                 LeaveMessage = LeaveMessage,
@@ -78,7 +81,7 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
     #endregion
 
     #region DB Methods
-    protected override ResultArgs<List<ConfigModel>> GetData(string sp)
+    protected override ResultArgs<List<ConfigModel>> GetData(string sp="Config_GetData")
     {
         try {
             using IDbConnection cnn = Connection;
@@ -88,18 +91,19 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
 
             return new ResultArgs<List<ConfigModel>>(data, param.Status, param.ErrMsg);
         } catch (Exception ex) {
+            Console.WriteLine(ex.Message);
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
         }
     }
 
-    protected override ResultArgs<int> SaveData(string sp, ConfigModel data)
+    protected override ResultArgs<int> SaveData(ConfigModel data, string sp="Config_Process")
     {
         try {
             using IDbConnection cnn = Connection;
             var sql = sp + @" @GuildId,
                 @WelcomeMessage,
-                @LeaveMessage
+                @LeaveMessage,
                 @DefaultChannel,
                 @BirthdayNotifications,
                 @BirthdayMessage,

@@ -13,7 +13,7 @@ namespace SaulGoodmanBot.Data;
 public abstract class DbBase<TModel, TDomain> {
     protected SqlConnection Connection => new(_connectionString);
     protected abstract ResultArgs<List<TModel>> GetData(string sp);
-    protected abstract ResultArgs<int> SaveData(string sp, TModel data);
+    protected abstract ResultArgs<int> SaveData(TModel data, string sp);
     protected abstract List<TDomain> MapData(List<TModel> data);
     protected async virtual Task<DiscordUser> GetUser(DiscordClient client, ulong id) => await client.GetUserAsync(id);
     protected T DeNull<T>(object? data, T defaultValue) => data == null ? defaultValue : (T)data;
