@@ -2,10 +2,8 @@ using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
 using SaulGoodmanBot.Library;
-using SaulGoodmanBot.Library.Birthdays;
-using SaulGoodmanBot.Commands;
-using SaulGoodmanBot.Library.Helpers;
-using SaulGoodmanBot.Library.Roles;
+using SaulGoodmanBot.Helpers;
+using SaulGoodmanBot.Controllers;
 
 namespace SaulGoodmanBot.Handlers;
 
@@ -29,12 +27,15 @@ public static class GeneralHandlers {
             .SendAsync(config.DefaultChannel);
 
         var roles = new ServerRoles(e.Guild, s);
-        if (roles.IsNotSetup() || roles.IsEmpty() || !config.SendRoleMenuOnMemberJoin) {
+        if (roles.IsNotSetup && !config.SendRoleMenuOnMemberJoin) {
+            await Task.CompletedTask;
             return;
         }
 
         var roleOptions = new List<DiscordSelectComponentOption>();
-        roles.Roles.ForEach(r => roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description ?? string.Empty, false, new DiscordComponentEmoji(r.Emoji ?? DiscordEmoji.FromName(s, ":arrow_right:", false)))));
+        foreach (var r in roles) {
+            roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description, false));
+        }
         DiscordSelectComponent roleDropdown = roles.AllowMultipleRoles ? new(IDHelper.Roles.MENU, "Select roles", roleOptions, false, 1, roleOptions.Count) : new(IDHelper.Roles.MENU, "Select a role", roleOptions, false);
 
         var embed = new DiscordEmbedBuilder()
@@ -44,7 +45,7 @@ public static class GeneralHandlers {
             .WithFooter(roles.AllowMultipleRoles ? "Can have multiple" : "Can only have one")
             .WithColor(DiscordColor.Turquoise);
 
-        foreach (var r in roles.Roles) {
+        foreach (var r in roles) {
             if (r == roles.Roles.First())
                 embed.AddField("Available Roles", r.Role.Mention);
             else
@@ -59,9 +60,10 @@ public static class GeneralHandlers {
 
     public static async Task HandleMemberLeave(DiscordClient s, GuildMemberRemoveEventArgs e) {
         var config = new ServerConfig(e.Guild);
-        var birthdays = new ServerBirthdays(e.Guild);
+        var birthdays = new ServerBirthdays(s, e.Guild);
 
-        birthdays.Edit(DataOperations.Delete, birthdays.Find(e.Member));
+        if (birthdays[e.Member] != null)
+            birthdays.Remove(birthdays[e.Member]!);
         
         if (config.LeaveMessage == null) {
             await Task.CompletedTask;

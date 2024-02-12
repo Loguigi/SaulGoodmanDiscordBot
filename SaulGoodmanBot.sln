@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaulGoodmanBot", "SaulGoodmanBot\SaulGoodmanBot.csproj", "{97C495C9-8070-4BA4-85AE-A265C184D526}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataLibrary", "DataLibrary\DataLibrary.csproj", "{8AE7546A-B77B-4074-A687-4616778E6E12}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,9 +18,5 @@ Global
 		{97C495C9-8070-4BA4-85AE-A265C184D526}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97C495C9-8070-4BA4-85AE-A265C184D526}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97C495C9-8070-4BA4-85AE-A265C184D526}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8AE7546A-B77B-4074-A687-4616778E6E12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8AE7546A-B77B-4074-A687-4616778E6E12}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8AE7546A-B77B-4074-A687-4616778E6E12}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8AE7546A-B77B-4074-A687-4616778E6E12}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -8,16 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.28" />
     <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-01685" />
     <PackageReference Include="DSharpPlus.CommandsNext" Version="5.0.0-nightly-01685" />
     <PackageReference Include="DSharpPlus.Interactivity" Version="5.0.0-nightly-01685" />
     <PackageReference Include="DSharpPlus.SlashCommands" Version="5.0.0-nightly-01685" />
     <PackageReference Include="DSharpPlus.VoiceNext" Version="5.0.0-nightly-01685" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\DataLibrary\DataLibrary.csproj" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
   </ItemGroup>
 
 </Project>

@@ -2,14 +2,15 @@ using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
 using SaulGoodmanBot.Library;
-using SaulGoodmanBot.Library.Birthdays;
-using SaulGoodmanBot.Library.Helpers;
+using SaulGoodmanBot.Helpers;
+using SaulGoodmanBot.Controllers;
+using System.Reflection;
 
 namespace SaulGoodmanBot.Handlers;
 
 public static class BirthdayHandler {
     public static async Task HandleBirthdayMessage(DiscordClient s, MessageCreateEventArgs e) {
-        var birthdays = new ServerBirthdays(e.Guild);
+        var birthdays = new ServerBirthdays(s, e.Guild);
         var config = new ServerConfig(e.Guild);
 
         if (e.Author.IsBot || config.PauseBdayNotifsTimer.Date == DateTime.Today || !config.BirthdayNotifications) {
@@ -17,24 +18,22 @@ public static class BirthdayHandler {
             return;
         }
 
-        config.PauseBdayNotifsTimer = ServerBirthdays.NO_BIRTHDAY;
+        config.PauseBdayNotifsTimer = DateTime.MinValue;
         var embed = new DiscordEmbedBuilder()
             .WithColor(DiscordColor.HotPink);
         
-        foreach (var birthday in birthdays.GetBirthdays()) {
-            if (birthday.IsBirthdayToday()) {
-                embed.WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} {config.BirthdayMessage} {birthday.User.Mention} ({birthday.GetAge()})");
+        foreach (var birthday in birthdays) {
+            if (birthday.HasBirthdayToday) {
+                embed.WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} {config.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
                 config.PauseBdayNotifsTimer = DateTime.Now;
                 await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
-            } else if (birthday.HasUpcomingBirthday()) {
+            } else if (birthday.HasUpcomingBirthday) {
                 embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__5__** days!").WithFooter($"{DiscordEmoji.FromName(s, ":birthday:", false)} {birthday} {DiscordEmoji.FromName(s, ":birthday:", false)}");
                 config.PauseBdayNotifsTimer = DateTime.Now;
                 await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
             }
         }
-        config.UpdateConfig();
-
-        
+        config.Save();
     }
 
     public static async Task HandleBirthdayList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
@@ -43,21 +42,26 @@ public static class BirthdayHandler {
             return;
         }
 
-        var birthdays = new ServerBirthdays(e.Guild);
-        var interactivity = new InteractivityHelper<Birthday>(s, birthdays.GetBirthdays(), IDHelper.Birthdays.LIST, e.Id.Split('\\')[PAGE_INDEX]);
+        try {
+            var birthdays = new ServerBirthdays(s, e.Guild);
+            var interactivity = new InteractivityHelper<Birthday>(s, birthdays.Birthdays, IDHelper.Birthdays.LIST, IDHelper.GetId(e.Id, PAGE_INDEX), 10);
 
-        var embed = new DiscordEmbedBuilder()
-            .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
-            .WithTitle("Birthdays")
-            .WithDescription(interactivity.IsEmpty())
-            .WithColor(DiscordColor.Magenta)
-            .WithFooter(interactivity.PageStatus());
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
+                .WithTitle("Birthdays")
+                .WithDescription(interactivity.IsEmpty())
+                .WithColor(DiscordColor.Magenta)
+                .WithFooter(interactivity.PageStatus);
 
-        foreach (var birthday in interactivity.GetPage()) {
-            embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.GetAge() + 1})`\n";
+            foreach (var birthday in interactivity) {
+                embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.Age + 1})`\n";
+            }
+
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
-
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
     }
 
     private const int PAGE_INDEX = 1;

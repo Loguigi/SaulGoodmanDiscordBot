@@ -1,8 +1,10 @@
+using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using SaulGoodmanBot.Library.Helpers;
-using SaulGoodmanBot.Library.Roles;
+using SaulGoodmanBot.Helpers;
+using SaulGoodmanBot.Library;
+using SaulGoodmanBot.Controllers;
 
 namespace SaulGoodmanBot.Handlers;
 
@@ -13,65 +15,59 @@ public static class RoleHandler {
             return;
         }
 
-        var roles = new ServerRoles(e.Guild, s);
-        var user = await e.Guild.GetMemberAsync(e.User.Id);
-        var embed = new DiscordEmbedBuilder()
-            .WithAuthor(e.User.GlobalName, "", e.User.AvatarUrl)
-            .WithTitle(roles.CategoryName)
-            .WithColor(DiscordColor.Green);
+        try {
+            var roles = new ServerRoles(e.Guild, s);
+            var user = await e.Guild.GetMemberAsync(e.User.Id);
+            var selected = new List<RoleComponent>();
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(e.User.GlobalName, "", e.User.AvatarUrl)
+                .WithTitle(roles.CategoryName)
+                .WithColor(DiscordColor.Green);
 
-        if (roles.AllowMultipleRoles) {
-            foreach (var roleid in e.Values) {
-                var r = roles.GetRole(ulong.Parse(roleid));
-                roles.Roles.Remove(r);
-
-                // Add any role selected
-                if (user.Roles.Contains(r.Role)) {
-                    // User already has selected role; continue
-                    continue;
-                } else {
-                    // User does not have selected role; grant role
-                    await user.GrantRoleAsync(r.Role);
-                    if (!embed.Fields.Where(x => x.Name == "Added Roles").Any())
-                        embed.AddField("Added Roles", r.Role.Mention);
-                    else
-                        embed.Fields.Where(x => x.Name == "Added Roles").First().Value += $", {r.Role.Mention}";
+            if (roles.AllowMultipleRoles) {
+                // save selected roles
+                foreach (var roleid in e.Values) {
+                    selected.Add(roles[e.Guild.GetRole(ulong.Parse(roleid))]!);
                 }
-            }
-            
-            // Remove any roles not selected
-            foreach (var savedRoles in roles.Roles) {
-                if (user.Roles.Contains(savedRoles.Role)) {
-                    await user.RevokeRoleAsync(savedRoles.Role);
-                    if (!embed.Fields.Where(x => x.Name == "Removed Roles").Any())
-                        embed.AddField("Removed Roles", savedRoles.Role.Mention);
-                    else
-                        embed.Fields.Where(x => x.Name == "Removed Roles").First().Value += $", {savedRoles.Role.Mention}";
+
+                // add selected roles
+                foreach (var select in selected) {
+                    if (!roles.HasRole(user, select))
+                        await user.GrantRoleAsync(select.Role);
+                }
+
+                // remove roles not selected
+                foreach (var r in roles) {
+                    if (roles.HasRole(user, r) && !selected.Contains(r)) {
+                        await user.RevokeRoleAsync(r.Role);
+                        if (!embed.Fields.Where(x => x.Name == "Removed Roles").Any())
+                            embed.AddField("Removed Roles", r.Role.Mention);
+                        else
+                            embed.Fields.Where(x => x.Name == "Removed Roles").First().Value += $", {r.Role.Mention}";
+                    }
+                }
+            } else {
+                var role = roles[e.Guild.GetRole(ulong.Parse(e.Values.First()))]!;
+                if (roles.HasRole(user, role))
+                    throw new Exception($"You already have the role {role.Role.Mention}");
+
+                await user.GrantRoleAsync(role.Role);
+                foreach (var r in roles) {
+                    if (r != role && roles.HasRole(user, role)) {
+                        await user.RevokeRoleAsync(r.Role);
+                        if (!embed.Fields.Where(x => x.Name == "Removed Roles").Any())
+                            embed.AddField("Removed Roles", r.Role.Mention);
+                        else
+                            embed.Fields.Where(x => x.Name == "Removed Roles").First().Value += $", {r.Role.Mention}";
+                    }
                 }
             }
 
             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
-            return;
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
-
-        var role = roles.GetRole(ulong.Parse(e.Values.First()));
-
-        // Remove any other role that isn't the selected role
-        foreach (var savedRoles in roles.Roles) {
-            if (user.Roles.Contains(savedRoles.Role)) {
-                await user.RevokeRoleAsync(savedRoles.Role);
-                if (!embed.Fields.Where(x => x.Name == "Removed Roles").Any())
-                    embed.AddField("Removed Roles", savedRoles.Role.Mention);
-                else
-                    embed.Fields.Where(x => x.Name == "Removed Roles").First().Value += $", {savedRoles.Role.Mention}";
-            }
-        }
-        
-        // Add role
-        await user.GrantRoleAsync(role.Role);
-        embed.AddField("Added Role", role.Role.Mention);
-
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
     }
 
     public static async Task HandleAssign(DiscordClient s, ComponentInteractionCreateEventArgs e) {
@@ -80,44 +76,50 @@ public static class RoleHandler {
             return;
         }
 
-        var roles = new ServerRoles(e.Guild, s);
-        var user = await e.Guild.GetMemberAsync(e.User.Id);
-        var embed = new DiscordEmbedBuilder()
-            .WithAuthor(e.User.GlobalName, "https://youtu.be/TQzBlxwoDpc", e.User.AvatarUrl)
-            .WithTitle(roles.CategoryName)
-            .WithColor(DiscordColor.Turquoise);
+        try {
+            var roles = new ServerRoles(e.Guild, s);
+            var user = await e.Guild.GetMemberAsync(e.User.Id);
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(e.User.GlobalName, "https://youtu.be/TQzBlxwoDpc", e.User.AvatarUrl)
+                .WithTitle(roles.CategoryName)
+                .WithColor(DiscordColor.Turquoise);
 
-        if (e.Values.First() == "cancel") {
-            embed.WithDescription("Cancelled");
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
-            return;
-        }
-
-        var role = roles.GetRole(ulong.Parse(e.Values.First())).Role;
-
-        if (user.Roles.Contains(role)) {
-            await user.RevokeRoleAsync(role);
-            embed.AddField("Removed Role", role.Mention);
-        } else if (roles.AllowMultipleRoles) {
-            await user.GrantRoleAsync(role);
-            embed.AddField("Added Role", role.Mention);
-        } else {
-            // Remove any other role that isn't the selected role
-            foreach (var savedRoles in roles.Roles) {
-                if (user.Roles.Contains(savedRoles.Role)) {
-                    await user.RevokeRoleAsync(savedRoles.Role);
-                    embed.AddField("Removed Role", savedRoles.Role.Mention);
-                }
+            if (e.Values.First() == "cancel") {
+                embed.WithDescription("Cancelled");
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
+                return;
             }
 
-            // Add role
-            await user.GrantRoleAsync(role);
-            embed.AddField("Added Role", role.Mention);
+            var role = roles[e.Guild.GetRole(ulong.Parse(e.Values.First()))]!;
+
+            if (roles.HasRole(user, role)) {
+                await user.RevokeRoleAsync(role.Role);
+                embed.AddField("Removed Role", role.Role.Mention);
+            } else if (roles.AllowMultipleRoles) {
+                await user.GrantRoleAsync(role.Role);
+                embed.AddField("Added Role", role.Role.Mention);
+            } else {
+                // Remove any other role that isn't the selected role
+                foreach (var x in roles) {
+                    if (roles.HasRole(user, x)) {
+                        await user.RevokeRoleAsync(x.Role);
+                        embed.AddField("Removed Role", x.Role.Mention);
+                    }
+                }
+
+                // Add role
+                await user.GrantRoleAsync(role.Role);
+                embed.AddField("Added Role", role.Role.Mention);
+            }
+
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
+
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        } finally {
+            s.ComponentInteractionCreated -= HandleAssign;
         }
-
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
-
-        s.ComponentInteractionCreated -= HandleAssign;
     }
 
     public static async Task HandleRemoveRole(DiscordClient s, ComponentInteractionCreateEventArgs e) {
@@ -126,32 +128,43 @@ public static class RoleHandler {
             return;
         }
 
-        var roles = new ServerRoles(e.Guild, s);
-        var embed = new DiscordEmbedBuilder()
-            .WithTitle("Remove Role")
-            .WithColor(DiscordColor.DarkRed);
+        try {
+            var roles = new ServerRoles(e.Guild, s);
+            var role = roles[e.Guild.GetRole(ulong.Parse(e.Values.First()))]!;
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Remove Role")
+                .WithColor(DiscordColor.DarkRed);
 
-        if (e.Values.First() == "cancel") {
-            embed.WithDescription("Cancelled");
+            if (e.Values.First() == "cancel") {
+                embed.WithDescription("Cancelled");
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+                return;
+            }
+
+            roles.Remove(role);
+            embed.WithDescription($"{role.Role.Mention} has been removed from {roles.CategoryName}");
+
             await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
-            return;
+            
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        } finally {
+            s.ComponentInteractionCreated -= HandleRemoveRole;
         }
-
-        var roleid = ulong.Parse(e.Values.First());
-        roles.Remove(roleid);
-        embed.WithDescription($"{e.Guild.GetRole(roleid).Mention} has been removed from {roles.CategoryName}");
-
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
-
-        s.ComponentInteractionCreated -= HandleRemoveRole;
     }
 
     public static async Task HandleServerRemoveRole(DiscordClient s, GuildRoleDeleteEventArgs e) {
-        var roles = new ServerRoles(e.Guild, s);
-        if (roles.AlreadyExists(e.Role)) {
-            roles.Remove(e.Role.Id);
-        }
+        try {
+            var roles = new ServerRoles(e.Guild, s);
+            if (roles[e.Role] != null) {
+                roles.Remove(roles[e.Role]!);
+            }
 
-        await Task.CompletedTask;
+            await Task.CompletedTask;
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 }
