@@ -30,7 +30,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
         User = user;
         
         try {
-            var result = GetData();
+            var result = GetData("Schedule_GetData", new DynamicParameters(new { GuildId = (long)Guild.Id, UserId = (long)User.Id })).Result;
             if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
@@ -41,21 +41,22 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
 
     public void Update() {
         try {
-            var result = SaveData(new ScheduleModel() {
-                GuildId = (long)Guild.Id,
-                UserId = (long)User.Id,
-                LastUpdated = LastUpdated,
-                RecurringSchedule = RecurringSchedule ? 1 : 0,
-                Sunday = WorkSchedule[DayOfWeek.Sunday],
-                Monday = WorkSchedule[DayOfWeek.Monday],
-                Tuesday = WorkSchedule[DayOfWeek.Tuesday],
-                Wednesday = WorkSchedule[DayOfWeek.Wednesday],
-                Thursday = WorkSchedule[DayOfWeek.Thursday],
-                Friday = WorkSchedule[DayOfWeek.Friday],
-                Saturday = WorkSchedule[DayOfWeek.Saturday],
-                PictureUrl = PictureUrl,
-                Mode = (int)DataMode.SAVE
-            });
+            var result = SaveData("Schedule_Process", new DynamicParameters(
+                new ScheduleModel() {
+                    GuildId = (long)Guild.Id,
+                    UserId = (long)User.Id,
+                    LastUpdated = LastUpdated,
+                    RecurringSchedule = RecurringSchedule ? 1 : 0,
+                    Sunday = WorkSchedule[DayOfWeek.Sunday],
+                    Monday = WorkSchedule[DayOfWeek.Monday],
+                    Tuesday = WorkSchedule[DayOfWeek.Tuesday],
+                    Wednesday = WorkSchedule[DayOfWeek.Wednesday],
+                    Thursday = WorkSchedule[DayOfWeek.Thursday],
+                    Friday = WorkSchedule[DayOfWeek.Friday],
+                    Saturday = WorkSchedule[DayOfWeek.Saturday],
+                    PictureUrl = PictureUrl,
+                    Mode = (int)DataMode.SAVE
+            })).Result;
 
             if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
@@ -67,12 +68,16 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
 
     public void Clear() {
         try {
-            var result = SaveData(new ScheduleModel() {
-                GuildId = (long)Guild.Id,
-                UserId = (long)User.Id,
-                LastUpdated = LastUpdated,
-                RecurringSchedule = RecurringSchedule ? 1 : 0
-            });
+            var result = SaveData("Schedule_Process", new DynamicParameters(
+                new ScheduleModel() {
+                    GuildId = (long)Guild.Id,
+                    UserId = (long)User.Id,
+                    LastUpdated = LastUpdated,
+                    RecurringSchedule = RecurringSchedule ? 1 : 0
+            })).Result;
+
+            if (result.Status != StatusCodes.SUCCESS)
+                throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
@@ -80,49 +85,6 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
     }
 
     #region DB Methods
-    protected ResultArgs<List<ScheduleModel>> GetData(string sp="Schedule_GetData")
-    {
-        try {
-            using IDbConnection cnn = Connection;
-            var sql = sp + " @GuildId, @UserId, @Status, @ErrMsg";
-            var param = new ScheduleModel() { GuildId = (long)Guild.Id };
-            var data = cnn.Query<ScheduleModel>(sql, param).ToList();
-
-            return new ResultArgs<List<ScheduleModel>>(data, param.Status, param.ErrMsg);
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
-    protected ResultArgs<int> SaveData(ScheduleModel data, string sp="Schedule_Process")
-    {
-        try {
-            using IDbConnection cnn = Connection;
-            var sql = sp + @" @GuildId,
-                @UserId,
-                @LastUpdated,
-                @RecurringSchedule,
-                @Sunday,
-                @Monday,
-                @Tuesday,
-                @Wednesday,
-                @Thursday,
-                @Friday,
-                @Saturday,
-                @PictureUrl,
-                @Mode,
-                @Status,
-                @ErrMsg";
-            var result = cnn.Execute(sql, data);
-
-            return new ResultArgs<int>(result, data.Status, data.ErrMsg);
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
     protected override List<Schedule> MapData(List<ScheduleModel> data)
     {
         var schedule = data.FirstOrDefault();
