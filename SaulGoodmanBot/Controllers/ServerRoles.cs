@@ -11,17 +11,28 @@ using Dapper;
 namespace SaulGoodmanBot.Controllers;
 
 public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleComponent> {
+    #region Properties
+    private DiscordGuild Guild { get; }
+    private DiscordClient Client { get; }
+    public string CategoryName { get; private set; }
+    public string CategoryDescription { get; private set; }
+    public bool AllowMultipleRoles { get; private set; }
+    public bool IsNotSetup { get => CategoryName == string.Empty && Roles.Count == 0; }
+    public List<RoleComponent> Roles { get; private set; } = new();
+    public DiscordEmoji DEFAULT_EMOJI { get => DiscordEmoji.FromName(Client, ":blue_circle:", false); }
+    #endregion
+    
     #region Public Methods
     public ServerRoles(DiscordGuild guild, DiscordClient client) {
         Guild = guild;
         Client = client;
 
         try {
-            var result = GetData();
-            if (result.Status != ResultArgs<List<RoleModel>>.StatusCodes.SUCCESS)
+            var result = GetData("Roles_GetData", new DynamicParameters(new { GuildId = (long)Guild.Id })).Result;
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
 
-            Roles = MapData(result.Result);
+            Roles = MapData(result.Result!);
             var config = new ServerConfig(Guild);
             CategoryName = config.ServerRolesName ?? string.Empty;
             CategoryDescription = config.ServerRolesDescription ?? string.Empty;
@@ -32,30 +43,28 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
         }
     }
 
+    public RoleComponent? this[DiscordRole role] { get => Roles.Where(x => x.Role == role).FirstOrDefault(); }
+
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     public IEnumerator<RoleComponent> GetEnumerator() => Roles.GetEnumerator();
 
-    public RoleComponent this[ulong roleid] {
-        get => Roles.Where(x => x.Role.Id == roleid).FirstOrDefault() ?? throw new Exception("Role not found");
+    public bool TryGetRole(DiscordRole role, out RoleComponent? saved_roll) {
+        saved_roll = this[role];
+        return saved_roll != null;
     }
-
-    public RoleComponent this[DiscordRole role] {
-        get => Roles.Where(x => x.Role == role).FirstOrDefault() ?? throw new Exception("Role not found");
-    }
-
-    public bool Contains(ulong roleid) => Roles.Exists(x => x.Role.Id == roleid);
-    public bool Contains(DiscordRole role) => Roles.Exists(x => x.Role == role);
 
     public void Add(RoleComponent role) {
         try {
-            var result = SaveData(new RoleModel() {
-                GuildId = (long)Guild.Id,
-                RoleId = (long)role.Role.Id,
-                Description = role.Description == string.Empty ? null : role.Description,
-                RoleEmoji = role.Emoji.GetDiscordName(),
-                Mode = (int)DataMode.ADD
-            });
-            if (result.Status == ResultArgs<int>.StatusCodes.ERROR)
+            var result = SaveData("Roles_Process", new DynamicParameters(
+                new RoleModel() {
+                    GuildId = (long)Guild.Id,
+                    RoleId = (long)role.Role.Id,
+                    Description = role.Description == string.Empty ? null : role.Description,
+                    RoleEmoji = role.Emoji.GetDiscordName(),
+                    Mode = (int)DataMode.ADD
+            })).Result;
+
+            if (result.Status == StatusCodes.ERROR)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -65,12 +74,14 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
 
     public void Remove(RoleComponent role) {
         try {
-            var result = SaveData(new RoleModel() {
-                GuildId = (long)Guild.Id,
-                RoleId = (long)role.Role.Id,
-                Mode = (int)DataMode.DELETE
-            });
-            if (result.Status == ResultArgs<int>.StatusCodes.ERROR)
+            var result = SaveData("Roles_Process", new DynamicParameters(
+                new RoleModel() {
+                    GuildId = (long)Guild.Id,
+                    RoleId = (long)role.Role.Id,
+                    Mode = (int)DataMode.DELETE
+            })).Result;
+
+            if (result.Status == StatusCodes.ERROR)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -82,41 +93,6 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
     #endregion
 
     #region DB Methods
-    protected override ResultArgs<List<RoleModel>> GetData(string sp="Roles_GetData")
-    {
-        try {
-            using IDbConnection cnn = Connection;
-            var sql = sp + " @GuildId, @Status, @ErrMsg";
-            var param = new RoleModel() { GuildId = (long)Guild.Id };
-            var data = cnn.Query<RoleModel>(sql, param).ToList();
-
-            return new ResultArgs<List<RoleModel>>(data, param.Status, param.ErrMsg);
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
-    protected override ResultArgs<int> SaveData(RoleModel data, string sp="Roles_Process")
-    {
-        try {
-            using IDbConnection cnn = Connection;
-            var sql = sp + @" @GuildId,
-                @RoleId,
-                @Description,
-                @RoleEmoji,
-                @Mode,
-                @Status,
-                @ErrMsg";
-            var result = cnn.Execute(sql, data);
-
-            return new ResultArgs<int>(result, data.Status, data.ErrMsg);
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
     protected override List<RoleComponent> MapData(List<RoleModel> data)
     {
         var roles = new List<RoleComponent>();
@@ -131,16 +107,5 @@ public class ServerRoles : DbBase<RoleModel, RoleComponent>, IEnumerable<RoleCom
         ADD,
         DELETE
     }
-    #endregion
-
-    #region Properties
-    private DiscordGuild Guild { get; }
-    private DiscordClient Client { get; }
-    public string CategoryName { get; private set; }
-    public string CategoryDescription { get; private set; }
-    public bool AllowMultipleRoles { get; private set; }
-    public bool IsNotSetup { get => CategoryName == string.Empty && Roles.Count == 0; }
-    public List<RoleComponent> Roles { get; private set; } = new();
-    public DiscordEmoji DEFAULT_EMOJI { get => DiscordEmoji.FromName(Client, ":blue_circle:", false); }
     #endregion
 }

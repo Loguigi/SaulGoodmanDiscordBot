@@ -31,7 +31,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
         
         try {
             var result = GetData();
-            if (result.Status != ResultArgs<List<ScheduleModel>>.StatusCodes.SUCCESS)
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -57,7 +57,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
                 Mode = (int)DataMode.SAVE
             });
 
-            if (result.Status != ResultArgs<int>.StatusCodes.SUCCESS)
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -80,7 +80,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
     }
 
     #region DB Methods
-    protected override ResultArgs<List<ScheduleModel>> GetData(string sp="Schedule_GetData")
+    protected ResultArgs<List<ScheduleModel>> GetData(string sp="Schedule_GetData")
     {
         try {
             using IDbConnection cnn = Connection;
@@ -95,7 +95,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
         }
     }
 
-    protected override ResultArgs<int> SaveData(ScheduleModel data, string sp="Schedule_Process")
+    protected ResultArgs<int> SaveData(ScheduleModel data, string sp="Schedule_Process")
     {
         try {
             using IDbConnection cnn = Connection;

@@ -28,10 +28,10 @@ public class Levels : DbBase<LevelModel, Levels> {
         User = user;
 
         try {
-            var result = GetData();
-            if (result.Status != ResultArgs<List<LevelModel>>.StatusCodes.SUCCESS)
+            var result = GetData("Levels_GetData", new DynamicParameters(new { GuildId = (long)Guild.Id })).Result;
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
-            MapData(result.Result);
+            MapData(result.Result!);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
@@ -46,14 +46,15 @@ public class Levels : DbBase<LevelModel, Levels> {
                 Level++;
                 LevelledUp = true;
             }
-            var result = SaveData(new LevelModel() {
-                GuildId = (long)Guild.Id,
-                UserId = (long)User.Id,
-                Experience = Experience,
-                Level = Level,
-                MsgLastSent = NewMsgSent
-            });
-            if (result.Result != 0)
+            var result = SaveData("Levels_Process", new DynamicParameters(
+                new LevelModel() {
+                    GuildId = (long)Guild.Id,
+                    UserId = (long)User.Id,
+                    Experience = Experience,
+                    Level = Level,
+                    MsgLastSent = NewMsgSent
+            })).Result;
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -63,45 +64,6 @@ public class Levels : DbBase<LevelModel, Levels> {
     #endregion
 
     #region DB Methods
-    protected override ResultArgs<List<LevelModel>> GetData(string sp="Levels_GetData")
-    {
-        try
-        {
-            using IDbConnection cnn = Connection;
-            var sql = sp += " @GuildId, @UserId, @Status, @ErrMsg";
-            var param = new LevelModel() { GuildId = (long)Guild.Id, UserId = (long)User.Id };
-            var result = cnn.Query<LevelModel>(sql, param).ToList();
-            return new ResultArgs<List<LevelModel>>(result, param.Status, param.ErrMsg);
-        }
-        catch (Exception ex)
-        {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
-    protected override ResultArgs<int> SaveData(LevelModel data, string sp="Levels_Process")
-    {
-        try
-        {
-            using IDbConnection cnn = Connection;
-            var param = sp + @" @GuildId, 
-                @UserId,
-                @Experience,
-                @Level,
-                @MsgLastSent,
-                @Status,
-                @ErrMsg";
-            var result = cnn.Execute(param, data);
-            return new ResultArgs<int>(result, data.Status, data.ErrMsg);
-        }
-        catch (Exception ex)
-        {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
     protected override List<Levels> MapData(List<LevelModel> data)
     {
         try

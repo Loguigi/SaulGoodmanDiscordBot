@@ -38,7 +38,7 @@ public class RoleCommands : ApplicationCommandModule {
         
         var roles = new ServerRoles(ctx.Guild, ctx.Client);
 
-        if (roles.Contains(role))
+        if (roles[role] != null)
             throw new Exception($"{role.Mention} already added to {roles.CategoryName}");
 
         if (emoji == null) {
@@ -63,11 +63,11 @@ public class RoleCommands : ApplicationCommandModule {
 
             // ERROR: emoji error
             } else
-                throw new Exception("Invalid emoji");
+                throw new Exception($"Invalid emoji: {emoji}");
 
         // ERROR: emoji error
         } else 
-            throw new Exception("Invalid emoji");
+            throw new Exception($"Invalid emoji: {emoji}");
         #endregion
     }
 
@@ -110,8 +110,8 @@ public class RoleCommands : ApplicationCommandModule {
             .WithFooter(roles.AllowMultipleRoles ? "Can have multiple" : "Can only have one")
             .WithColor(DiscordColor.Turquoise);
 
-        foreach (var r in roles.Roles) {
-            if (r == roles.Roles.First())
+        foreach (var r in roles) {
+            if (r == roles.First())
                 embed.AddField("Available Roles", r.Role.Mention);
             else
                 embed.Fields.Where(x => x.Name == "Available Roles").First().Value += $", {r.Role.Mention}";

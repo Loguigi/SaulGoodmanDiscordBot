@@ -18,6 +18,7 @@ using SaulGoodmanBot.Handlers;
 using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Controllers;
 using SaulGoodmanBot.Helpers;
+using System.Reflection;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -33,14 +34,20 @@ public class BirthdayCommands : ApplicationCommandModule {
             return;
         }
 
-        var birthday = new ServerBirthdays(ctx.Guild)[user] ?? throw new Exception($"{user.Mention} has not input their birthday");
+        try {
+            var birthday = new ServerBirthdays(ctx.Client, ctx.Guild)[user] ?? 
+                throw new Exception($"{user.Mention} has not input their birthday");
 
-        var embed = new DiscordEmbedBuilder()
-            .WithAuthor($"{birthday.User.GlobalName}'s birthday", "", birthday.User.AvatarUrl)
-            .WithTitle(birthday.ToString())
-            .WithColor(DiscordColor.Lilac);
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor($"{birthday.User.GlobalName}'s birthday", "", birthday.User.AvatarUrl)
+                .WithTitle(birthday.ToString())
+                .WithColor(DiscordColor.Lilac);
 
-        await ctx.CreateResponseAsync(embed, ephemeral:true);
+            await ctx.CreateResponseAsync(embed, ephemeral:true);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     [ContextMenu(ApplicationCommandType.UserContextMenu, "Birthday")]
@@ -50,14 +57,20 @@ public class BirthdayCommands : ApplicationCommandModule {
             return;
         }
 
-        var birthday = new ServerBirthdays(ctx.Guild)[ctx.TargetUser]  ?? throw new Exception($"{ctx.TargetUser.Mention} has not input their birthday");
+        try {
+            var birthday = new ServerBirthdays(ctx.Client, ctx.Guild)[ctx.TargetUser] ?? 
+                throw new Exception($"{ctx.TargetUser.Mention} has not input their birthday");
 
-        var embed = new DiscordEmbedBuilder()
-            .WithAuthor($"{birthday.User.GlobalName}'s birthday", "", birthday.User.AvatarUrl)
-            .WithTitle(birthday.ToString())
-            .WithColor(DiscordColor.Lilac);
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor($"{birthday.User.GlobalName}'s birthday", "", birthday.User.AvatarUrl)
+                .WithTitle(birthday.ToString())
+                .WithColor(DiscordColor.Lilac);
 
-        await ctx.CreateResponseAsync(embed, ephemeral:true);
+            await ctx.CreateResponseAsync(embed, ephemeral:true);
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     [SlashCommand("add", "Add your birthday")]
@@ -66,11 +79,16 @@ public class BirthdayCommands : ApplicationCommandModule {
         [Option("day", "Day of birthday")][Minimum(1)][Maximum(31)] long day,
         [Option("year", "Year of birthday")][Minimum(2024-100)][Maximum(2024)] long year) {
         
-        var birthdays = new ServerBirthdays(ctx.Guild);
-        if (!DateTime.TryParse($"{year}, {month} {day}", out DateTime date))
-            throw new Exception("Invalid date");
+        try {
+            var birthdays = new ServerBirthdays(ctx.Client, ctx.Guild);
+            if (!DateTime.TryParse($"{year}, {month} {day}", out DateTime date))
+                throw new Exception("Invalid date");
 
-        await ctx.CreateResponseAsync(StandardOutput.Success($"Your birthday is changed to {month}/{day}/{year}"));
+            await ctx.CreateResponseAsync(StandardOutput.Success($"Your birthday is changed to {month}/{day}/{year}"));
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     [SlashCommand("change", "Change a user's birthday")]
@@ -86,40 +104,49 @@ public class BirthdayCommands : ApplicationCommandModule {
             return;
         }
         
-        var birthdays = new ServerBirthdays(ctx.Guild);
-        if (!DateTime.TryParse($"{year}, {month} {day}", out DateTime date))
-            throw new Exception("Invalid date");
+        try {
+            var birthdays = new ServerBirthdays(ctx.Client, ctx.Guild);
+            if (!DateTime.TryParse($"{year}, {month} {day}", out DateTime date))
+                throw new Exception("Invalid date");
 
-        await ctx.CreateResponseAsync(StandardOutput.Success($"{user.Mention}'s birthday changed to {month}/{day}/{year}"));
+            await ctx.CreateResponseAsync(StandardOutput.Success($"{user.Mention}'s birthday changed to {month}/{day}/{year}"));
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     [SlashCommand("list", "Lists all the birthdays of your friends")]
     public async Task ListBirthdays(InteractionContext ctx) {
-        var birthdays = new ServerBirthdays(ctx.Guild);
+        try {
+            var birthdays = new ServerBirthdays(ctx.Client, ctx.Guild);
+            var interactivity = new InteractivityHelper<Birthday>(ctx.Client, birthdays.Birthdays, IDHelper.Birthdays.LIST, "1", 10, "There are no birthdays");
+            
+            // print all birthdays
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
+                .WithTitle("Birthdays")
+                .WithDescription(interactivity.IsEmpty())
+                .WithColor(DiscordColor.Magenta)
+                .WithFooter(interactivity.PageStatus);
 
-        var interactivity = new InteractivityHelper<Birthday>(ctx.Client, birthdays.Birthdays, IDHelper.Birthdays.LIST, "1", 10, "There are no birthdays");
-        
-        // print all birthdays
-        var embed = new DiscordEmbedBuilder()
-            .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
-            .WithTitle("Birthdays")
-            .WithDescription(interactivity.IsEmpty())
-            .WithColor(DiscordColor.Magenta)
-            .WithFooter(interactivity.PageStatus);
+            foreach (var birthday in interactivity) {
+                embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.Age + 1})`\n";
+            }
 
-        foreach (var birthday in interactivity) {
-            embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.Age + 1})`\n";
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+
+            ctx.Client.ComponentInteractionCreated -= BirthdayHandler.HandleBirthdayList;
+            ctx.Client.ComponentInteractionCreated += BirthdayHandler.HandleBirthdayList;
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
-
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
-
-        ctx.Client.ComponentInteractionCreated -= BirthdayHandler.HandleBirthdayList;
-        ctx.Client.ComponentInteractionCreated += BirthdayHandler.HandleBirthdayList;
     }
     
     [SlashCommand("next", "Finds the next upcoming birthday")]
     public async Task NextBirthday(InteractionContext ctx) {
-        var birthdays = new ServerBirthdays(ctx.Guild);
+        var birthdays = new ServerBirthdays(ctx.Client, ctx.Guild);
 
         var nextBirthday = birthdays.Next;
         var embed = new DiscordEmbedBuilder()

@@ -4,19 +4,19 @@ using DSharpPlus.Entities;
 using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Helpers;
 using SaulGoodmanBot.Controllers;
+using System.Reflection;
 
 namespace SaulGoodmanBot.Handlers;
 
 public static class BirthdayHandler {
     public static async Task HandleBirthdayMessage(DiscordClient s, MessageCreateEventArgs e) {
-        var birthdays = new ServerBirthdays(e.Guild);
+        var birthdays = new ServerBirthdays(s, e.Guild);
         var config = new ServerConfig(e.Guild);
 
         if (e.Author.IsBot || config.PauseBdayNotifsTimer.Date == DateTime.Today || !config.BirthdayNotifications) {
             await Task.CompletedTask;
             return;
         }
-        Thread.Sleep(100);
 
         config.PauseBdayNotifsTimer = DateTime.MinValue;
         var embed = new DiscordEmbedBuilder()
@@ -42,21 +42,26 @@ public static class BirthdayHandler {
             return;
         }
 
-        var birthdays = new ServerBirthdays(e.Guild);
-        var interactivity = new InteractivityHelper<Birthday>(s, birthdays.Birthdays, IDHelper.Birthdays.LIST, IDHelper.GetId(e.Id, PAGE_INDEX), 10);
+        try {
+            var birthdays = new ServerBirthdays(s, e.Guild);
+            var interactivity = new InteractivityHelper<Birthday>(s, birthdays.Birthdays, IDHelper.Birthdays.LIST, IDHelper.GetId(e.Id, PAGE_INDEX), 10);
 
-        var embed = new DiscordEmbedBuilder()
-            .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
-            .WithTitle("Birthdays")
-            .WithDescription(interactivity.IsEmpty())
-            .WithColor(DiscordColor.Magenta)
-            .WithFooter(interactivity.PageStatus);
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
+                .WithTitle("Birthdays")
+                .WithDescription(interactivity.IsEmpty())
+                .WithColor(DiscordColor.Magenta)
+                .WithFooter(interactivity.PageStatus);
 
-        foreach (var birthday in interactivity) {
-            embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.Age + 1})`\n";
+            foreach (var birthday in interactivity) {
+                embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.Age + 1})`\n";
+            }
+
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
-
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
     }
 
     private const int PAGE_INDEX = 1;

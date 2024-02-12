@@ -6,6 +6,7 @@ using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Helpers;
 using SaulGoodmanBot.Controllers;
+using System.Reflection;
 
 namespace SaulGoodmanBot.Commands;
 
@@ -24,47 +25,62 @@ public class ScheduleCommands : ApplicationCommandModule {
         [Option("saturday", "Schedule for Saturday")] string? saturday=null,
         [Option("picture", "Picture of your schedule if you have one")] DiscordAttachment? picture=null) {
         
-        var schedule = new Schedule(ctx.Guild, ctx.User) {
-            LastUpdated = ctx.Interaction.CreationTimestamp.LocalDateTime,
-            RecurringSchedule = recurring,
-            PictureUrl = picture?.Url ?? string.Empty
-        };
-        schedule.WorkSchedule[DayOfWeek.Sunday] = sunday;
-        schedule.WorkSchedule[DayOfWeek.Monday] = monday;
-        schedule.WorkSchedule[DayOfWeek.Tuesday] = tuesday;
-        schedule.WorkSchedule[DayOfWeek.Wednesday] = wednesday;
-        schedule.WorkSchedule[DayOfWeek.Thursday] = thursday;
-        schedule.WorkSchedule[DayOfWeek.Friday] = friday;
-        schedule.WorkSchedule[DayOfWeek.Saturday] = saturday;
+        try {
+            var schedule = new Schedule(ctx.Guild, ctx.User) {
+                LastUpdated = ctx.Interaction.CreationTimestamp.LocalDateTime,
+                RecurringSchedule = recurring,
+                PictureUrl = picture?.Url ?? string.Empty
+            };
+            schedule.WorkSchedule[DayOfWeek.Sunday] = sunday;
+            schedule.WorkSchedule[DayOfWeek.Monday] = monday;
+            schedule.WorkSchedule[DayOfWeek.Tuesday] = tuesday;
+            schedule.WorkSchedule[DayOfWeek.Wednesday] = wednesday;
+            schedule.WorkSchedule[DayOfWeek.Thursday] = thursday;
+            schedule.WorkSchedule[DayOfWeek.Friday] = friday;
+            schedule.WorkSchedule[DayOfWeek.Saturday] = saturday;
 
-        schedule.Update();
+            schedule.Update();
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("This is what your schedule looks like:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("This is what your schedule looks like:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }    
     }
 
     [SlashCommand("check", "Check your own or somebody else's schedule")]
     public async Task CheckSchedule(InteractionContext ctx,
         [Option("user", "Schedule of specific user")] DiscordUser? user=null) {
-        if (user! != null! && user.IsBot) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("Joe Biden"), ephemeral:true);
-            return;
+        try {
+            if (user! != null! && user.IsBot) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Joe Biden"), ephemeral:true);
+                return;
+            }
+
+            var schedule = new Schedule(ctx.Guild, user ?? ctx.User);
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(DisplaySchedule(schedule, ctx.Client))));
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
-
-        var schedule = new Schedule(ctx.Guild, user ?? ctx.User);
-
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(DisplaySchedule(schedule, ctx.Client))));
     }
 
     [ContextMenu(ApplicationCommandType.UserContextMenu, "Schedule")]
     public async Task ContextCheckSchedule(ContextMenuContext ctx) {
-        if (ctx.TargetUser.IsBot) {
-            await ctx.CreateResponseAsync(StandardOutput.Error("Joe Biden"), ephemeral:true);
-            return;
+        try {
+            if (ctx.TargetUser.IsBot) {
+                await ctx.CreateResponseAsync(StandardOutput.Error("Joe Biden"), ephemeral:true);
+                return;
+            }
+
+            var schedule = new Schedule(ctx.Guild, ctx.TargetUser);
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(DisplaySchedule(schedule, ctx.Client))));
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
-
-        var schedule = new Schedule(ctx.Guild, ctx.TargetUser);
-
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(DisplaySchedule(schedule, ctx.Client))));
     }
 
     [SlashCommand("edit", "Edit a specific day or upload a new schedule picture")]
@@ -78,49 +94,63 @@ public class ScheduleCommands : ApplicationCommandModule {
         [Choice("Saturday", (long)DayOfWeek.Saturday)]
         [Option("day", "Day of the week to edit")] long day,
         [Option("newschedule", "Change to the schedule")] string newSchedule) {
+        
+        try {
+            var schedule = new Schedule(ctx.Guild, ctx.User) { LastUpdated = ctx.Interaction.CreationTimestamp.LocalDateTime };
+            schedule.WorkSchedule[(DayOfWeek)day] = newSchedule;
+            schedule.Update();
 
-        var schedule = new Schedule(ctx.Guild, ctx.User) { LastUpdated = ctx.Interaction.CreationTimestamp.LocalDateTime };
-        schedule.WorkSchedule[(DayOfWeek)day] = newSchedule;
-        schedule.Update();
-
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Updated schedule:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Updated schedule:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     [SlashCommand("picture", "Update your schedule picture")]
     public async Task EditPicture(InteractionContext ctx,
         [Option("newpicture", "New picture")] DiscordAttachment img) {
-        
-        var schedule = new Schedule(ctx.Guild, ctx.User) {PictureUrl = img.Url};
-        schedule.Update();
+        try {
+            var schedule = new Schedule(ctx.Guild, ctx.User) {PictureUrl = img.Url};
+            schedule.Update();
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Updated schedule:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Updated schedule:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     [SlashCommand("today", "List the people that work today")]
     public async Task TodaysSchedules(InteractionContext ctx) {
-        var schedules = new List<Schedule>();
-        foreach (var user in ctx.Guild.Members) {
-            if (!user.Value.IsBot) {
-                schedules.Add(new Schedule(ctx.Guild, user.Value));
+        try {
+            var schedules = new List<Schedule>();
+            foreach (var user in ctx.Guild.Members) {
+                if (!user.Value.IsBot) {
+                    schedules.Add(new Schedule(ctx.Guild, user.Value));
+                }
             }
+            var interactivity = new InteractivityHelper<Schedule>(ctx.Client, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, "1", 10, "## Nobody works today");
+
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle(DateTime.Now.ToString("dddd MMMM d, yyyy"))
+                .WithDescription(interactivity.IsEmpty())
+                .WithColor(DiscordColor.DarkBlue)
+                .WithFooter(interactivity.PageStatus);
+
+            foreach (var schedule in interactivity.GetPage()) {
+                embed.Description += $"### {schedule.User.Mention}: {schedule.WorkSchedule[DateTime.Now.DayOfWeek]}\n";
+            }
+
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(
+                interactivity.AddPageButtons().AddEmbed(embed)));
+
+            ctx.Client.ComponentInteractionCreated -= ScheduleHandler.HandleTodaysSchedules;
+            ctx.Client.ComponentInteractionCreated += ScheduleHandler.HandleTodaysSchedules;
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
-        var interactivity = new InteractivityHelper<Schedule>(ctx.Client, schedules.Where(x => x.WorkSchedule[DateTime.Now.DayOfWeek] != null).ToList(), IDHelper.Schedules.Today, "1", 10, "## Nobody works today");
-
-        var embed = new DiscordEmbedBuilder()
-            .WithTitle(DateTime.Now.ToString("dddd MMMM d, yyyy"))
-            .WithDescription(interactivity.IsEmpty())
-            .WithColor(DiscordColor.DarkBlue)
-            .WithFooter(interactivity.PageStatus);
-
-        foreach (var schedule in interactivity.GetPage()) {
-            embed.Description += $"### {schedule.User.Mention}: {schedule.WorkSchedule[DateTime.Now.DayOfWeek]}\n";
-        }
-
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(
-            interactivity.AddPageButtons().AddEmbed(embed)));
-
-        ctx.Client.ComponentInteractionCreated -= ScheduleHandler.HandleTodaysSchedules;
-        ctx.Client.ComponentInteractionCreated += ScheduleHandler.HandleTodaysSchedules;
     }
 
     [SlashCommand("override", "Override another user's schedule")]
@@ -142,19 +172,29 @@ public class ScheduleCommands : ApplicationCommandModule {
             return;
         }
 
-        var schedule = new Schedule(ctx.Guild, user) { LastUpdated = ctx.Interaction.CreationTimestamp.LocalDateTime };
-        schedule.WorkSchedule[(DayOfWeek)day] = newSchedule;
-        schedule.Update();
+        try {
+            var schedule = new Schedule(ctx.Guild, user) { LastUpdated = ctx.Interaction.CreationTimestamp.LocalDateTime };
+            schedule.WorkSchedule[(DayOfWeek)day] = newSchedule;
+            schedule.Update();
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Updated schedule:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Updated schedule:").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     [SlashCommand("clear", "Clear your schedule for the week")]
     public async Task ClearSchedule(InteractionContext ctx) {
-        var schedule = new Schedule(ctx.Guild, ctx.User);
-        schedule.Clear();
-        
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Cleared schedule").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+        try {
+            var schedule = new Schedule(ctx.Guild, ctx.User);
+            schedule.Clear();
+            
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithContent("Cleared schedule").AddEmbed(DisplaySchedule(schedule, ctx.Client))).AsEphemeral());
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 
     private DiscordEmbedBuilder DisplaySchedule(Schedule schedule, DiscordClient client) {

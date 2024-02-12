@@ -43,10 +43,10 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
         DefaultChannel = Guild.GetDefaultChannel();
         
         try {
-            var result = GetData();
-            if (result.Status != ResultArgs<List<ConfigModel>>.StatusCodes.SUCCESS)
+            var result = GetData("Config_GetData", new DynamicParameters(new { GuildId = (long)Guild.Id })).Result;
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
-            MapData(result.Result);
+            MapData(result.Result!);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
@@ -55,22 +55,23 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
 
     public void Save() {
         try {
-            var result = SaveData(new ConfigModel() {
-                GuildId = (long)Guild.Id,
-                WelcomeMessage = WelcomeMessage,
-                LeaveMessage = LeaveMessage,
-                DefaultChannel = (long)DefaultChannel.Id,
-                BirthdayNotifications = BirthdayNotifications ? 1 : 0,
-                PauseBdayNotifsTimer = PauseBdayNotifsTimer,
-                BirthdayMessage = BirthdayMessage,
-                ServerRolesName = ServerRolesName,
-                ServerRolesDescription = ServerRolesDescription,
-                AllowMultipleRoles = AllowMultipleRoles ? 1 : 0,
-                SendRoleMenuOnMemberJoin = SendRoleMenuOnMemberJoin ? 1 : 0,
-                EnableLevels = EnableLevels ? 1 : 0,
-                LevelUpMessage = LevelUpMessage
-            });
-            if (result.Status != ResultArgs<int>.StatusCodes.SUCCESS)
+            var result = SaveData("Config_Process", new DynamicParameters(
+                new ConfigModel() {
+                    GuildId = (long)Guild.Id,
+                    WelcomeMessage = WelcomeMessage,
+                    LeaveMessage = LeaveMessage,
+                    DefaultChannel = (long)DefaultChannel.Id,
+                    BirthdayNotifications = BirthdayNotifications ? 1 : 0,
+                    PauseBdayNotifsTimer = PauseBdayNotifsTimer,
+                    BirthdayMessage = BirthdayMessage,
+                    ServerRolesName = ServerRolesName,
+                    ServerRolesDescription = ServerRolesDescription,
+                    AllowMultipleRoles = AllowMultipleRoles ? 1 : 0,
+                    SendRoleMenuOnMemberJoin = SendRoleMenuOnMemberJoin ? 1 : 0,
+                    EnableLevels = EnableLevels ? 1 : 0,
+                    LevelUpMessage = LevelUpMessage
+            })).Result;
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
             
         } catch (Exception ex) {
@@ -81,51 +82,6 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
     #endregion
 
     #region DB Methods
-    protected override ResultArgs<List<ConfigModel>> GetData(string sp="Config_GetData")
-    {
-        try {
-            using IDbConnection cnn = Connection;
-            var sql = sp + " @GuildId, @Status, @ErrMsg";
-            var param = new ConfigModel() { GuildId = (long)Guild.Id };
-            var data = cnn.Query<ConfigModel>(sql, param).ToList();
-
-            return new ResultArgs<List<ConfigModel>>(data, param.Status, param.ErrMsg);
-        } catch (Exception ex) {
-            Console.WriteLine(ex.Message);
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
-    protected override ResultArgs<int> SaveData(ConfigModel data, string sp="Config_Process")
-    {
-        try {
-            using IDbConnection cnn = Connection;
-            var sql = sp + @" @GuildId,
-                @WelcomeMessage,
-                @LeaveMessage,
-                @DefaultChannel,
-                @BirthdayNotifications,
-                @BirthdayMessage,
-                @PauseBdayNotifsTimer,
-                @ServerRolesName,
-                @ServerRolesDescription,
-                @AllowMultipleRoles,
-                @SendRoleMenuOnMemberJoin,
-                @EnableLevels,
-                @LevelUpMessage,
-                @Status,
-                @ErrMsg";
-            var result = cnn.Execute(sql, data);
-
-            return new ResultArgs<int>(result, data.Status, data.ErrMsg);
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-        
-    }
-
     protected override List<ServerConfig> MapData(List<ConfigModel> data)
     {
         var config = data.First();

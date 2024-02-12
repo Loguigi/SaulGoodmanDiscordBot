@@ -20,21 +20,20 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
     public WheelPickers(DiscordGuild guild) {
         Guild = guild;
         try {
-            var result = GetData();
-            if (result.Status == ResultArgs<List<WheelsModel>>.StatusCodes.ERROR)
+            var result = GetData(
+                StoredProcedures.GET_WHEEL_DATA, 
+                new DynamicParameters( new { GuildId = (long)Guild.Id })).Result;
+            
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
-            else if (result.Status == ResultArgs<List<WheelsModel>>.StatusCodes.NEEDS_SETUP)
-                IsEmpty = true;
-            MapData(result.Result);
+            MapData(result.Result!);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
         }
     }
 
-    public Wheel this[string key] {
-        get => Wheels.Where(x => x.Name == key).FirstOrDefault() ?? throw new Exception("Wheel does not exist");
-    }
+    public Wheel this[string key] { get => Wheels.Where(x => x.Name == key).First(); }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     public IEnumerator<Wheel> GetEnumerator() => Wheels.GetEnumerator();
@@ -43,14 +42,16 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void AddWheel(Wheel wheel, string first_option) {
         try {
-            var result = SaveData(new WheelsModel() {
-                GuildId = (long)Guild.Id,
-                WheelName = wheel.Name,
-                WheelOption = first_option,
-                ImageUrl = wheel.Image == string.Empty ? null : wheel.Image,
-                Mode = (int)DataMode.ADD_WHEEL
-            });
-            if (result.Status != 0)
+            var result = SaveData(StoredProcedures.PROCESS_WHEEL_DATA, new DynamicParameters(
+                new WheelsModel() {
+                    GuildId = (long)Guild.Id,
+                    WheelName = wheel.Name,
+                    WheelOption = first_option,
+                    ImageUrl = wheel.Image == string.Empty ? null : wheel.Image,
+                    Mode = (int)DataMode.ADD_WHEEL
+            })).Result;
+
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -60,13 +61,14 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void AddOption(Wheel wheel, string option) {
         try {
-            var result = SaveData(new WheelsModel() {
-                GuildId = (long)Guild.Id,
-                WheelName = wheel.Name,
-                WheelOption = option,
-                Mode = (int)DataMode.ADD_OPTION
-            });
-            if (result.Result != 0) 
+            var result = SaveData(StoredProcedures.PROCESS_WHEEL_DATA, new DynamicParameters(
+                new WheelsModel() {
+                    GuildId = (long)Guild.Id,
+                    WheelName = wheel.Name,
+                    WheelOption = option,
+                    Mode = (int)DataMode.ADD_OPTION
+            })).Result;
+            if (result.Status != StatusCodes.SUCCESS) 
                 throw new Exception(result.Message);
             wheel.AvailableOptions.Add(option);
         } catch (Exception ex) {
@@ -77,12 +79,13 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void DeleteWheel(Wheel wheel) {
         try {
-            var result = SaveData(new WheelsModel() {
-                GuildId = (long)Guild.Id,
-                WheelName = wheel.Name,
-                Mode = (int)DataMode.DELETE_WHEEL
-            });
-            if (result.Result != 0)
+            var result = SaveData(StoredProcedures.PROCESS_WHEEL_DATA, new DynamicParameters(
+                new WheelsModel() {
+                    GuildId = (long)Guild.Id,
+                    WheelName = wheel.Name,
+                    Mode = (int)DataMode.DELETE_WHEEL
+            })).Result;
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -92,13 +95,14 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void DeleteOption(Wheel wheel, string option) {
         try {
-            var result = SaveData(new WheelsModel() {
-                GuildId = (long)Guild.Id,
-                WheelName = wheel.Name,
-                WheelOption = option,
-                Mode = (int)DataMode.DELETE_OPTION
-            });
-            if (result.Result != 0)
+            var result = SaveData(StoredProcedures.PROCESS_WHEEL_DATA, new DynamicParameters(
+                new WheelsModel() {
+                    GuildId = (long)Guild.Id,
+                    WheelName = wheel.Name,
+                    WheelOption = option,
+                    Mode = (int)DataMode.DELETE_OPTION
+            })).Result;
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -108,14 +112,15 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void TemporarilyRemoveOption(Wheel wheel, string option) {
         try {
-            var result = SaveData(new WheelsModel() {
-                GuildId = (long)Guild.Id,
-                WheelName = wheel.Name,
-                WheelOption = option,
-                TempRemoved = 0,
-                Mode = (int)DataMode.TEMP_REMOVE
-            });
-            if (result.Result != 0)
+            var result = SaveData(StoredProcedures.PROCESS_WHEEL_DATA, new DynamicParameters(
+                new WheelsModel() {
+                    GuildId = (long)Guild.Id,
+                    WheelName = wheel.Name,
+                    WheelOption = option,
+                    TempRemoved = 1,
+                    Mode = (int)DataMode.TEMP_REMOVE
+            })).Result;
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -125,12 +130,13 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
 
     public void Restore(Wheel wheel) {
         try {
-            var result = SaveData(new WheelsModel() {
-                GuildId = (long)Guild.Id,
-                WheelName = wheel.Name,
-                Mode = (int)DataMode.RESTORE
-            });
-            if (result.Result != 0)
+            var result = SaveData(StoredProcedures.PROCESS_WHEEL_DATA, new DynamicParameters(
+                new WheelsModel() {
+                    GuildId = (long)Guild.Id,
+                    WheelName = wheel.Name,
+                    Mode = (int)DataMode.RESTORE
+            })).Result;
+            if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
@@ -140,40 +146,6 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
     #endregion
 
     #region DB Methods
-    protected override ResultArgs<List<WheelsModel>> GetData(string sp="Wheels_GetData") {
-        try {
-            using IDbConnection cnn = Connection;
-            var sql = sp + " @Status, @ErrMsg";
-            var result = new DbCommonParams();
-            var data = cnn.Query<WheelsModel>(sp, result).ToList();
-            return new ResultArgs<List<WheelsModel>>(data, result.Status, result.ErrMsg);
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
-    protected override ResultArgs<int> SaveData(WheelsModel data, string sp="Wheels_Process")
-    {
-        try {
-            using IDbConnection cnn = Connection;
-            var sql = sp + 
-                @" @GuildId,
-                @WheelName,
-                @WheelOption,
-                @ImageUrl,
-                @TempRemoved,
-                @Mode,
-                @Status,
-                @ErrMsg";
-            return new ResultArgs<int>(cnn.Execute(sp, data), data.Status, data.ErrMsg);
-            
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
     protected override List<Wheel> MapData(List<WheelsModel> data) {
         try {
             foreach (var w in data) {
@@ -200,6 +172,10 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
         DELETE_OPTION = 3,
         TEMP_REMOVE = 4,
         RESTORE = 5
+    }
+    private struct StoredProcedures {
+        public const string GET_WHEEL_DATA = "Wheels_GetData";
+        public const string PROCESS_WHEEL_DATA = "Wheels_Process";
     }
     #endregion
 }

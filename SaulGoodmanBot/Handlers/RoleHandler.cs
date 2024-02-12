@@ -27,7 +27,7 @@ public static class RoleHandler {
             if (roles.AllowMultipleRoles) {
                 // save selected roles
                 foreach (var roleid in e.Values) {
-                    selected.Add(roles[ulong.Parse(roleid)]);
+                    selected.Add(roles[e.Guild.GetRole(ulong.Parse(roleid))]!);
                 }
 
                 // add selected roles
@@ -47,7 +47,7 @@ public static class RoleHandler {
                     }
                 }
             } else {
-                var role = roles[ulong.Parse(e.Values.First())];
+                var role = roles[e.Guild.GetRole(ulong.Parse(e.Values.First()))]!;
                 if (roles.HasRole(user, role))
                     throw new Exception($"You already have the role {role.Role.Mention}");
 
@@ -76,44 +76,50 @@ public static class RoleHandler {
             return;
         }
 
-        var roles = new ServerRoles(e.Guild, s);
-        var user = await e.Guild.GetMemberAsync(e.User.Id);
-        var embed = new DiscordEmbedBuilder()
-            .WithAuthor(e.User.GlobalName, "https://youtu.be/TQzBlxwoDpc", e.User.AvatarUrl)
-            .WithTitle(roles.CategoryName)
-            .WithColor(DiscordColor.Turquoise);
+        try {
+            var roles = new ServerRoles(e.Guild, s);
+            var user = await e.Guild.GetMemberAsync(e.User.Id);
+            var embed = new DiscordEmbedBuilder()
+                .WithAuthor(e.User.GlobalName, "https://youtu.be/TQzBlxwoDpc", e.User.AvatarUrl)
+                .WithTitle(roles.CategoryName)
+                .WithColor(DiscordColor.Turquoise);
 
-        if (e.Values.First() == "cancel") {
-            embed.WithDescription("Cancelled");
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
-            return;
-        }
-
-        var role = roles[ulong.Parse(e.Values.First())];
-
-        if (roles.HasRole(user, role)) {
-            await user.RevokeRoleAsync(role.Role);
-            embed.AddField("Removed Role", role.Role.Mention);
-        } else if (roles.AllowMultipleRoles) {
-            await user.GrantRoleAsync(role.Role);
-            embed.AddField("Added Role", role.Role.Mention);
-        } else {
-            // Remove any other role that isn't the selected role
-            foreach (var x in roles) {
-                if (roles.HasRole(user, x)) {
-                    await user.RevokeRoleAsync(x.Role);
-                    embed.AddField("Removed Role", x.Role.Mention);
-                }
+            if (e.Values.First() == "cancel") {
+                embed.WithDescription("Cancelled");
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
+                return;
             }
 
-            // Add role
-            await user.GrantRoleAsync(role.Role);
-            embed.AddField("Added Role", role.Role.Mention);
+            var role = roles[e.Guild.GetRole(ulong.Parse(e.Values.First()))]!;
+
+            if (roles.HasRole(user, role)) {
+                await user.RevokeRoleAsync(role.Role);
+                embed.AddField("Removed Role", role.Role.Mention);
+            } else if (roles.AllowMultipleRoles) {
+                await user.GrantRoleAsync(role.Role);
+                embed.AddField("Added Role", role.Role.Mention);
+            } else {
+                // Remove any other role that isn't the selected role
+                foreach (var x in roles) {
+                    if (roles.HasRole(user, x)) {
+                        await user.RevokeRoleAsync(x.Role);
+                        embed.AddField("Removed Role", x.Role.Mention);
+                    }
+                }
+
+                // Add role
+                await user.GrantRoleAsync(role.Role);
+                embed.AddField("Added Role", role.Role.Mention);
+            }
+
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
+
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        } finally {
+            s.ComponentInteractionCreated -= HandleAssign;
         }
-
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)).AsEphemeral());
-
-        s.ComponentInteractionCreated -= HandleAssign;
     }
 
     public static async Task HandleRemoveRole(DiscordClient s, ComponentInteractionCreateEventArgs e) {
@@ -122,32 +128,43 @@ public static class RoleHandler {
             return;
         }
 
-        var roles = new ServerRoles(e.Guild, s);
-        var role = roles[ulong.Parse(e.Values.First())];
-        var embed = new DiscordEmbedBuilder()
-            .WithTitle("Remove Role")
-            .WithColor(DiscordColor.DarkRed);
+        try {
+            var roles = new ServerRoles(e.Guild, s);
+            var role = roles[e.Guild.GetRole(ulong.Parse(e.Values.First()))]!;
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Remove Role")
+                .WithColor(DiscordColor.DarkRed);
 
-        if (e.Values.First() == "cancel") {
-            embed.WithDescription("Cancelled");
+            if (e.Values.First() == "cancel") {
+                embed.WithDescription("Cancelled");
+                await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
+                return;
+            }
+
+            roles.Remove(role);
+            embed.WithDescription($"{role.Role.Mention} has been removed from {roles.CategoryName}");
+
             await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
-            return;
+            
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        } finally {
+            s.ComponentInteractionCreated -= HandleRemoveRole;
         }
-
-        roles.Remove(role);
-        embed.WithDescription($"{role.Role.Mention} has been removed from {roles.CategoryName}");
-
-        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
-
-        s.ComponentInteractionCreated -= HandleRemoveRole;
     }
 
     public static async Task HandleServerRemoveRole(DiscordClient s, GuildRoleDeleteEventArgs e) {
-        var roles = new ServerRoles(e.Guild, s);
-        if (roles.Contains(e.Role)) {
-            roles.Remove(roles[e.Role]);
-        }
+        try {
+            var roles = new ServerRoles(e.Guild, s);
+            if (roles[e.Role] != null) {
+                roles.Remove(roles[e.Role]!);
+            }
 
-        await Task.CompletedTask;
+            await Task.CompletedTask;
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
     }
 }

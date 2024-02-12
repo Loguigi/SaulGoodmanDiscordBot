@@ -16,7 +16,7 @@ public static class WheelPickerHandler {
         }
 
         var interactivity = s.GetInteractivity();
-        var name = IDHelper.GetId(e.Id, WHEEL_NAME_INDEX);
+        var name = e.Values.First();
         var wheels = new WheelPickers(e.Guild);
         var wheel = wheels[name];
 

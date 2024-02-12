@@ -36,7 +36,7 @@ public class Poll {
 
     public int GetTotalVotes() {
         int total = 0;
-        Options.ForEach(delegate(PollOption option) {
+        Options.ForEach((PollOption option) => {
             total += option.Votes;
         });
         return total;

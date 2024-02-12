@@ -60,10 +60,10 @@ public static class GeneralHandlers {
 
     public static async Task HandleMemberLeave(DiscordClient s, GuildMemberRemoveEventArgs e) {
         var config = new ServerConfig(e.Guild);
-        var birthdays = new ServerBirthdays(e.Guild);
+        var birthdays = new ServerBirthdays(s, e.Guild);
 
         if (birthdays[e.Member] != null)
-            birthdays.Remove(birthdays[e.Member]);
+            birthdays.Remove(birthdays[e.Member]!);
         
         if (config.LeaveMessage == null) {
             await Task.CompletedTask;
