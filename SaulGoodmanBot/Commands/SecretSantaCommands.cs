@@ -238,28 +238,16 @@
 //             ctx.Client.ComponentInteractionCreated += SantaHandler.HandleParticipantList;
 //         }
 
-//         [SlashCommand("exchange_time", "View the time of the gift exchange")]
-//         public async Task ViewExchangeTime(InteractionContext ctx) {
-//             var santa = new Santa(ctx.Client, ctx.Guild);
-//             var embed = new DiscordEmbedBuilder()
-//                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
-//                 .WithTitle("Gift Exchange Date/Time")
-//                 .WithDescription(santa.Config.HasStarted ? $"# {santa.Config.ExchangeDate:dddd, MMMM d h:mm tt}" : "### Undecided")
-//                 .WithColor(DiscordColor.SpringGreen)
-//                 .WithThumbnail(ImageHelper.Images["WalterChristmas"]);
-
-//             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().WithEmbed(embed)));
-//         }
-
-//         [SlashCommand("exchange_location", "View the location of the gift exchange")]
-//         public async Task ViewExchangeLocation(InteractionContext ctx) {
-//             var santa = new Santa(ctx.Client, ctx.Guild);
-//             var embed = new DiscordEmbedBuilder()
-//                 .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
-//                 .WithTitle("Gift Exchange Location")
-//                 .WithDescription(santa.Config.HasStarted ? $"### {santa.Config.ExchangeLocation}" : "### Undecided")
-//                 .WithColor(DiscordColor.Red)
-//                 .WithThumbnail(ImageHelper.Images["WalterChristmas"]);
+        // [SlashCommand("exchange_details", "View the time and location of the gift exchange")]
+        // public async Task ViewExchangeDetails(InteractionContext ctx) {
+        //     var santa = new Santa(ctx.Client, ctx.Guild);
+        //     var embed = new DiscordEmbedBuilder()
+        //         .WithAuthor(ctx.Guild.Name, "", ctx.Guild.IconUrl)
+        //         .WithTitle("Gift Exchange Details")
+        //         .WithColor(DiscordColor.Rose)
+        //         .WithThumbnail(ImageHelper.Images["WalterChristmas"])
+        //         .AddField("Date/Time", santa.Config.HasStarted ? $"{santa.Config.ExchangeDate:dddd, MMMM d h:mm tt}" : "Undecided")
+        //         .AddField("Location", santa.Config.HasStarted ? $"{santa.Config.ExchangeLocation}" : "Undecided");
 
 //             if (santa.Config.ExchangeAddress != null)
 //                 embed.AddField("Address", santa.Config.ExchangeAddress);
@@ -533,10 +521,10 @@
 
 //             var exchange_date = new DateTime(month == 1 ? DateTime.Now.AddYears(1).Year : DateTime.Now.Year, (int)month, (int)day, (int)hour, (int)minute, 0);
 
-//             if (!ValidateDates(santa.Config.ParticipationDeadline, exchange_date)) {
-//                 await ctx.CreateResponseAsync(StandardOutput.Error("Date error. The participation deadline date must be after today and before the exchange date"));
-//                 return;
-//             }
+            // if (!ValidateDates(santa.Config.ParticipationDeadline, exchange_date, santa.Config.LockedIn)) {
+            //     await ctx.CreateResponseAsync(StandardOutput.Error("Date error. The participation deadline date must be after today and before the exchange date"));
+            //     return;
+            // }
 
 //             santa.Config.ExchangeDate = exchange_date;
 //             santa.Config.Update();
@@ -598,10 +586,10 @@
 
 //             var participation_deadline = new DateTime(month == 1 ? DateTime.Now.AddYears(1).Year : DateTime.Now.Year, (int)month, (int)day);
 
-//             if (!ValidateDates(participation_deadline, santa.Config.ExchangeDate)) {
-//                 await ctx.CreateResponseAsync(StandardOutput.Error("Date error. The participation deadline date must be after today and before the exchange date"));
-//                 return;
-//             }
+            // if (!ValidateDates(participation_deadline, santa.Config.ExchangeDate, santa.Config.LockedIn)) {
+            //     await ctx.CreateResponseAsync(StandardOutput.Error("Date error. The participation deadline date must be after today and before the exchange date"));
+            //     return;
+            // }
 
 //             santa.Config.ParticipationDeadline = participation_deadline;
 //             santa.Config.Update();
@@ -616,8 +604,8 @@
 //         }
 //     }
 
-//     private static bool ValidateDates(DateTime participation_deadline, DateTime exchange_date) {
-//         return exchange_date > participation_deadline && participation_deadline >= DateTime.Today;
+//     private static bool ValidateDates(DateTime participation_deadline, DateTime exchange_date, bool locked_in) {
+//         return exchange_date > participation_deadline && (locked_in || participation_deadline >= DateTime.Today);
 //     }
 // }
 

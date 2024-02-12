@@ -51,6 +51,6 @@ public class Poll {
     }
 
     public string FormatPercent(PollOption option) {
-        return string.Format("{0:P1}", option.Votes / GetTotalVotes());
+        return string.Format("{0:P1}", option.Votes / (double)GetTotalVotes());
     }
 }
