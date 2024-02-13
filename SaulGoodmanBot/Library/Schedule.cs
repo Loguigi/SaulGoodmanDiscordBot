@@ -11,7 +11,7 @@ public class Schedule : DbBase<ScheduleModel, Schedule> {
     #region Properties
     private DiscordGuild Guild { get; set; }
     public DiscordUser User { get; private set; }
-    public DateTime LastUpdated { get; set; } = DateTime.MinValue;
+    public DateTime LastUpdated { get; set; } = DateTime.Parse("1/1/1900");
     public bool RecurringSchedule { get; set; } = false;
     public Dictionary<DayOfWeek, string?> WorkSchedule { get; set; } = new() {
         {DayOfWeek.Sunday, null},

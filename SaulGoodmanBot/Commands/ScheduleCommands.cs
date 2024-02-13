@@ -203,7 +203,7 @@ public class ScheduleCommands : ApplicationCommandModule {
             .WithTitle("Work Schedule")
             .WithDescription(schedule.RecurringSchedule ? "Schedule does not change" : "Schedule changes weekly")
             .WithImageUrl(schedule.PictureUrl ?? "")
-            .WithFooter($"Last updated {(schedule.LastUpdated != DateTime.MinValue ? schedule.LastUpdated : "never")}")
+            .WithFooter($"Last updated {(schedule.LastUpdated != DateTime.Parse("1/1/1900") ? schedule.LastUpdated : "never")}")
             .WithColor(DiscordColor.Teal);
 
         foreach (var day in schedule.WorkSchedule) {
@@ -213,7 +213,7 @@ public class ScheduleCommands : ApplicationCommandModule {
         }
 
         if (!schedule.RecurringSchedule && DateTime.Now > schedule.LastUpdated.AddDays(7)) {
-            embed.WithFooter($"{DiscordEmoji.FromName(client, ":warning:", false)} Last updated {(schedule.LastUpdated != DateTime.MinValue ? schedule.LastUpdated : "never")}, may be inaccurate");
+            embed.WithFooter($"{DiscordEmoji.FromName(client, ":warning:", false)} Last updated {(schedule.LastUpdated != DateTime.Parse("1/1/1900") ? schedule.LastUpdated : "never")}, may be inaccurate");
         }
 
         return embed;

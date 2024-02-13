@@ -42,8 +42,8 @@ public class Bot {
         Client.SessionCreated += GeneralHandlers.HandleOnReady;
         Client.GuildMemberAdded += GeneralHandlers.HandleMemberJoin;
         Client.GuildMemberRemoved += GeneralHandlers.HandleMemberLeave;
-        //Client.MessageCreated += BirthdayHandler.HandleBirthdayMessage;
-        //Client.MessageCreated += LevelHandler.HandleExpGain;
+        Client.MessageCreated += BirthdayHandler.HandleBirthdayMessage;
+        Client.MessageCreated += LevelHandler.HandleExpGain;
         Client.GuildRoleDeleted += RoleHandler.HandleServerRemoveRole;
         Client.GuildCreated += GeneralHandlers.HandleServerJoin;
         #endregion

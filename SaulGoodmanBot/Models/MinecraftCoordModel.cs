@@ -2,7 +2,7 @@ using SaulGoodmanBot.Data;
 
 namespace SaulGoodmanBot.Models;
 
-public class MinecraftWaypointModel : DbCommonParams {
+public class MinecraftWaypointModel {
     public long GuildId { get; set; }
     public string Dimension { get; set; } = "overworld";
     public string Name { get; set; } = string.Empty;

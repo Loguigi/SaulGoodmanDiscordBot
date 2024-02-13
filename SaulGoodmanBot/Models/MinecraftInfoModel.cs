@@ -2,7 +2,7 @@ using SaulGoodmanBot.Data;
 
 namespace SaulGoodmanBot.Models;
 
-public class MinecraftInfoModel : DbCommonParams {
+public class MinecraftInfoModel {
     public long GuildId { get; set; }
     public string WorldName { get; set; } = string.Empty;
     public string? WorldDescription { get; set; } = null;

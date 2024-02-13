@@ -2,10 +2,10 @@ using SaulGoodmanBot.Data;
 
 namespace SaulGoodmanBot.Models;
 
-public class ScheduleModel : DbCommonParams {
+public class ScheduleModel {
     public long GuildId { get; set; }
     public long UserId { get; set; }
-    public DateTime LastUpdated { get; set; } = DateTime.MinValue;
+    public DateTime LastUpdated { get; set; } = DateTime.Parse("1/1/1900");
     public int RecurringSchedule { get; set; } = 0;
     public string? Sunday { get; set; } = null;
     public string? Monday { get; set; } = null;
@@ -15,6 +15,7 @@ public class ScheduleModel : DbCommonParams {
     public string? Friday { get; set; } = null;
     public string? Saturday { get; set; } = null;
     public string? PictureUrl { get; set; } = null;
+    public int Mode { get; set; } = 0;
 
     public List<string?> ToList() {
         return new List<string?>() {

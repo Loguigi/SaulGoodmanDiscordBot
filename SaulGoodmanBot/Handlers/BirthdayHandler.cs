@@ -18,7 +18,7 @@ public static class BirthdayHandler {
             return;
         }
 
-        config.PauseBdayNotifsTimer = DateTime.MinValue;
+        config.PauseBdayNotifsTimer = DateTime.Parse("1/1/1900");
         var embed = new DiscordEmbedBuilder()
             .WithColor(DiscordColor.HotPink);
         

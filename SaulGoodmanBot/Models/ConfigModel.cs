@@ -2,7 +2,7 @@ using SaulGoodmanBot.Data;
 
 namespace SaulGoodmanBot.Models;
 
-public class ConfigModel : DbCommonParams {
+public class ConfigModel {
     public long GuildId { get; set; }
     public string? WelcomeMessage { get; set; } = null;
     public string? LeaveMessage { get; set; } = null;

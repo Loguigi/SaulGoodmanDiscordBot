@@ -2,7 +2,7 @@ using SaulGoodmanBot.Data;
 
 namespace SaulGoodmanBot.Models;
 
-public class SantaParticipantModel : DbCommonParams {
+public class SantaParticipantModel {
     public long GuildId { get; set; }
     public long UserId { get; set; }
     public string FirstName { get; set; } = string.Empty;

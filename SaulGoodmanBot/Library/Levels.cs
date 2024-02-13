@@ -28,10 +28,11 @@ public class Levels : DbBase<LevelModel, Levels> {
         User = user;
 
         try {
-            var result = GetData("Levels_GetData", new DynamicParameters(new { GuildId = (long)Guild.Id })).Result;
+            var result = GetData("Levels_GetData", new DynamicParameters( new { GuildId = (long)Guild.Id, UserId = (long)User.Id})).Result;
             if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
             MapData(result.Result!);
+            Rank = GetRank();
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
@@ -68,16 +69,30 @@ public class Levels : DbBase<LevelModel, Levels> {
     {
         try
         {
-            var level = data.First();
-            Experience = level.Experience;
-            Level = level.Level;
-            MsgLastSent = level.MsgLastSent;
-            Rank = level.Rank;
+            var level = data.FirstOrDefault();
+            Experience = level?.Experience ?? -1;
+            Level = level?.Level ?? 0;
+            MsgLastSent = level?.MsgLastSent ?? DateTime.Now;
 
             return new List<Levels>();
         }
         catch (Exception ex)
         {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
+    }
+
+    private int GetRank() {
+        try {
+            var param = new DynamicParameters(new { GuildId = (long)Guild.Id, UserId = (long)User.Id });
+            param.Add("@Rank", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            var result = SaveData("Levels_GetRank", param).Result;
+
+            if (result.Status != StatusCodes.SUCCESS)
+                throw new Exception(result.Message);
+            return param.Get<int>("@Rank");
+        } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
         }
