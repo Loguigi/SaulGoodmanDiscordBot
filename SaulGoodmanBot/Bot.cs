@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.Helpers;
 using DSharpPlus.Entities;
+using DSharpPlus.CommandsNext;
 
 namespace SaulGoodmanBot;
 
@@ -16,6 +17,7 @@ public class Bot {
     #region Discord Client Properties
     public static DiscordClient? Client { get; private set; }
     public static InteractivityExtension? Interactivity { get; private set; }
+    public static CommandsNextExtension? Prefix { get; private set; }
     public static SlashCommandsExtension? Slash { get; private set; }
     #endregion
 
@@ -36,6 +38,11 @@ public class Bot {
         Client.UseInteractivity(new InteractivityConfiguration() {
             Timeout = TimeSpan.FromMinutes(2)
         });
+        Prefix = Client.UseCommandsNext(new CommandsNextConfiguration() {
+            StringPrefixes = new[] { "`" }
+
+        });
+        Prefix.RegisterCommands<SecretCommands>();
         #endregion
 
         #region Event Handler Registration
