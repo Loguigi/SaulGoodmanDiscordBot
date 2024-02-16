@@ -133,14 +133,13 @@ public class RoleCommands : ApplicationCommandModule {
             roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description, false, new DiscordComponentEmoji(r.Emoji)));
         }
         var roleDropdown = new DiscordSelectComponent(IDHelper.Roles.ASSIGN, "Select a role", roleOptions);
-        var cancelButton = new DiscordButtonComponent(ButtonStyle.Secondary, IDHelper.Roles.ASSIGN, "Cancel", false, new DiscordComponentEmoji(DiscordEmoji.FromName(ctx.Client, ":arrow_left:", false)));
         
         var embed = new DiscordEmbedBuilder()
             .WithTitle(roles.CategoryName)
             .WithDescription(roles.CategoryDescription)
             .WithColor(DiscordColor.Turquoise);
 
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(roleDropdown).AddComponents(cancelButton)));
+        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(roleDropdown)));
 
         ctx.Client.ComponentInteractionCreated -= RoleHandler.HandleAssign;
         ctx.Client.ComponentInteractionCreated += RoleHandler.HandleAssign;
