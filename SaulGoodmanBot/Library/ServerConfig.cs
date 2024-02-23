@@ -18,10 +18,9 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
     #endregion
 
     #region Birthday Config
-    public static DateTime DATE_ERROR { get; private set; } = DateTime.Parse("1/1/1800");
     public bool BirthdayNotifications { get; set; } = true;
     public string BirthdayMessage { get; set; } = "Happy Birthday!";
-    public DateTime PauseBdayNotifsTimer { get; set; } = DATE_ERROR;
+    public TimeOnly BirthdayTimer { get; set; } = new TimeOnly(5, 0);
     #endregion
 
     #region Role Config
@@ -62,7 +61,7 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
                     LeaveMessage = LeaveMessage,
                     DefaultChannel = (long)DefaultChannel.Id,
                     BirthdayNotifications = BirthdayNotifications ? 1 : 0,
-                    PauseBdayNotifsTimer = PauseBdayNotifsTimer,
+                    BirthdayTimer = BirthdayTimer,
                     BirthdayMessage = BirthdayMessage,
                     ServerRolesName = ServerRolesName,
                     ServerRolesDescription = ServerRolesDescription,
@@ -90,7 +89,7 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
         LeaveMessage = config.LeaveMessage;
         DefaultChannel = Guild.GetChannel((ulong)config.DefaultChannel);
         BirthdayNotifications = config.BirthdayNotifications == 1;
-        PauseBdayNotifsTimer = config.PauseBdayNotifsTimer;
+        BirthdayTimer = config.BirthdayTimer;
         BirthdayMessage = config.BirthdayMessage;
         ServerRolesName = config.ServerRolesName;
         ServerRolesDescription = config.ServerRolesDescription;

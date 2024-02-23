@@ -15,9 +15,10 @@ public class RequireLoguigiAttribute : CheckBaseAttribute {
 
 [RequireLoguigi]
 public class SecretCommands : BaseCommandModule {
-    #region Bot Display
+    #region Bot Control
     [Command("status")]
     public async Task SetBotStatus(CommandContext ctx, string appear, string status) {
+        await ctx.Message.DeleteAsync();
         await ctx.Client.UpdateStatusAsync(
             activity: new DiscordActivity(status, ActivityType.Playing),
             userStatus: appear switch {
@@ -27,6 +28,29 @@ public class SecretCommands : BaseCommandModule {
                 "invis" => UserStatus.Invisible,
                 _ => UserStatus.Offline
         });
+    }
+
+    [Command("leave")]
+    public async Task ForceLeaveServer(CommandContext ctx) {
+        await ctx.Message.DeleteAsync();
+        await ctx.Guild.LeaveAsync();
+    }
+    #endregion
+
+    #region Ticket Management
+    [Command("tview")]
+    public async Task ViewTicket(CommandContext ctx, int id) {
+
+    }
+
+    [Command("tlist")]
+    public async Task TicketList(CommandContext ctx) {
+
+    }
+
+    [Command("tmanage")]
+    public async Task ManageTicket(CommandContext ctx, int id) {
+
     }
     #endregion
 }

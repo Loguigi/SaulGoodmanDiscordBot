@@ -5,17 +5,6 @@ using SaulGoodmanBot.Models;
 
 namespace SaulGoodmanBot.Library;
 
-public enum ETicketType {
-    Feature = 0,
-    Issue = 1
-}
-
-public enum ETicketStatus {
-    New = 0,
-    InProgress = 1,
-    Closed = 2
-}
-
 public class Ticket : DbBase {
     #region Properties
     public int Id { get; private set; }

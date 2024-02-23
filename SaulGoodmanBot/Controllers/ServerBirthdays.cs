@@ -49,7 +49,13 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
         }
     }
 
-    public Birthday? this[DiscordUser user] { get => Birthdays.Where(x => x.User == user).FirstOrDefault(); }
+    public Birthday? this[DiscordUser user] { 
+        get => Birthdays.Where(x => x.User == user).FirstOrDefault();
+        set {
+            Birthdays.Remove(Birthdays.Where(x => x.User == value!.User).First());
+            Birthdays.Add(value!);
+        }
+    }
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     public IEnumerator<Birthday> GetEnumerator() => Birthdays.GetEnumerator();
 
@@ -65,6 +71,12 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
 
             if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
+
+            if (this[bday.User] == null) {
+                Birthdays.Add(bday);
+            } else {
+                this[bday.User] = bday;
+            }
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
@@ -83,6 +95,7 @@ public class ServerBirthdays : DbBase<BirthdayModel, Birthday>, IEnumerable<Birt
 
             if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
+            Birthdays.Remove(bday);
         } catch (Exception ex) {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;

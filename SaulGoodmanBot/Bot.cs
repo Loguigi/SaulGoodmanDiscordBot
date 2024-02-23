@@ -10,6 +10,7 @@ using DSharpPlus.SlashCommands.Attributes;
 using SaulGoodmanBot.Helpers;
 using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext;
+using SaulGoodmanBot.Controllers;
 
 namespace SaulGoodmanBot;
 
@@ -19,10 +20,13 @@ public class Bot {
     public static InteractivityExtension? Interactivity { get; private set; }
     public static CommandsNextExtension? Prefix { get; private set; }
     public static SlashCommandsExtension? Slash { get; private set; }
+    public static System.Timers.Timer? Timer { get; private set; }
+    public static Dictionary<DiscordGuild, ServerMaster> Guilds { get; private set; } = new();
     #endregion
 
     internal async Task MainAsync() {
         Env.SetContext();
+        using System.Timers.Timer Timer = new(TimeSpan.FromHours(1));
 
         #region Discord Client Config
         var discordConfig = new DiscordConfiguration() {
@@ -46,13 +50,18 @@ public class Bot {
         #endregion
 
         #region Event Handler Registration
-        Client.SessionCreated += GeneralHandlers.HandleOnReady;
+        Client.SessionCreated += async (s, e) => {
+            foreach (var g in Client.Guilds.Values) {
+                Guilds.Add(g, new ServerMaster(Client, g));
+            }
+            await Task.CompletedTask;
+        };
         Client.GuildMemberAdded += GeneralHandlers.HandleMemberJoin;
         Client.GuildMemberRemoved += GeneralHandlers.HandleMemberLeave;
-        Client.MessageCreated += BirthdayHandler.HandleBirthdayMessage;
         Client.MessageCreated += LevelHandler.HandleExpGain;
         Client.GuildRoleDeleted += RoleHandler.HandleServerRemoveRole;
         Client.GuildCreated += GeneralHandlers.HandleServerJoin;
+        Timer.Elapsed += async (s, e) => await BirthdayHandler.HandleBirthdayMessage(e);
         #endregion
 
         #region Slash Commands
@@ -73,6 +82,8 @@ public class Bot {
             //Client.MessageCreated += SantaHandler.HandleParticipationDeadlineCheck;
             //Slash.RegisterCommands<SecretSantaCommands>();
         }
+
+        Slash.SlashCommandExecuted += async (s, e) => { await Guilds[e.Context.Guild].Refresh(); };
 
         Slash.SlashCommandInvoked += async (s, e) => {
             Console.WriteLine($"{e.Context.CommandName} invoked by {e.Context.User} in {e.Context.Channel}/{e.Context.Guild}");

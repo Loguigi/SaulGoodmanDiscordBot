@@ -1,11 +1,11 @@
-using SaulGoodmanBot.Data;
+using static SaulGoodmanBot.Data.Constants;
 
 namespace SaulGoodmanBot.Models;
 
 public class ScheduleModel {
     public long GuildId { get; set; }
     public long UserId { get; set; }
-    public DateTime LastUpdated { get; set; } = DateTime.Parse("1/1/1900");
+    public DateTime LastUpdated { get; set; } = DATE_ERROR;
     public int RecurringSchedule { get; set; } = 0;
     public string? Sunday { get; set; } = null;
     public string? Monday { get; set; } = null;
