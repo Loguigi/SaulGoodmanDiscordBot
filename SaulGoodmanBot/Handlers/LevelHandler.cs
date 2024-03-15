@@ -42,7 +42,7 @@ public static class LevelHandler {
 
         try {
             var leaderboard = new List<Levels>();
-            foreach (var user in await e.Guild.GetAllMembersAsync()) {
+            await foreach (var user in e.Guild.GetAllMembersAsync()) {
                 if (!user.IsBot) leaderboard.Add(new Levels(e.Guild, user));
             }
             leaderboard.Sort(delegate(Levels x, Levels y) {return x.Rank.CompareTo(y.Rank);});

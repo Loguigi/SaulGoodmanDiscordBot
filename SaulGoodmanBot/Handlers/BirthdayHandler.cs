@@ -11,23 +11,25 @@ namespace SaulGoodmanBot.Handlers;
 
 public static class BirthdayHandler {
     public static async Task HandleBirthdayMessage(ElapsedEventArgs e) {
-        foreach (var guild in Bot.Guilds.Values) {
-            if (!guild.Config.BirthdayNotifications)
+        foreach (var guild in Bot.ServerConfig) {
+            if (!guild.Value.BirthdayNotifications)
                 continue;
             
-            if (e.SignalTime.Hour != guild.Config.BirthdayTimer.Hour)
+            if (e.SignalTime.Hour != guild.Value.BirthdayTimer.Hour)
                 continue;
 
             var embed = new DiscordEmbedBuilder()
                 .WithColor(DiscordColor.HotPink);
 
-            foreach (var birthday in guild.Birthdays) {
+            var birthdays = new ServerBirthdays(Bot.Client!, guild.Key);
+
+            foreach (var birthday in birthdays) {
                 if (birthday.HasBirthdayToday) {
-                    embed.WithDescription($"# {DiscordEmoji.FromName(Bot.Client!, ":birthday:", false)} {guild.Config.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
-                    await guild.Config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
+                    embed.WithDescription($"# {DiscordEmoji.FromName(Bot.Client!, ":birthday:", false)} {guild.Value.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
+                    await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
                 } else if (birthday.HasUpcomingBirthday) {
                     embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__5__** days!").WithFooter($"{DiscordEmoji.FromName(Bot.Client!, ":birthday:", false)} {birthday} {DiscordEmoji.FromName(Bot.Client!, ":birthday:", false)}");
-                    await guild.Config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
+                    await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
                 }
             }
         }

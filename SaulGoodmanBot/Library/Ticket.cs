@@ -17,4 +17,6 @@ public class Ticket : DbBase {
     public List<DiscordUser> Votes { get; set; } = new();
     public List<TicketAction> Actions { get; set; } = new();
     #endregion
+
+    
 }

@@ -11,6 +11,7 @@ using SaulGoodmanBot.Helpers;
 using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext;
 using SaulGoodmanBot.Controllers;
+using SaulGoodmanBot.Library;
 
 namespace SaulGoodmanBot;
 
@@ -21,10 +22,10 @@ public class Bot {
     public static CommandsNextExtension? Prefix { get; private set; }
     public static SlashCommandsExtension? Slash { get; private set; }
     public static System.Timers.Timer? Timer { get; private set; }
-    public static Dictionary<DiscordGuild, ServerMaster> Guilds { get; private set; } = new();
+    public static Dictionary<DiscordGuild, ServerConfig> ServerConfig { get; private set; } = new();
     #endregion
 
-    internal async Task MainAsync() {
+    internal async Task Run() {
         Env.SetContext();
         using System.Timers.Timer Timer = new(TimeSpan.FromHours(1));
 
@@ -52,7 +53,7 @@ public class Bot {
         #region Event Handler Registration
         Client.SessionCreated += async (s, e) => {
             foreach (var g in Client.Guilds.Values) {
-                Guilds.Add(g, new ServerMaster(Client, g));
+                ServerConfig.Add(g, new ServerConfig(g));
             }
             await Task.CompletedTask;
         };
@@ -61,6 +62,7 @@ public class Bot {
         Client.MessageCreated += LevelHandler.HandleExpGain;
         Client.GuildRoleDeleted += RoleHandler.HandleServerRemoveRole;
         Client.GuildCreated += GeneralHandlers.HandleServerJoin;
+        Client.ScheduledGuildEventCreated += GuildEventHandler.HandleGuildEventCreate;
         Timer.Elapsed += async (s, e) => await BirthdayHandler.HandleBirthdayMessage(e);
         #endregion
 
@@ -76,6 +78,7 @@ public class Bot {
         Slash.RegisterCommands<LevelCommands>();
         //Slash.RegisterCommands<MinecraftCommands>();
         Slash.RegisterCommands<ScheduleCommands>();
+        Slash.RegisterCommands<GuildEventCommands>();
 
         // Secret Santa seasonal commands/handlers
         if (DateTime.Now.Month == 11 || DateTime.Now.Month == 12 || DateTime.Now.Month == 1) {
@@ -83,7 +86,7 @@ public class Bot {
             //Slash.RegisterCommands<SecretSantaCommands>();
         }
 
-        Slash.SlashCommandExecuted += async (s, e) => { await Guilds[e.Context.Guild].Refresh(); };
+        Slash.SlashCommandExecuted += async (s, e) => { ServerConfig[e.Context.Guild] = new ServerConfig(e.Context.Guild); await Task.CompletedTask; };
 
         Slash.SlashCommandInvoked += async (s, e) => {
             Console.WriteLine($"{e.Context.CommandName} invoked by {e.Context.User} in {e.Context.Channel}/{e.Context.Guild}");
@@ -115,5 +118,5 @@ public class Bot {
         await Task.Delay(-1);
     }
 
-    internal static void Main() => new Bot().MainAsync().GetAwaiter().GetResult();
+    internal static void Main() => new Bot().Run().GetAwaiter().GetResult();
 }

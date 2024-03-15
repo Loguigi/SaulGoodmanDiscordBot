@@ -162,7 +162,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
         [Option("option", "Config option")] string option,
         [Option("enabled", "True to enable, false to disable")] bool toggle) {
         
-        var config = Bot.Guilds[ctx.Guild].Config;
+        var config = Bot.ServerConfig[ctx.Guild];
         switch (option) {
             case "Server Levels":
                 config.EnableLevels = toggle;

@@ -20,7 +20,7 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
     #region Birthday Config
     public bool BirthdayNotifications { get; set; } = true;
     public string BirthdayMessage { get; set; } = "Happy Birthday!";
-    public TimeOnly BirthdayTimer { get; set; } = new TimeOnly(5, 0);
+    public DateTime BirthdayTimer { get; set; } = Constants.DATE_ERROR.AddHours(5);
     #endregion
 
     #region Role Config
@@ -87,7 +87,7 @@ public class ServerConfig : DbBase<ConfigModel, ServerConfig> {
 
         WelcomeMessage = config.WelcomeMessage;
         LeaveMessage = config.LeaveMessage;
-        DefaultChannel = Guild.GetChannel((ulong)config.DefaultChannel);
+        DefaultChannel = Guild.GetChannel((ulong)config.DefaultChannel) ?? Guild.GetDefaultChannel();
         BirthdayNotifications = config.BirthdayNotifications == 1;
         BirthdayTimer = config.BirthdayTimer;
         BirthdayMessage = config.BirthdayMessage;

@@ -79,7 +79,7 @@ public class LevelCommands : ApplicationCommandModule {
     public async Task LevelLeaderboard(InteractionContext ctx) {
         try {
             var leaderboard = new List<Levels>();
-            foreach (var user in await ctx.Guild.GetAllMembersAsync()) {
+            await foreach (var user in ctx.Guild.GetAllMembersAsync()) {
                 if (!user.IsBot) leaderboard.Add(new Levels(ctx.Guild, user));
             }
             leaderboard.Sort(delegate(Levels x, Levels y) {return x.Rank.CompareTo(y.Rank);});
