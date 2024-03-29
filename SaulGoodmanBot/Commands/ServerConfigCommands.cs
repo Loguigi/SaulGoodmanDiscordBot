@@ -5,7 +5,6 @@ using DSharpPlus.Interactivity.Extensions;
 using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Helpers;
 using DSharpPlus.SlashCommands.Attributes;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace SaulGoodmanBot.Commands;
@@ -20,7 +19,7 @@ public class ServerConfigCommands : ApplicationCommandModule {
         [Choice("Leave message", "leave")]
         [Choice("Birthday message", "birthday")]
         [Choice("Level up message", "levelup")]
-        [Option("option", "General config option")] string option) {
+        [Option("option", "Message config option")] string option) {
             
         try {
             var config = new ServerConfig(ctx.Guild);
@@ -156,60 +155,27 @@ public class ServerConfigCommands : ApplicationCommandModule {
         }
     }
 
-    [SlashCommand("levels", "Enable or disable levels")]
-    public async Task LevelsConfig (InteractionContext ctx,
-        [Choice("Enable", "enable")]
-        [Choice("Disable", "disable")]
-        [Option("option", "Option")] string option) {
-
-        try {
-            var config = new ServerConfig(ctx.Guild) {
-                EnableLevels = option == "enable"
-            };
-            config.Save();
-
-            await ctx.CreateResponseAsync(StandardOutput.ConfigChange(ctx.Client, ctx.Guild, config.EnableLevels ? ConfigChangeOption.DisabledToEnabled : ConfigChangeOption.EnabledToDisabled, "Server levels"));
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
-    }
-
-    [SlashCommand("birthday_notifications", "Enable or disable all birthday notifications")]
-    public async Task BirthdayNotifications(InteractionContext ctx,
-        [Choice("Enable", "enable")]
-        [Choice("Disable", "disable")]
-        [Option("option", "Option")] string option) {
+    public async Task ToggleConfig(InteractionContext ctx,
+        [Choice("Server Levels", "Server Levels")]
+        [Choice("Birthday Notifications", "Birthday Notifications")]
+        [Choice("Role Menu on Member Join", "Role Menu on Member Join")]
+        [Option("option", "Config option")] string option,
+        [Option("enabled", "True to enable, false to disable")] bool toggle) {
         
-        try {
-            var config = new ServerConfig(ctx.Guild) {
-                BirthdayNotifications = option == "enable"
-            };
-            config.Save();
-
-            await ctx.CreateResponseAsync(StandardOutput.ConfigChange(ctx.Client, ctx.Guild, config.BirthdayNotifications ? ConfigChangeOption.DisabledToEnabled : ConfigChangeOption.EnabledToDisabled, "Birthday notifications"));
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
+        var config = Bot.ServerConfig[ctx.Guild];
+        switch (option) {
+            case "Server Levels":
+                config.EnableLevels = toggle;
+                break;
+            case "Birthday Notifications":
+                config.BirthdayNotifications = toggle;
+                break;
+            case "Role Menu on Member Join":
+                config.SendRoleMenuOnMemberJoin = toggle;
+                break;
         }
-    }
+        config.Save();
 
-    [SlashCommand("role_menu", "Enable or disable the sending of role menu when a member joins the server")]
-    public async Task RoleMenuOnMemberJoin(InteractionContext ctx,
-        [Choice("Enable", "enable")]
-        [Choice("Disable", "disable")]
-        [Option("option", "Option")] string option) {
-        
-        try {
-            var config = new ServerConfig(ctx.Guild) {
-                SendRoleMenuOnMemberJoin = option == "enable"
-            };
-            config.Save();
-
-            await ctx.CreateResponseAsync(StandardOutput.ConfigChange(ctx.Client, ctx.Guild, config.SendRoleMenuOnMemberJoin ? ConfigChangeOption.DisabledToEnabled : ConfigChangeOption.EnabledToDisabled, "Send role menu on member join"));
-        } catch (Exception ex) {
-            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
-            throw;
-        }
+        await ctx.CreateResponseAsync(StandardOutput.ConfigChange(ctx.Client, ctx.Guild, toggle ? ConfigChangeOption.DisabledToEnabled : ConfigChangeOption.EnabledToDisabled, option));
     }
 }

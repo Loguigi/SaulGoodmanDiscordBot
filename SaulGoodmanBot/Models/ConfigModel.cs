@@ -8,7 +8,7 @@ public class ConfigModel {
     public string? LeaveMessage { get; set; } = null;
     public long DefaultChannel { get; set; }
     public int BirthdayNotifications { get; set; } = 1;
-    public DateTime PauseBdayNotifsTimer { get; set; }
+    public DateTime BirthdayTimer { get; set; } = Constants.DATE_ERROR.AddHours(5);
     public string BirthdayMessage { get; set; } = "Happy Birthday!";
     public string? ServerRolesName { get; set; } = null;
     public string? ServerRolesDescription { get; set; } = null;

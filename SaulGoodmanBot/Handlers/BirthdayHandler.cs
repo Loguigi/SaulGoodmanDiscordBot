@@ -5,35 +5,34 @@ using SaulGoodmanBot.Library;
 using SaulGoodmanBot.Helpers;
 using SaulGoodmanBot.Controllers;
 using System.Reflection;
+using System.Timers;
 
 namespace SaulGoodmanBot.Handlers;
 
 public static class BirthdayHandler {
-    public static async Task HandleBirthdayMessage(DiscordClient s, MessageCreateEventArgs e) {
-        var birthdays = new ServerBirthdays(s, e.Guild);
-        var config = new ServerConfig(e.Guild);
+    public static async Task HandleBirthdayMessage(ElapsedEventArgs e) {
+        foreach (var guild in Bot.ServerConfig) {
+            if (!guild.Value.BirthdayNotifications)
+                continue;
+            
+            if (e.SignalTime.Hour != guild.Value.BirthdayTimer.Hour)
+                continue;
 
-        if (e.Author.IsBot || config.PauseBdayNotifsTimer.Date == DateTime.Today || !config.BirthdayNotifications) {
-            await Task.CompletedTask;
-            return;
-        }
+            var embed = new DiscordEmbedBuilder()
+                .WithColor(DiscordColor.HotPink);
 
-        config.PauseBdayNotifsTimer = DateTime.Parse("1/1/1900");
-        var embed = new DiscordEmbedBuilder()
-            .WithColor(DiscordColor.HotPink);
-        
-        foreach (var birthday in birthdays) {
-            if (birthday.HasBirthdayToday) {
-                embed.WithDescription($"# {DiscordEmoji.FromName(s, ":birthday:", false)} {config.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
-                config.PauseBdayNotifsTimer = DateTime.Now;
-                await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
-            } else if (birthday.HasUpcomingBirthday) {
-                embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__5__** days!").WithFooter($"{DiscordEmoji.FromName(s, ":birthday:", false)} {birthday} {DiscordEmoji.FromName(s, ":birthday:", false)}");
-                config.PauseBdayNotifsTimer = DateTime.Now;
-                await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
+            var birthdays = new ServerBirthdays(Bot.Client!, guild.Key);
+
+            foreach (var birthday in birthdays) {
+                if (birthday.HasBirthdayToday) {
+                    embed.WithDescription($"# {DiscordEmoji.FromName(Bot.Client!, ":birthday:", false)} {guild.Value.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
+                    await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
+                } else if (birthday.HasUpcomingBirthday) {
+                    embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__5__** days!").WithFooter($"{DiscordEmoji.FromName(Bot.Client!, ":birthday:", false)} {birthday} {DiscordEmoji.FromName(Bot.Client!, ":birthday:", false)}");
+                    await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
+                }
             }
         }
-        config.Save();
     }
 
     public static async Task HandleBirthdayList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
