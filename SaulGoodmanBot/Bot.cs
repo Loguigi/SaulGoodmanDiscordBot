@@ -105,7 +105,6 @@ public class Bot {
                 var embed = new DiscordEmbedBuilder()
                     .WithAuthor("Error", "", ImageHelper.Images["Error"])
                     .AddField("Message", ex.Message)
-                    .AddField("Source", ex.Source ?? "Unknown")
                     .WithColor(DiscordColor.Red)
                     .WithThumbnail(ImageHelper.Images["Finger"]);
 

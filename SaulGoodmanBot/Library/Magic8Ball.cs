@@ -1,7 +1,7 @@
 namespace SaulGoodmanBot.Library;
 
 public class Magic8Ball {
-    private static readonly List<string> Answers = new() {
+    private static readonly List<string> Answers = [
         // Affirmitave answers
         "It is certain",
         "It is decidedly so",
@@ -30,7 +30,7 @@ public class Magic8Ball {
         "Outlook not so good",
         "Very doubtful",
         "Nah come on… man, some straight like you giant stick up his ass all of a sudden at age what 60 he's just going to break bad?"
-    };
+    ];
 
     private static readonly Random random = new();
 

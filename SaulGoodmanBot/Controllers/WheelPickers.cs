@@ -33,7 +33,7 @@ public class WheelPickers : DbBase<WheelsModel, Wheel>, IEnumerable<Wheel> {
         }
     }
 
-    public Wheel this[string key] { get => Wheels.Where(x => x.Name == key).First(); }
+    public Wheel this[string key] => Wheels.Where(x => x.Name == key).First();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     public IEnumerator<Wheel> GetEnumerator() => Wheels.GetEnumerator();
