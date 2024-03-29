@@ -4,6 +4,7 @@ using SaulGoodmanBot.Models;
 using Dapper;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using System.Reflection;
 
 namespace SaulGoodmanBot.Controllers;
 
@@ -17,6 +18,7 @@ public class TicketMaster : DbBase {
             var tickets = GetData<TicketModel>("", new DynamicParameters()).Result;
             Tickets = MapData(tickets.Result!);
         } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
         }
     }
@@ -25,7 +27,8 @@ public class TicketMaster : DbBase {
         try {
             var result = SaveData("", new DynamicParameters()); // todo
         } catch (Exception ex) {
-
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
     }
 
@@ -39,7 +42,7 @@ public class TicketMaster : DbBase {
 
     public void AddVote(Ticket ticket, DiscordUser user) {
         try {
-            var result = SaveData("", new DynamicParameters(
+            var result = SaveData(StoredProcedures.TICKETS_TOGGLE_VOTE, new DynamicParameters(
                 new TicketVoteModel() {
                     TicketId = ticket.Id,
                     UserId = (long)user.Id
@@ -48,7 +51,8 @@ public class TicketMaster : DbBase {
             if (result.Status != StatusCodes.SUCCESS)
                 throw new Exception(result.Message);
         } catch (Exception ex) {
-
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
         }
     }
 

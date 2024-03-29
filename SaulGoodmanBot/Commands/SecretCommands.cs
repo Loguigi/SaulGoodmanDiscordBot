@@ -35,22 +35,31 @@ public class SecretCommands : BaseCommandModule {
         await ctx.Message.DeleteAsync();
         await ctx.Guild.LeaveAsync();
     }
+
+    [Command("debug")]
+    public async Task ToggleDebugMode(CommandContext ctx, bool mode) {
+        Env.DebugMode = mode;
+        await ctx.Message.RespondAsync($"Debug: {Env.DebugMode}");
+    } 
     #endregion
 
     #region Ticket Management
     [Command("tview")]
     public async Task ViewTicket(CommandContext ctx, int id) {
-
+        await Task.CompletedTask;
+        throw new NotImplementedException();
     }
 
     [Command("tlist")]
     public async Task TicketList(CommandContext ctx) {
-
+        await Task.CompletedTask;
+        throw new NotImplementedException();
     }
 
     [Command("tmanage")]
     public async Task ManageTicket(CommandContext ctx, int id) {
-
+        await Task.CompletedTask;
+        throw new NotImplementedException();
     }
     #endregion
 }

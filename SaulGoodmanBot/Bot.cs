@@ -97,7 +97,7 @@ public class Bot {
             if (e.Exception is SlashExecutionChecksFailedException slex) {
                 foreach (var check in slex.FailedChecks) {
                     if (check is SlashRequirePermissionsAttribute att)
-                        await e.Context.CreateResponseAsync(StandardOutput.Error("Only an admin can run this command!"), ephemeral:true);
+                        await e.Context.CreateResponseAsync(StandardOutput.Error("Only a server admin can run this command!"), ephemeral:true);
                 }
             }
 
@@ -110,6 +110,16 @@ public class Bot {
                     .WithThumbnail(ImageHelper.Images["Finger"]);
 
                 await e.Context.CreateResponseAsync(embed, ephemeral:true);
+
+                if (Env.DebugMode) {
+                    var me = await e.Context.Guild.GetMemberAsync(Env.Loguigi);
+                    var dm = await me.CreateDmChannelAsync();
+                    embed.AddField("Command", e.Context.CommandName);
+                    embed.AddField("Source", ex.Source ?? "Unknown");
+                    embed.AddField("Invoked By", e.Context.User.Mention);
+
+                    await dm.SendMessageAsync(embed);
+                }
             }
         };
         #endregion
