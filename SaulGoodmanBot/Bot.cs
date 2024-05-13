@@ -123,6 +123,7 @@ public class Bot {
         };
         #endregion
 
+        Timer.Start();
         await Client.ConnectAsync();
         await Task.Delay(-1);
     }
