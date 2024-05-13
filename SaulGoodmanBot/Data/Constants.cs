@@ -8,6 +8,9 @@ public struct StoredProcedures {
     public const string WHEELS_GETDATA = "Wheels_GetData";
     public const string WHEELS_PROCESS = "Wheels_Process";
     public const string TICKETS_TOGGLE_VOTE = "Ticket_ToggleVote";
+    public const string MINECRAFT_GETDATA = "Minecraft_GetData";
+    public const string MINECRAFT_SAVEWAYPOINT = "Minecraft_SaveWaypoint";
+    public const string MINECRAFT_SAVECONFIG = "Minecraft_SaveConfig";
 }
 
 public enum ETicketType {

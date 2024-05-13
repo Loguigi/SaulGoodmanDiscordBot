@@ -1,4 +1,6 @@
+using DSharpPlus.Entities;
 using SaulGoodmanBot.Data;
+using SaulGoodmanBot.Library;
 
 namespace SaulGoodmanBot.Models;
 
@@ -9,4 +11,14 @@ public class MinecraftWaypointModel {
     public int XCord { get; set; } = 0;
     public int YCord { get; set; } = 0;
     public int ZCord { get; set; } = 0;
+
+    public MinecraftWaypointModel() {}
+    public MinecraftWaypointModel(DiscordGuild guild, Waypoint wp) {
+        GuildId = (long)guild.Id;
+        Dimension = wp.Dimension;
+        Name = wp.Name;
+        XCord = wp.X;
+        YCord = wp.Y;
+        ZCord = wp.Z;
+    }
 }

@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.Net;
 using DSharpPlus.Entities;
 using DSharpPlus;
+using static Dapper.SqlMapper;
 
 namespace SaulGoodmanBot.Data;
 
@@ -94,6 +95,24 @@ public abstract class DbBase {
         }
     }
 
+    protected virtual async Task<ResultArgs<GridReader>> GetMultipleData(string sp, DynamicParameters param) {
+        try {
+            using var cnn = Connection;
+            param.Add("@Status", null, DbType.Int32, ParameterDirection.Output);
+            param.Add("@ErrMsg", null, DbType.String, ParameterDirection.Output, 500);
+            var data = await cnn.QueryMultipleAsync(sp, param, commandType: CommandType.StoredProcedure);
+            
+            return new ResultArgs<GridReader>() {
+                Result = data,
+                Status = (StatusCodes)param.Get<int>("@Status"),
+                Message = param.Get<string>("@ErrMsg")
+            };
+        } catch (Exception ex) {
+            ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
+            throw;
+        }
+    }
+
     protected async virtual Task<DiscordUser> GetUser(DiscordClient client, ulong id) => await client.GetUserAsync(id);
-    private string? _connectionString = Env.CnnVal;
+    private readonly string? _connectionString = Env.CnnVal;
 }

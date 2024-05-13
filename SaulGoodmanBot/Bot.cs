@@ -76,7 +76,7 @@ public class Bot {
         Slash.RegisterCommands<ServerConfigCommands>();
         Slash.RegisterCommands<RoleCommands>();
         Slash.RegisterCommands<LevelCommands>();
-        //Slash.RegisterCommands<MinecraftCommands>();
+        Slash.RegisterCommands<MinecraftCommands>();
         Slash.RegisterCommands<ScheduleCommands>();
         Slash.RegisterCommands<GuildEventCommands>();
 
