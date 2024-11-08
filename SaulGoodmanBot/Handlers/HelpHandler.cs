@@ -22,10 +22,7 @@ public static class HelpHandler {
             .WithThumbnail(ImageHelper.Images["Saul"])
             .WithColor(DiscordColor.Orange);
         
-        var pages = new List<DiscordSelectComponentOption>();
-        foreach (var p in HelpText.Setup.Keys) {
-            pages.Add(new DiscordSelectComponentOption(p, p));
-        }
+        var pages = HelpText.Setup.Keys.Select(p => new DiscordSelectComponentOption(p, p)).ToList();
         var dropdown = new DiscordSelectComponent(IDHelper.Help.SETUP, "Select a page...", pages);
 
         await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown)));

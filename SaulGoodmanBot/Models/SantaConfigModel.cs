@@ -1,4 +1,5 @@
 using SaulGoodmanBot.Data;
+using SaulGoodmanBot.Library;
 
 namespace SaulGoodmanBot.Models;
 
@@ -11,4 +12,18 @@ public class SantaConfigModel {
     public string? ExchangeAddress { get; set; } = null;
     public double? PriceLimit { get; set; } = null;
     public int LockedIn { get; set; } = 0;
+    
+    public SantaConfigModel() {}
+
+    public SantaConfigModel(SantaConfig config)
+    {
+        GuildId = (long)config.Guild.Id;
+        SantaRoleId = (long)config.SantaRole.Id;
+        ParticipationDeadline = config.ParticipationDeadline;
+        ExchangeDate = config.ExchangeDate;
+        ExchangeLocation = config.ExchangeLocation;
+        ExchangeAddress = config.ExchangeAddress;
+        PriceLimit = config.PriceLimit;
+        LockedIn = config.LockedIn ? 1 : 0;
+    }
 }

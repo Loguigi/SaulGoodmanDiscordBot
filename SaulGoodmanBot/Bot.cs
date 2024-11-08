@@ -81,9 +81,10 @@ public class Bot {
         Slash.RegisterCommands<GuildEventCommands>();
 
         // Secret Santa seasonal commands/handlers
-        if (DateTime.Now.Month == 11 || DateTime.Now.Month == 12 || DateTime.Now.Month == 1) {
-            //Client.MessageCreated += SantaHandler.HandleParticipationDeadlineCheck;
-            //Slash.RegisterCommands<SecretSantaCommands>();
+        if (DateTime.Now.Month == 11 || DateTime.Now.Month == 12 || DateTime.Now.Month == 1) 
+        {
+            Client.MessageCreated += SantaHandler.HandleParticipationDeadlineCheck;
+            Slash.RegisterCommands<SecretSantaCommands>();
         }
 
         Slash.SlashCommandExecuted += async (s, e) => { ServerConfig[e.Context.Guild] = new ServerConfig(e.Context.Guild); await Task.CompletedTask; };
