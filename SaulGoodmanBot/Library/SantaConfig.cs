@@ -10,7 +10,7 @@ public class SantaConfig : DataAccess
 {
     #region Properties
     public DiscordGuild Guild { get; }
-    public DiscordRole SantaRole { get; set; }
+    public DiscordRole? SantaRole { get; set; }
     public bool HasStarted => ParticipationDeadline < DateTime.Now;
     public DateTime ParticipationDeadline { get; set; }
     public DateTime ExchangeDate { get; set; }
@@ -26,8 +26,12 @@ public class SantaConfig : DataAccess
     {
         Guild = guild;
         var config = GetData<SantaConfigModel>(StoredProcedures.SANTA_GET_CONFIG, new DynamicParameters(new { GuildId = (long)guild.Id })).Result.First();
+
+        if (config.SantaRoleId != 0)
+        {
+            SantaRole = Guild.GetRole((ulong)config.SantaRoleId);    
+        }
         
-        SantaRole = Guild.GetRole((ulong)config.SantaRoleId);
         ParticipationDeadline = config.ParticipationDeadline;
         ExchangeDate = config.ExchangeDate;
         ExchangeLocation = config.ExchangeLocation;

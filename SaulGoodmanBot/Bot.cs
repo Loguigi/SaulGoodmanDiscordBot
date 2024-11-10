@@ -102,7 +102,8 @@ public class Bot {
                 }
             }
 
-            if (e.Exception is Exception ex) {
+            if (e.Exception is Exception ex) 
+            {
                 var embed = new DiscordEmbedBuilder()
                     .WithAuthor("Error", "", ImageHelper.Images["Error"])
                     .AddField("Message", ex.Message)
@@ -111,15 +112,15 @@ public class Bot {
 
                 await e.Context.CreateResponseAsync(embed, ephemeral:true);
 
-                if (Env.DebugMode) {
-                    var me = await e.Context.Guild.GetMemberAsync(Env.Loguigi);
-                    var dm = await me.CreateDmChannelAsync();
-                    embed.AddField("Command", e.Context.CommandName);
-                    embed.AddField("Source", ex.Source ?? "Unknown");
-                    embed.AddField("Invoked By", e.Context.User.Mention);
+#if DEBUG
+                var me = await e.Context.Guild.GetMemberAsync(Env.Loguigi);
+                var dm = await me.CreateDmChannelAsync();
+                embed.AddField("Command", e.Context.CommandName);
+                embed.AddField("Source", ex.Source ?? "Unknown");
+                embed.AddField("Invoked By", e.Context.User.Mention);
 
-                    await dm.SendMessageAsync(embed);
-                }
+                await dm.SendMessageAsync(embed);       
+#endif
             }
         };
         #endregion
