@@ -28,7 +28,7 @@ public class Santa : DataAccess
         Guild = guild;
         Config = new SantaConfig(guild);
         
-        var participants = GetData<SantaParticipantModel>(StoredProcedures.SANTA_GET_PARTICIPANTS, new DynamicParameters(new { GuildId = guild.Id })).Result;
+        var participants = GetData<SantaParticipantModel>(StoredProcedures.SANTA_GET_PARTICIPANTS, new DynamicParameters(new { GuildId = (long)guild.Id })).Result;
         foreach (var participant in participants)
         {
             Participants.Add(new SantaParticipant
