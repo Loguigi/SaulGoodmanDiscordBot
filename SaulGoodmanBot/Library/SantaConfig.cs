@@ -11,7 +11,7 @@ public class SantaConfig : DataAccess
     #region Properties
     public DiscordGuild Guild { get; }
     public DiscordRole? SantaRole { get; set; }
-    public bool HasStarted => ParticipationDeadline > DateTime.Now;
+    public bool HasStarted => ParticipationDeadline > DateTime.Now || LockedIn;
     public DateTime ParticipationDeadline { get; set; }
     public DateTime ExchangeDate { get; set; }
     public string ExchangeLocation { get; set; }
