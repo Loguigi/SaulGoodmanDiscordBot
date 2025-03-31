@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SaulGoodmanData")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+23833eb4f66d3a6fa313865013e3f1fe58c0e697")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7da5976bd328b1f6a551cdd8711ec4b521b60b6c")]
 [assembly: System.Reflection.AssemblyProductAttribute("SaulGoodmanData")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SaulGoodmanData")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

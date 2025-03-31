@@ -12,7 +12,6 @@ public static class BirthdayHandler
 {
     public static async Task HandleBirthdayMessage(object source, ElapsedEventArgs e) 
     {
-        Console.WriteLine($"Timer elapsed: {DateTime.Now}");
         foreach (var guild in DiscordHelper.ServerConfigs) 
         {
             guild.Value.Load();

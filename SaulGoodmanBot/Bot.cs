@@ -127,7 +127,7 @@ public class Bot
 
         await DiscordHelper.Client.ConnectAsync();
         DiscordHelper.ServerConfigs = new Dictionary<DiscordGuild, ServerConfig>();
-        Timer = new System.Timers.Timer(60000) { AutoReset = true };
+        Timer = new System.Timers.Timer(3600000) { AutoReset = true };
         Timer.Elapsed += async (s, e) => await BirthdayHandler.HandleBirthdayMessage(s, e);
         Timer.Start();
         await Task.Delay(-1);
