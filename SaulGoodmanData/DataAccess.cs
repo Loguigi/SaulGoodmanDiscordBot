@@ -31,11 +31,11 @@ public abstract class DataAccess
             }
 
             await using SqlConnection cnn = new(_connectionString);
-            param.Add("Status", null, DbType.Int32, ParameterDirection.Output);
-            param.Add("Message", null, DbType.String, ParameterDirection.Output, 500);
+            param.Add("@Status", null, DbType.Int32, ParameterDirection.Output);
+            param.Add("@Message", null, DbType.String, ParameterDirection.Output, 500);
             var data = await cnn.QueryAsync<T>(sp, param, commandType: CommandType.StoredProcedure);
 			
-            ResultArgs result = new(param.Get<int>("Status"), param.Get<string>("Message"));
+            ResultArgs result = new(param.Get<int>("@Status"), param.Get<string>("@Message"));
             if (result.Status != StatusCodes.SUCCESS) throw new Exception(result.Message);
 			
             return data.ToList();
@@ -57,11 +57,11 @@ public abstract class DataAccess
             }
 			
             await using SqlConnection cnn = new(_connectionString);
-            param.Add("Status", null, DbType.Int32, ParameterDirection.Output);
-            param.Add("Message", null, DbType.String, ParameterDirection.Output, 500);
+            param.Add("@Status", null, DbType.Int32, ParameterDirection.Output);
+            param.Add("@Message", null, DbType.String, ParameterDirection.Output, 500);
             await cnn.ExecuteAsync(sp, param, commandType: CommandType.StoredProcedure);
 
-            ResultArgs result = new(param.Get<int>("Status"), param.Get<string>("Message"));
+            ResultArgs result = new(param.Get<int>("@Status"), param.Get<string>("@Message"));
             if (result.Status != StatusCodes.SUCCESS) throw new Exception(result.Message);
         } 
         catch (Exception ex) 
