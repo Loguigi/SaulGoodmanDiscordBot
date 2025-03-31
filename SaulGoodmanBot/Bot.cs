@@ -2,22 +2,20 @@
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
-using SaulGoodmanBot.Config;
 using SaulGoodmanBot.Commands;
 using SaulGoodmanBot.Handlers;
 using Microsoft.Extensions.Logging;
 using DSharpPlus.SlashCommands.Attributes;
-using SaulGoodmanBot.Helpers;
 using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext;
-using SaulGoodmanBot.Controllers;
-using SaulGoodmanBot.Library;
+using SaulGoodmanLibrary;
+using SaulGoodmanLibrary.Helpers;
 
 namespace SaulGoodmanBot;
 
-public class Bot {
+public class Bot 
+{
     #region Discord Client Properties
-    public static DiscordClient? Client { get; private set; }
     public static InteractivityExtension? Interactivity { get; private set; }
     public static CommandsNextExtension? Prefix { get; private set; }
     public static SlashCommandsExtension? Slash { get; private set; }
@@ -25,25 +23,26 @@ public class Bot {
     public static Dictionary<DiscordGuild, ServerConfig> ServerConfig { get; private set; } = new();
     #endregion
 
-    internal async Task Run() {
-        Env.SetContext();
-        using System.Timers.Timer Timer = new(TimeSpan.FromHours(1));
-
+    internal async Task Run() 
+    {
         #region Discord Client Config
-        var discordConfig = new DiscordConfiguration() {
+        var discordConfig = new DiscordConfiguration() 
+        {
             Intents = DiscordIntents.All,
-            Token = Env.Token ?? throw new Exception("No token"),
+            Token = _token ?? throw new Exception("No token"),
             TokenType = TokenType.Bot,
             AutoReconnect = true,
             LogTimestampFormat = "MMM dd yyyy - hh:mm:ss tt",
             MinimumLogLevel = LogLevel.Debug,
         };
 
-        Client = new DiscordClient(discordConfig);
-        Client.UseInteractivity(new InteractivityConfiguration() {
+        DiscordHelper.Client = new DiscordClient(discordConfig);
+        DiscordHelper.Client.UseInteractivity(new InteractivityConfiguration() 
+        {
             Timeout = TimeSpan.FromMinutes(2)
         });
-        Prefix = Client.UseCommandsNext(new CommandsNextConfiguration() {
+        Prefix = DiscordHelper.Client.UseCommandsNext(new CommandsNextConfiguration() 
+        {
             StringPrefixes = new[] { "`" }
 
         });
@@ -51,24 +50,27 @@ public class Bot {
         #endregion
 
         #region Event Handler Registration
-        Client.SessionCreated += async (s, e) => {
-            foreach (var g in Client.Guilds.Values) {
-                ServerConfig.Add(g, new ServerConfig(g));
+        DiscordHelper.Client.GuildMemberAdded += GeneralHandlers.HandleMemberJoin;
+        DiscordHelper.Client.GuildMemberRemoved += GeneralHandlers.HandleMemberLeave;
+        DiscordHelper.Client.MessageCreated += LevelHandler.HandleExpGain;
+        DiscordHelper.Client.GuildRoleDeleted += RoleHandler.HandleServerRemoveRole;
+        DiscordHelper.Client.GuildCreated += GeneralHandlers.HandleServerJoin;
+        DiscordHelper.Client.ScheduledGuildEventCreated += GuildEventHandler.HandleGuildEventCreate;
+        DiscordHelper.Client.Heartbeated += async (s, e) =>
+        {
+            DiscordHelper.ServerConfigs = new Dictionary<DiscordGuild, ServerConfig>();
+            await foreach (var g in s.GetGuildsAsync())
+            {
+                DiscordHelper.ServerConfigs.Add(g, new ServerConfig(g));
             }
+
             await Task.CompletedTask;
         };
-        Client.GuildMemberAdded += GeneralHandlers.HandleMemberJoin;
-        Client.GuildMemberRemoved += GeneralHandlers.HandleMemberLeave;
-        Client.MessageCreated += LevelHandler.HandleExpGain;
-        Client.GuildRoleDeleted += RoleHandler.HandleServerRemoveRole;
-        Client.GuildCreated += GeneralHandlers.HandleServerJoin;
-        Client.ScheduledGuildEventCreated += GuildEventHandler.HandleGuildEventCreate;
-        Timer.Elapsed += async (s, e) => await BirthdayHandler.HandleBirthdayMessage(e);
         #endregion
 
         #region Slash Commands
-        Slash = Client.UseSlashCommands();
-        Slash.RegisterCommands<HelpCommands>();
+        Slash = DiscordHelper.Client.UseSlashCommands();
+        //Slash.RegisterCommands<HelpCommands>();
         Slash.RegisterCommands<MiscCommands>();
         Slash.RegisterCommands<WheelPickerCommands>();
         Slash.RegisterCommands<ReactionCommands>(270349691147780096);
@@ -76,14 +78,12 @@ public class Bot {
         Slash.RegisterCommands<ServerConfigCommands>();
         Slash.RegisterCommands<RoleCommands>();
         Slash.RegisterCommands<LevelCommands>();
-        //Slash.RegisterCommands<MinecraftCommands>();
-        Slash.RegisterCommands<ScheduleCommands>();
         Slash.RegisterCommands<GuildEventCommands>();
 
         // Secret Santa seasonal commands/handlers
         if (DateTime.Now.Month == 11 || DateTime.Now.Month == 12 || DateTime.Now.Month == 1) 
         {
-            Client.MessageCreated += SantaHandler.HandleParticipationDeadlineCheck;
+            DiscordHelper.Client.MessageCreated += SantaHandler.HandleParticipationDeadlineCheck;
             Slash.RegisterCommands<SecretSantaCommands>();
         }
 
@@ -113,7 +113,7 @@ public class Bot {
                 await e.Context.CreateResponseAsync(embed, ephemeral:true);
 
 #if DEBUG
-                var me = await e.Context.Guild.GetMemberAsync(Env.Loguigi);
+                var me = await e.Context.Guild.GetMemberAsync(_loguigi);
                 var dm = await me.CreateDmChannelAsync();
                 embed.AddField("Command", e.Context.CommandName);
                 embed.AddField("Source", ex.Source ?? "Unknown");
@@ -125,9 +125,16 @@ public class Bot {
         };
         #endregion
 
-        await Client.ConnectAsync();
+        await DiscordHelper.Client.ConnectAsync();
+        DiscordHelper.ServerConfigs = new Dictionary<DiscordGuild, ServerConfig>();
+        Timer = new System.Timers.Timer(60000) { AutoReset = true };
+        Timer.Elapsed += async (s, e) => await BirthdayHandler.HandleBirthdayMessage(s, e);
+        Timer.Start();
         await Task.Delay(-1);
     }
 
     internal static void Main() => new Bot().Run().GetAwaiter().GetResult();
+
+    private string _token = Environment.GetEnvironmentVariable("SAULTOKEN") ?? throw new Exception("Token not set");
+    private ulong _loguigi = ulong.Parse(Environment.GetEnvironmentVariable("LOGUIGI") ?? throw new Exception("Loguigi UID not set"));
 }

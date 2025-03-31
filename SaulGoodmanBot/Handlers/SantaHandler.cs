@@ -1,9 +1,8 @@
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
-using SaulGoodmanBot.Helpers;
-using SaulGoodmanBot.Controllers;
-using SaulGoodmanBot.Library;
+using SaulGoodmanLibrary;
+using SaulGoodmanLibrary.Helpers;
 
 namespace SaulGoodmanBot.Handlers;
 
@@ -11,7 +10,7 @@ public static class SantaHandler
 {
     public static async Task HandleParticipationDeadlineCheck(DiscordClient s, MessageCreateEventArgs e) 
     {
-        var santa = new Santa(s, e.Guild);
+        var santa = new Santa(e.Guild);
 
         if (!santa.Config.HasStarted || santa.Config.LockedIn || e.Message.CreationTimestamp.LocalDateTime != santa.Config.ParticipationDeadline) 
         {
@@ -25,11 +24,11 @@ public static class SantaHandler
         {
             await config.DefaultChannel.SendMessageAsync("Not enough participants for Secret Santa. Changing deadline to tomorrow");
             santa.Config.ParticipationDeadline = santa.Config.ParticipationDeadline.AddDays(1);
-            santa.Config.Update();
+            await santa.Config.Update();
             return;
         }
 
-        santa.AssignNames();
+        await santa.AssignNames();
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor("ATTENTION", "https://youtu.be/a3_PPdjD6mg?si=4q_PpummrNXtmZmP", ImageHelper.Images["Heisenberg"])
@@ -49,8 +48,8 @@ public static class SantaHandler
             return;
         }
 
-        var santa = new Santa(s, e.Guild);
-        var interactivity = new InteractivityHelper<SantaParticipant>(s, santa.Participants, IDHelper.Santa.PARTICIPANTS, e.Id.Split('\\')[PAGE_INDEX], 10, "There are no participants yet");
+        var santa = new Santa(e.Guild);
+        var interactivity = new InteractivityHelper<Santa.SantaParticipant>(santa.Participants, IDHelper.Santa.PARTICIPANTS, IDHelper.GetId(e.Id, PAGE_INDEX), 10, "There are no participants yet");
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
@@ -70,13 +69,14 @@ public static class SantaHandler
 
     public static async Task HandleGiftStatusesList(DiscordClient s, ComponentInteractionCreateEventArgs e) 
     {
-        if (!e.Id.Contains(IDHelper.Santa.GIFTSTATUSES)) {
+        if (!e.Id.Contains(IDHelper.Santa.GIFTSTATUSES)) 
+        {
             await Task.CompletedTask;
             return;
         }
 
-        var santa = new Santa(s, e.Guild);
-        var interactivity = new InteractivityHelper<SantaParticipant>(s, santa.Participants, IDHelper.Santa.GIFTSTATUSES, e.Id.Split('\\')[PAGE_INDEX], 10);
+        var santa = new Santa(e.Guild);
+        var interactivity = new InteractivityHelper<Santa.SantaParticipant>(santa.Participants, IDHelper.Santa.GIFTSTATUSES, IDHelper.GetId(e.Id, PAGE_INDEX), 10);
 
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)

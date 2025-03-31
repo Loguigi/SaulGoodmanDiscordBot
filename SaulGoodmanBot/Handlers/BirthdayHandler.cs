@@ -1,63 +1,76 @@
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
-using SaulGoodmanBot.Library;
-using SaulGoodmanBot.Helpers;
-using SaulGoodmanBot.Controllers;
 using System.Reflection;
 using System.Timers;
+using SaulGoodmanLibrary;
+using SaulGoodmanLibrary.Helpers;
 
 namespace SaulGoodmanBot.Handlers;
 
-public static class BirthdayHandler {
-    public static async Task HandleBirthdayMessage(ElapsedEventArgs e) {
-        foreach (var guild in Bot.ServerConfig) {
+public static class BirthdayHandler 
+{
+    public static async Task HandleBirthdayMessage(object source, ElapsedEventArgs e) 
+    {
+        Console.WriteLine($"Timer elapsed: {DateTime.Now}");
+        foreach (var guild in DiscordHelper.ServerConfigs) 
+        {
+            guild.Value.Load();
             if (!guild.Value.BirthdayNotifications)
                 continue;
             
-            if (e.SignalTime.Hour != guild.Value.BirthdayTimer.Hour)
+            if (DateTime.Now.Hour != guild.Value.BirthdayTimerHour)
                 continue;
 
             var embed = new DiscordEmbedBuilder()
                 .WithColor(DiscordColor.HotPink);
 
-            var birthdays = new ServerBirthdays(Bot.Client!, guild.Key);
+            var birthdays = new Birthdays(guild.Key);
 
-            foreach (var birthday in birthdays) {
-                if (birthday.HasBirthdayToday) {
-                    embed.WithDescription($"# {DiscordEmoji.FromName(Bot.Client!, ":birthday:", false)} {guild.Value.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
+            foreach (var birthday in birthdays.Members) 
+            {
+                if (birthday.HasBirthdayToday) 
+                {
+                    embed.WithDescription($"# {DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)} {guild.Value.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
                     await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
-                } else if (birthday.HasUpcomingBirthday) {
-                    embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__5__** days!").WithFooter($"{DiscordEmoji.FromName(Bot.Client!, ":birthday:", false)} {birthday} {DiscordEmoji.FromName(Bot.Client!, ":birthday:", false)}");
-                    await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
+                } 
+                else if (birthday.HasUpcomingBirthday) 
+                {
+                    embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__{birthday.DaysUntilBirthday.Days}__** {(birthday.DaysUntilBirthday.Days == 1 ? "day" : "days")}!").WithFooter($"{DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)} {birthday.NextBirthday:D} {DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)}");
+                    await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(embed));
                 }
             }
         }
     }
 
-    public static async Task HandleBirthdayList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
-        if (!e.Id.Contains(IDHelper.Birthdays.LIST)) {
+    public static async Task HandleBirthdayList(DiscordClient s, ComponentInteractionCreateEventArgs e) 
+    {
+        if (!e.Id.Contains(IDHelper.Birthdays.LIST)) 
+        {
             await Task.CompletedTask;
             return;
         }
 
-        try {
-            var birthdays = new ServerBirthdays(s, e.Guild);
-            var interactivity = new InteractivityHelper<Birthday>(s, birthdays.Birthdays, IDHelper.Birthdays.LIST, IDHelper.GetId(e.Id, PAGE_INDEX), 10);
+        try 
+        {
+            var birthdays = new Birthdays(e.Guild).GetInteractivity(IDHelper.GetId(e.Id, PAGE_INDEX));
 
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
                 .WithTitle("Birthdays")
-                .WithDescription(interactivity.IsEmpty())
+                .WithDescription(birthdays.IsEmpty())
                 .WithColor(DiscordColor.Magenta)
-                .WithFooter(interactivity.PageStatus);
+                .WithFooter(birthdays.PageStatus);
 
-            foreach (var birthday in interactivity) {
-                embed.Description += $"### {birthday.User.Mention}: {birthday.BDay:MMMM d} `({birthday.Age + 1})`\n";
+            foreach (var birthday in birthdays)
+            {
+                embed.Description += $"### {birthday.User.Mention}: {birthday.Birthday:MMMM d} `({birthday.Age + 1})`\n";
             }
 
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
-        } catch (Exception ex) {
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(birthdays.AddPageButtons().AddEmbed(embed)));
+        } 
+        catch (Exception ex) 
+        {
             ex.Source = MethodBase.GetCurrentMethod()!.Name + "(): " + ex.Source;
             throw;
         }

@@ -1,17 +1,21 @@
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
-using SaulGoodmanBot.Library;
-using SaulGoodmanBot.Helpers;
-using SaulGoodmanBot.Controllers;
+using SaulGoodmanLibrary;
+using SaulGoodmanLibrary.Helpers;
 
 namespace SaulGoodmanBot.Handlers;
 
 public static class GeneralHandlers {
 
-    public static async Task HandleMemberJoin(DiscordClient s, GuildMemberAddEventArgs e) {
+    public static async Task HandleMemberJoin(DiscordClient s, GuildMemberAddEventArgs e) 
+    {
         var config = new ServerConfig(e.Guild);
-        if (config.WelcomeMessage == null) {
+        var member = new ServerMember(e.Guild, e.Member);
+        await member.Activate();
+        
+        if (config.WelcomeMessage == null) 
+        {
             await Task.CompletedTask;
             return;
         }
@@ -22,15 +26,17 @@ public static class GeneralHandlers {
                 .WithColor(DiscordColor.Green))
             .SendAsync(config.DefaultChannel);
 
-        var roles = new ServerRoles(e.Guild, s);
-        if (roles.IsNotSetup && !config.SendRoleMenuOnMemberJoin) {
+        var roles = new ServerRoles(e.Guild);
+        if (roles.IsNotSetup && !config.SendRoleMenuOnMemberJoin) 
+        {
             await Task.CompletedTask;
             return;
         }
 
         var roleOptions = new List<DiscordSelectComponentOption>();
-        foreach (var r in roles) {
-            roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description, false));
+        foreach (var r in roles.Roles) 
+        {
+            roleOptions.Add(new DiscordSelectComponentOption(r.Role.Name, r.Role.Id.ToString(), r.Description));
         }
         DiscordSelectComponent roleDropdown = roles.AllowMultipleRoles ? new(IDHelper.Roles.MENU, "Select roles", roleOptions, false, 1, roleOptions.Count) : new(IDHelper.Roles.MENU, "Select a role", roleOptions, false);
 
@@ -41,11 +47,12 @@ public static class GeneralHandlers {
             .WithFooter(roles.AllowMultipleRoles ? "Can have multiple" : "Can only have one")
             .WithColor(DiscordColor.Turquoise);
 
-        foreach (var r in roles) {
+        foreach (var r in roles.Roles) 
+        {
             if (r == roles.Roles.First())
                 embed.AddField("Available Roles", r.Role.Mention);
             else
-                embed.Fields.Where(x => x.Name == "Available Roles").First().Value += $", {r.Role.Mention}";
+                embed.Fields.First(x => x.Name == "Available Roles").Value += $", {r.Role.Mention}";
         }
         await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent(e.Member.Mention).AddMention(new UserMention(e.Member)).AddEmbed(embed).AddComponents(roleDropdown));
 
@@ -54,14 +61,14 @@ public static class GeneralHandlers {
         s.ComponentInteractionCreated += RoleHandler.HandleMenu;
     }
 
-    public static async Task HandleMemberLeave(DiscordClient s, GuildMemberRemoveEventArgs e) {
+    public static async Task HandleMemberLeave(DiscordClient s, GuildMemberRemoveEventArgs e) 
+    {
         var config = new ServerConfig(e.Guild);
-        var birthdays = new ServerBirthdays(s, e.Guild);
-
-        if (birthdays[e.Member] != null)
-            birthdays.Remove(birthdays[e.Member]!);
+        var member = new ServerMember(e.Guild, e.Member);
+        await member.Deactivate();
         
-        if (config.LeaveMessage == null) {
+        if (config.LeaveMessage == null) 
+        {
             await Task.CompletedTask;
             return;
         }
@@ -73,7 +80,8 @@ public static class GeneralHandlers {
             .SendAsync(config.DefaultChannel);
     }
 
-    public static async Task HandleServerJoin(DiscordClient s, GuildCreateEventArgs e) {
+    public static async Task HandleServerJoin(DiscordClient s, GuildCreateEventArgs e) 
+    {
         var embed = new DiscordEmbedBuilder()
             .WithAuthor("Saul Goodman", "", ImageHelper.Images["Heisenberg"])
             .WithTitle(HelpText.Setup.First().Key)
@@ -82,7 +90,8 @@ public static class GeneralHandlers {
             .WithColor(DiscordColor.Orange);
         
         var pages = new List<DiscordSelectComponentOption>();
-        foreach (var p in HelpText.Setup.Keys) {
+        foreach (var p in HelpText.Setup.Keys) 
+        {
             pages.Add(new DiscordSelectComponentOption(p, p));
         }
         var dropdown = new DiscordSelectComponent(IDHelper.Help.SETUP, "Select a page...", pages);
@@ -90,7 +99,7 @@ public static class GeneralHandlers {
         await e.Guild.GetDefaultChannel().SendMessageAsync("https://tenor.com/view/saul-goodman-better-call-saul-saul-goodman3d-meme-breaking-bad-gif-24027228");
         await e.Guild.GetDefaultChannel().SendMessageAsync(new DiscordMessageBuilder().AddEmbed(embed).AddComponents(dropdown));
 
-        s.ComponentInteractionCreated -= HelpHandler.HandleSetupHelp;
-        s.ComponentInteractionCreated += HelpHandler.HandleSetupHelp;
+        // s.ComponentInteractionCreated -= HelpHandler.HandleSetupHelp;
+        // s.ComponentInteractionCreated += HelpHandler.HandleSetupHelp;
     }
 }
