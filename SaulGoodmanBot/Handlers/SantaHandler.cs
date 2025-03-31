@@ -1,116 +1,97 @@
-// using DSharpPlus;
-// using DSharpPlus.EventArgs;
-// using DSharpPlus.Entities;
-// using SaulGoodmanBot.Helpers;
-// using SaulGoodmanBot.Controllers;
-// using SaulGoodmanBot.Library;
+using DSharpPlus;
+using DSharpPlus.EventArgs;
+using DSharpPlus.Entities;
+using SaulGoodmanLibrary;
+using SaulGoodmanLibrary.Helpers;
 
-// namespace SaulGoodmanBot.Handlers;
+namespace SaulGoodmanBot.Handlers;
 
-// public static class SantaHandler {
-//     public static async Task HandleParticipationDeadlineCheck(DiscordClient s, MessageCreateEventArgs e) {
-//         var santa = new Santa(s, e.Guild);
+public static class SantaHandler 
+{
+    public static async Task HandleParticipationDeadlineCheck(DiscordClient s, MessageCreateEventArgs e) 
+    {
+        var santa = new Santa(e.Guild);
 
-//         if (!santa.Config.HasStarted || santa.Config.LockedIn || e.Message.CreationTimestamp.LocalDateTime != santa.Config.ParticipationDeadline) {
-//             await Task.CompletedTask;
-//             return;
-//         }
+        if (!santa.Config.HasStarted || santa.Config.LockedIn || e.Message.CreationTimestamp.LocalDateTime != santa.Config.ParticipationDeadline) 
+        {
+            await Task.CompletedTask;
+            return;
+        }
 
-//         var config = new ServerConfig(e.Guild);
+        var config = new ServerConfig(e.Guild);
 
-//         if (santa.NotEnoughParticipants()) {
-//             await config.DefaultChannel.SendMessageAsync("Not enough participants for Secret Santa. Changing deadline to tomorrow");
-//             santa.Config.ParticipationDeadline.AddDays(1);
-//             santa.Config.Update();
-//             return;
-//         }
+        if (santa.NotEnoughParticipants) 
+        {
+            await config.DefaultChannel.SendMessageAsync("Not enough participants for Secret Santa. Changing deadline to tomorrow");
+            santa.Config.ParticipationDeadline = santa.Config.ParticipationDeadline.AddDays(1);
+            await santa.Config.Update();
+            return;
+        }
 
-//         santa.AssignNames();
+        await santa.AssignNames();
 
-//         var embed = new DiscordEmbedBuilder()
-//             .WithAuthor("ATTENTION", "https://youtu.be/a3_PPdjD6mg?si=4q_PpummrNXtmZmP", ImageHelper.Images["Heisenberg"])
-//             .WithTitle("Participation deadline has passed")
-//             .WithDescription("### </santa view giftee:1177333432649531493> to see who you're gifting!")
-//             .WithColor(DiscordColor.Orange)
-//             .WithFooter("(Nobody else will see)");
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor("ATTENTION", "https://youtu.be/a3_PPdjD6mg?si=4q_PpummrNXtmZmP", ImageHelper.Images["Heisenberg"])
+            .WithTitle("Participation deadline has passed")
+            .WithDescription("### </santa view giftee:1177333432649531493> to see who you're gifting!")
+            .WithColor(DiscordColor.Orange)
+            .WithFooter("(Nobody else will see)");
 
-//         await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent(e.Guild.EveryoneRole.Mention).AddEmbed(embed));
-//     }
+        await config.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent(e.Guild.EveryoneRole.Mention).AddEmbed(embed));
+    }
 
-//     public static async Task HandleParticipantList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
-//         if (!e.Id.Contains(IDHelper.Santa.PARTICIPANTS)) {
-//             await Task.CompletedTask;
-//             return;
-//         }
+    public static async Task HandleParticipantList(DiscordClient s, ComponentInteractionCreateEventArgs e) 
+    {
+        if (!e.Id.Contains(IDHelper.Santa.PARTICIPANTS)) 
+        {
+            await Task.CompletedTask;
+            return;
+        }
 
-//         var santa = new Santa(s, e.Guild);
-//         var interactivity = new InteractivityHelper<SantaParticipant>(s, santa.Participants, IDHelper.Santa.PARTICIPANTS, e.Id.Split('\\')[PAGE_INDEX], 10, "There are no participants yet");
+        var santa = new Santa(e.Guild);
+        var interactivity = new InteractivityHelper<Santa.SantaParticipant>(santa.Participants, IDHelper.Santa.PARTICIPANTS, IDHelper.GetId(e.Id, PAGE_INDEX), 10, "There are no participants yet");
 
-//         var embed = new DiscordEmbedBuilder()
-//             .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
-//             .WithTitle("Secret Santa Participants")
-//             .WithDescription(interactivity.IsEmpty())
-//             .WithThumbnail(ImageHelper.Images["BetterCallSanta"])
-//             .WithColor(DiscordColor.SapGreen)
-//             .WithFooter(interactivity.PageStatus);
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
+            .WithTitle("Secret Santa Participants")
+            .WithDescription(interactivity.IsEmpty())
+            .WithThumbnail(ImageHelper.Images["BetterCallSanta"])
+            .WithColor(DiscordColor.SapGreen)
+            .WithFooter(interactivity.PageStatus);
 
-//         foreach (var p in interactivity) {
-//             embed.Description += $"{p.User.Mention} ({p.FirstName})\n";
-//         }
+        foreach (var p in interactivity) 
+        {
+            embed.Description += $"{p.User.Mention} ({p.FirstName})\n";
+        }
 
-//         await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
-//     }
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+    }
 
-//     public static async Task HandleGiftStatusesList(DiscordClient s, ComponentInteractionCreateEventArgs e) {
-//         if (!e.Id.Contains(IDHelper.Santa.GIFTSTATUSES)) {
-//             await Task.CompletedTask;
-//             return;
-//         }
+    public static async Task HandleGiftStatusesList(DiscordClient s, ComponentInteractionCreateEventArgs e) 
+    {
+        if (!e.Id.Contains(IDHelper.Santa.GIFTSTATUSES)) 
+        {
+            await Task.CompletedTask;
+            return;
+        }
 
-//         var santa = new Santa(s, e.Guild);
-//         var interactivity = new InteractivityHelper<SantaParticipant>(s, santa.Participants, IDHelper.Santa.GIFTSTATUSES, e.Id.Split('\\')[PAGE_INDEX], 10);
+        var santa = new Santa(e.Guild);
+        var interactivity = new InteractivityHelper<Santa.SantaParticipant>(santa.Participants, IDHelper.Santa.GIFTSTATUSES, IDHelper.GetId(e.Id, PAGE_INDEX), 10);
 
-//         var embed = new DiscordEmbedBuilder()
-//             .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
-//             .WithTitle("Secret Santa Gift Statuses")
-//             .WithDescription("List of people that have gifts ready for their Secret Santa\n\n")
-//             .WithColor(DiscordColor.Rose)
-//             .WithFooter(interactivity.PageStatus);
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor(e.Guild.Name, "", e.Guild.IconUrl)
+            .WithTitle("Secret Santa Gift Statuses")
+            .WithDescription("List of people that have gifts ready for their Secret Santa\n\n")
+            .WithColor(DiscordColor.Rose)
+            .WithFooter(interactivity.PageStatus);
 
-//         foreach (var p in interactivity) {
-//             embed.Description += $"{(p.GiftReady ? DiscordEmoji.FromName(s, ":white_check_mark:", false) : DiscordEmoji.FromName(s, ":x:", false))} {p.User.Mention} ({p.FirstName}) {(p.GiftReady ? "`READY`" : "`NOT READY`")}\n";
-//         }
+        foreach (var p in interactivity) 
+        {
+            embed.Description += $"{(p.GiftReady ? DiscordEmoji.FromName(s, ":white_check_mark:", false) : DiscordEmoji.FromName(s, ":x:", false))} {p.User.Mention} ({p.FirstName}) {(p.GiftReady ? "`READY`" : "`NOT READY`")}\n";
+        }
 
-//         await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
-//     }
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(interactivity.AddPageButtons().AddEmbed(embed)));
+    }
 
-//     public static async Task HandleWishlistRemove(DiscordClient s, ComponentInteractionCreateEventArgs e) {
-//         if (e.Id != IDHelper.Santa.WISHLISTREMOVE) {
-//             await Task.CompletedTask;
-//             return;
-//         }
-
-//         var user = new Santa(s, e.Guild)[e.User] ?? throw new Exception(""); // TODO
-
-//         var embed = new DiscordEmbedBuilder()
-//             .WithTitle("Wishlist Remove")
-//             .WithDescription("Removed:\n\n")
-//             .WithColor(DiscordColor.DarkRed);
-        
-//         if (e.Values.Contains("CANCEL")) {
-//             await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed.WithDescription("### Cancelled"))));
-//             return;
-//         }
-
-//         foreach (var i in e.Values) {
-//             user.EditWishlist(e.Guild.Id, DataOperations.Delete, i);
-//             embed.Description += $"{DiscordEmoji.FromName(s, ":x:", false)} {i}\n";
-//         }
-
-//         await e.Interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, new DiscordInteractionResponseBuilder(new DiscordMessageBuilder().AddEmbed(embed)));
-
-//         s.ComponentInteractionCreated -= HandleWishlistRemove;
-//     }
-
-//     private const int PAGE_INDEX = 1;
-// }
+    private const int PAGE_INDEX = 1;
+}

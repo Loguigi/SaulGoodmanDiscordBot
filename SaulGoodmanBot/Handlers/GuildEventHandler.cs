@@ -5,7 +5,8 @@ using DSharpPlus.EventArgs;
 namespace SaulGoodmanBot.Handlers;
 
 public static class GuildEventHandler {
-    public static async Task HandleGuildEventCreate(DiscordClient s, ScheduledGuildEventCreateEventArgs e) {
+    public static async Task HandleGuildEventCreate(DiscordClient s, ScheduledGuildEventCreateEventArgs e) 
+    {
         // TODO if Config
         
         _ = await new DiscordMessageBuilder()
