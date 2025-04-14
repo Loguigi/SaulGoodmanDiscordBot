@@ -28,15 +28,22 @@ public static class BirthdayHandler
 
             foreach (var birthday in birthdays.Members) 
             {
-                if (birthday.HasBirthdayToday) 
+                switch (birthday.DaysUntilBirthday.Days)
                 {
-                    embed.WithDescription($"# {DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)} {guild.Value.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
-                    await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
-                } 
-                else if (birthday.HasUpcomingBirthday) 
-                {
-                    embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__{birthday.DaysUntilBirthday.Days}__** {(birthday.DaysUntilBirthday.Days == 1 ? "day" : "days")}!").WithFooter($"{DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)} {birthday.NextBirthday:D} {DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)}");
-                    await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(embed));
+                    case 0:
+                        embed.WithDescription($"# {DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)} {guild.Value.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
+                        await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
+                        break;
+                    case 1:
+                        embed.WithDescription($"# {birthday.User.Mention}'s birthday is **__tomorrow__**!").WithFooter($"{DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)} {birthday.NextBirthday:D} {DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)}");
+                        await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(embed));
+                        break;
+                    case 3:
+                    case 5:
+                    case 7:
+                        embed.WithDescription($"# {birthday.User.Mention}'s birthday is in **__{birthday.DaysUntilBirthday.Days}__** {(birthday.DaysUntilBirthday.Days == 1 ? "day" : "days")}!").WithFooter($"{DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)} {birthday.NextBirthday:D} {DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)}");
+                        await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(embed));
+                        break;
                 }
             }
         }
