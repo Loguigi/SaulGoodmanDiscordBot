@@ -28,6 +28,7 @@ public static class IDHelper
     public static class Misc 
     {
         public const string FLIP = "COINFLIP";
+        public const string WHO = "WHOAREYOULIST";
     }
 
     public static class Levels 
