@@ -79,6 +79,7 @@ public class Bot
         Slash.RegisterCommands<RoleCommands>();
         Slash.RegisterCommands<LevelCommands>();
         Slash.RegisterCommands<GuildEventCommands>();
+        Slash.RegisterCommands<IdentityCommands>();
 
         // Secret Santa seasonal commands/handlers
         if (DateTime.Now.Month == 11 || DateTime.Now.Month == 12 || DateTime.Now.Month == 1) 
