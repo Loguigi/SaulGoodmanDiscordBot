@@ -28,12 +28,15 @@ public static class BirthdayHandler
 
             foreach (var birthday in birthdays.Members) 
             {
+                if (birthday.HasBirthdayToday)
+                {
+                    embed.WithDescription($"# {DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)} {guild.Value.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
+                    await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
+                    continue;
+                }
+                
                 switch (birthday.DaysUntilBirthday.Days)
                 {
-                    case 0:
-                        embed.WithDescription($"# {DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)} {guild.Value.BirthdayMessage} {birthday.User.Mention} ({birthday.Age})");
-                        await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().WithContent("@everyone").AddMention(new EveryoneMention()).AddEmbed(embed));
-                        break;
                     case 1:
                         embed.WithDescription($"# {birthday.User.Mention}'s birthday is **__tomorrow__**!").WithFooter($"{DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)} {birthday.NextBirthday:D} {DiscordEmoji.FromName(DiscordHelper.Client, ":birthday:", false)}");
                         await guild.Value.DefaultChannel.SendMessageAsync(new DiscordMessageBuilder().AddEmbed(embed));
