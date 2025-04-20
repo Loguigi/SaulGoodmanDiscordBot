@@ -24,11 +24,12 @@ public static class LevelHandler
             }
             var levels = new Levels(e.Guild);
             var user = levels[e.Author];
-
+            
+            levelledUp = await levels.GrantExp(user);
+            user = levels[e.Author];
             //if (DateTime.Now >= user.MsgLastSent.AddMinutes(1)) 
             //{
-                levelledUp = await levels.GrantExp(user);
-                user = levels[e.Author];
+            //
             //}
 
             if (levelledUp) 
