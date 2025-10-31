@@ -1,0 +1,38 @@
+namespace GarryLibrary.Helpers;
+
+public record FlipData(FlipResult LastFlip, int HeadCount, int TailsCount)
+{
+    public string ToButtonId() => $@"{IDHelper.Misc.FLIP}\{LastFlip}\{HeadCount}\{TailsCount}";
+
+    public FlipData Flip(FlipData data, FlipResult flip)
+    {
+        return flip switch
+        {
+            FlipResult.Heads => new FlipData(FlipResult.Heads, data.HeadCount + 1, data.TailsCount),
+            FlipResult.Tails => new FlipData(FlipResult.Tails, data.HeadCount, data.TailsCount + 1),
+            _ => throw new ArgumentException("Invalid flip result")
+        };
+    }
+    
+    public static FlipData FirstFlip(FlipResult flip) => flip switch
+    {
+        FlipResult.Heads => new FlipData(FlipResult.Heads, 1, 0),
+        FlipResult.Tails => new FlipData(FlipResult.Tails, 0, 1),
+        _ => throw new ArgumentException("Invalid flip result")
+    };
+    
+    public static FlipData FromButtonId(string buttonId)
+    {
+        var parts = buttonId.Split('\\');
+        var lastFlip = Enum.Parse<FlipResult>(parts[1]);
+        var headsCount = int.Parse(parts[2]);
+        var tailsCount = int.Parse(parts[3]);
+        return new FlipData(lastFlip, headsCount, tailsCount);
+    }
+}
+
+public enum FlipResult
+{
+    Heads,
+    Tails
+}

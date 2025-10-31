@@ -1,0 +1,18 @@
+﻿services:
+  dev:
+    image: garrybot
+    env_file:
+      - /Volumes/Mr. L/.config/.env.development
+    build:
+      context: .
+      dockerfile: GarryBot/Dockerfile
+    restart: unless-stopped
+
+  prod:
+    image: garrybot-1
+    env_file:
+      - /Volumes/Mr. L/.config/.env.production
+    build:
+      context: .
+      dockerfile: GarryBot/Dockerfile
+    restart: unless-stopped

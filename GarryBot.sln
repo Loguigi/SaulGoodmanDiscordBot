@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GarryBot", "GarryBot\GarryBot.csproj", "{CAA96387-4B80-4B03-B46D-FB534E21A150}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GarryLibrary", "GarryLibrary\GarryLibrary.csproj", "{2B4F611F-7A37-47A3-8B12-AFF17C846A75}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{81A132C0-5E97-4121-8409-9AA3DD39A7B1}"
+	ProjectSection(SolutionItems) = preProject
+		compose.yaml = compose.yaml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CAA96387-4B80-4B03-B46D-FB534E21A150}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAA96387-4B80-4B03-B46D-FB534E21A150}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAA96387-4B80-4B03-B46D-FB534E21A150}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAA96387-4B80-4B03-B46D-FB534E21A150}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B4F611F-7A37-47A3-8B12-AFF17C846A75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B4F611F-7A37-47A3-8B12-AFF17C846A75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B4F611F-7A37-47A3-8B12-AFF17C846A75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B4F611F-7A37-47A3-8B12-AFF17C846A75}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
