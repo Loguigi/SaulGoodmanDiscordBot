@@ -30,12 +30,13 @@ public class ServerMemberManager(
                 {
                     GuildId = (long)guild.Id,
                     UserId = (long)user.Id,
-                    User = user,
                     Level = 1,
                     Experience = 0,
                 };
                 await serverMemberRepository.CreateAsync(member);
             }
+            member.User = user;
+            member.Guild = guild;
 
             return member;
         }
@@ -57,7 +58,35 @@ public class ServerMemberManager(
             foreach (var member in members)
             {
                 member.User = await GetUserAsync(member.UserId);
+                member.Guild = guild;
             }
+
+            foreach (var user in guild.Members.Values)
+            {
+                if (user.IsBot) continue;
+                
+                var member = members.FirstOrDefault(x => x.UserId == (long)user.Id);
+
+                if (member != null)
+                {
+                    if (member.Active) continue;
+                    
+                    member.Active = true;
+                    await UpdateMemberAsync(member);
+                }
+                else
+                {
+                    var newMember = new ServerMember()
+                    {
+                        UserId = (long)user.Id,
+                        GuildId = (long)guild.Id
+                    };
+
+                    await CreateMemberAsync(newMember);
+                }
+            }
+            
+            members = members.Where(x => x.Active).ToList();
             members = members.OrderByDescending(x => x.Level).ThenByDescending(y => y.Experience).ToList();
 
             for (var i = 0; i < members.Count; i++)

@@ -6,6 +6,7 @@ using DSharpPlus.Commands.Processors.TextCommands.Parsing;
 using DSharpPlus.Extensions;
 using GarryBot.Commands;
 using GarryBot.Handlers;
+using GarryBot.Services;
 using GarryLibrary.Data;
 using GarryLibrary.Managers;
 using Microsoft.EntityFrameworkCore;
@@ -25,9 +26,14 @@ var host = Host.CreateDefaultBuilder(args)
             logging.ClearProviders();
             logging.AddConsole();
             logging.AddDebug();
+#if DEBUG
             logging.SetMinimumLevel(LogLevel.Information);
+#else
+            logging.SetMinimumLevel(LogLevel.Warning);
+#endif
         });
     
+        #region Data Source Service
         if (!string.IsNullOrEmpty(sqlCnn))
         {
             services.AddDbContext<GarryDbContext>(options =>
@@ -39,21 +45,30 @@ var host = Host.CreateDefaultBuilder(args)
         }
 
         services.AddScoped(typeof(IDataRepository<>), typeof(GarryRepository<>));
+        #endregion
+        
+        #region Data Managers
         services.AddScoped<ServerMemberManager>();
         services.AddScoped<SecretSantaManager>();
         services.AddScoped<WheelPickerManager>();
         services.AddScoped<ServerConfigManager>();
+        #endregion
         
+        #region Event Handlers
         services.AddScoped<LevelHandlers>();
         services.AddScoped<MiscHandlers>();
+        #endregion
+        
+        #region Other Services
+        services.AddSingleton<Random>();
+        services.AddHostedService<DailyEventService>();
+        #endregion
     
+        #region Discord Service
         services.AddDiscordClient(discordToken, DiscordIntents.All);
         services.AddCommandsExtension((provider, extension) =>
         {
-            extension.AddCommands(typeof(BirthdayCommands).Assembly);
-            extension.AddCommands(typeof(LevelCommands).Assembly);
-            extension.AddCommands(typeof(MiscCommands).Assembly);
-            extension.AddCommands(typeof(WheelPickerCommands).Assembly);
+            extension.AddCommands(typeof(Program).Assembly);
             
             TextCommandProcessor textCommandProcessor = new(new TextCommandConfiguration
             {
@@ -66,7 +81,7 @@ var host = Host.CreateDefaultBuilder(args)
         {
             RegisterDefaultCommandProcessors = true,
         });
-        services.AddSingleton<Random>();
+        #endregion
     })
 .Build();
 

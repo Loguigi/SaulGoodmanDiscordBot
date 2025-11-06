@@ -23,6 +23,8 @@ public class ServerMember : IPageable
     #region Unmapped Properties
     [NotMapped] public DiscordUser User { get; set; } = null!;
     [NotMapped] public DiscordGuild? Guild { get; set; }
+    [NotMapped] public string DisplayName => Name ?? User.Username;
+    [NotMapped] public string DisplayMention => Name ?? User.Mention;
     [NotMapped] public int Rank { get; set; }
     [NotMapped] public int ExpNeededForNextLevel => 2 * (int)Math.Pow(Level + 1, 2) - 2;
     [NotMapped] public string? FormattedBirthday => Birthday?.ToString("MMMM d, yyyy");
@@ -62,10 +64,10 @@ public class ServerMember : IPageable
 
     public string GetPageItemDisplay(string context) => context switch
     {
-        IDHelper.Levels.LEADERBOARD => $"{GetRankText()} {User.Mention} `LVL {Level}` `{Experience} XP`",
+        IDHelper.Levels.LEADERBOARD => $"{GetRankText()} {DisplayMention} `LVL {Level}` `{Experience} XP`",
         IDHelper.Misc.WHO => $"### * {User.Mention} ➡️ {Name ?? "`?`"}",
-        IDHelper.Birthdays.LIST => $"### {User.Mention}: {Birthday:MMMM d} `({Age + 1})`",
-        IDHelper.Misc.EGG => $"### 🥚 {Name ?? User.Mention}: `{EggCount}` 🥚",
+        IDHelper.Birthdays.LIST => $"### {DisplayMention}: {Birthday:MMMM d} `({Age + 1})`",
+        IDHelper.Misc.EGG => $"### 🥚 {DisplayMention}: `{EggCount}` 🥚",
         _ => ""
     };
 

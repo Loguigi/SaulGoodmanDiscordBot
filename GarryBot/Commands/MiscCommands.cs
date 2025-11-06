@@ -40,7 +40,7 @@ public class MiscCommands(
                 ctx.User.Username, ctx.Guild?.Name);
             
             var members = await memberManager.GetMembersAsync(ctx.Guild!);
-            await ctx.RespondWithModalAsync(
+            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder(MessageTemplates.CreateEggCounter(ctx.Guild!, members, "1")));
         }
         catch (Exception ex)
@@ -61,8 +61,8 @@ public class MiscCommands(
             var flip = random.Next(2) == 1 ? FlipResult.Heads : FlipResult.Tails;
             var member = await memberManager.GetMember(ctx.User, ctx.Guild!);
             
-            await ctx.RespondWithModalAsync(new DiscordInteractionResponseBuilder(
-                MessageTemplates.CreateCoinFlip(member, FlipData.FirstFlip(flip))));
+            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder(MessageTemplates.CreateCoinFlip(member, FlipData.FirstFlip(flip))));
         }
         catch (Exception ex)
         {

@@ -118,6 +118,18 @@ public static class MessageTemplates
             .ToEmbed();
     }
 
+    public static DiscordMessageBuilder CreateBirthdayNotification(ServerMember member, string message, bool isBirthday = false)
+    {
+        var builder = new GarryMessageBuilder()
+            .WithTheme(EmbedTheme.Birthday)
+            .WithDescription($"# {message}")
+            .WithFooter($"🎂 {(isBirthday ? DateTime.Now.ToString("D") : member.NextBirthday!.Value.ToString("D"))}");
+
+        if (isBirthday) builder.WithEveryoneMention();
+        
+        return builder.Build();
+    }
+
     #endregion
 
     #region Miscellaneous

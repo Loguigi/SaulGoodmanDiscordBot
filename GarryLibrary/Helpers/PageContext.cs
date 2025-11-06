@@ -44,10 +44,10 @@ public class PageContext<T>(List<T> data, int itemsPerPage, string currentPage, 
 
     public DiscordComponent[] GetPageButtons() =>
     [
-        new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{FIRST_PAGE}", "", CurrentPage == 1, new DiscordComponentEmoji(":track_previous:")),
-        new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{CurrentPage - 1}", "", CurrentPage - 1 < 1, new DiscordComponentEmoji("rewind")),
-        new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{CurrentPage + 1}", "", CurrentPage + 1 > CurrentPage, new DiscordComponentEmoji("fast_forward")),
-        new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{LAST_PAGE}", "", CurrentPage == TotalPages, new DiscordComponentEmoji(":track_next:"))
+        new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{FIRST_PAGE}", "", CurrentPage == 1, new DiscordComponentEmoji("⏮️")),
+        new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{CurrentPage - 1}", "", CurrentPage - 1 < 1, new DiscordComponentEmoji("⏪")),
+        new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{CurrentPage + 1}", "", CurrentPage + 1 > CurrentPage, new DiscordComponentEmoji("⏩")),
+        new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{LAST_PAGE}", "", CurrentPage == TotalPages, new DiscordComponentEmoji("⏭️"))
     ];
 
     private int ParsePage(string page) => page switch

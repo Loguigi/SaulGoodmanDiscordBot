@@ -92,12 +92,7 @@ public class DailyEventService : IHostedService, IDisposable
             var config = await configManager.GetConfig(guild);
             var members = await memberManager.GetMembersAsync(guild);
             
-            // Check for birthdays
             await CheckBirthdays(guild, members, config);
-            
-            // Check for other events
-            // await CheckSantaExchange(guild, config);
-            // await CheckOtherEvents(guild);
         }
         catch (Exception ex)
         {
@@ -110,26 +105,30 @@ public class DailyEventService : IHostedService, IDisposable
         List<ServerMember> members, 
         ServerConfig config)
     {
-        var todaysBirthdays = members.Where(m => m.HasBirthdayToday == true).ToList();
+        var channel = config.DefaultChannel ?? guild.GetDefaultChannel();
         
-        if (todaysBirthdays.Any())
+        foreach (var member in members)
         {
-            _logger.LogInformation("Found {Count} birthday(s) in {GuildName}", 
-                todaysBirthdays.Count, guild.Name);
-            
-            var channel = config.DefaultChannel ?? guild.GetDefaultChannel();
-            
-            foreach (var member in todaysBirthdays)
+            string message;
+            if (member.HasBirthdayToday.HasValue && member.HasBirthdayToday.Value)
             {
-                var embed = new GarryMessageBuilder()
-                    .WithTitle("🎉 Happy Birthday! 🎉")
-                    .WithDescription($"Happy birthday {member.User.Mention}! 🎂\nThey're turning **{member.Age}** today!")
-                    .WithThumbnail(member.User.AvatarUrl)
-                    .WithTheme(EmbedTheme.Birthday)
-                    .WithTimestamp()
-                    .ToEmbed();
-                
-                await channel!.SendMessageAsync(embed);
+                message = $"🎉 {config.BirthdayMessage} {member.DisplayMention} (**{member.Age}**) 🎉";
+                await channel!.SendMessageAsync(MessageTemplates.CreateBirthdayNotification(member, message, true));
+                continue;
+            }
+
+            if (!member.DaysUntilBirthday.HasValue) continue;
+
+            message = member.DaysUntilBirthday.Value.Days switch
+            {
+                1 => $"🎉 {member.DisplayMention}'s birthday is **__tomorrow__**! 🎉",
+                3 or 5 or 7 => $"🎉 {member.DisplayMention}'s birthday is in **__{member.DaysUntilBirthday.Value.Days} days__**! 🎉",
+                _ => string.Empty
+            };
+
+            if (!string.IsNullOrEmpty(message))
+            {
+                await channel!.SendMessageAsync(MessageTemplates.CreateBirthdayNotification(member, message));
             }
         }
     }

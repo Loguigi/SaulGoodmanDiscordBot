@@ -41,6 +41,24 @@ public class GarryMessageBuilder
         return this;
     }
 
+    public GarryMessageBuilder WithUserMention(DiscordUser user)
+    {
+        _builder.WithContent(user.Mention).AddMention(new UserMention(user));
+        return this;
+    }
+
+    public GarryMessageBuilder WithRoleMention(DiscordRole role)
+    {
+        _builder.WithContent(role.Mention).AddMention(new RoleMention(role));
+        return this;
+    }
+
+    public GarryMessageBuilder WithEveryoneMention()
+    {
+        _builder.WithContent("@everyone").AddMention(new EveryoneMention());
+        return this;
+    }
+
     public GarryMessageBuilder WithField(string name, string value, bool inline = false)
     {
         _embed.AddField(name, value, inline);
@@ -71,7 +89,7 @@ public class GarryMessageBuilder
 
     public GarryMessageBuilder WithUserBranding(ServerMember member)
     {
-        _embed.WithAuthor(member.Name ?? member.User.GlobalName, "", member.User.AvatarUrl);
+        _embed.WithAuthor(member.DisplayName, "", member.User.AvatarUrl);
         return this;
     }
 
@@ -88,7 +106,7 @@ public class GarryMessageBuilder
         WithGuildBranding(guild);
         if (string.IsNullOrWhiteSpace(prefix))
         {
-            _embed.WithTitle($"{member.Name ?? member.User.GlobalName}")
+            _embed.WithTitle($"{member.DisplayName}")
                 .WithThumbnail(member.User.AvatarUrl);
         }
         else

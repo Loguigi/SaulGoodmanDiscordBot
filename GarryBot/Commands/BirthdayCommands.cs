@@ -6,6 +6,7 @@ using DSharpPlus.Entities;
 using GarryLibrary.Helpers;
 using GarryLibrary.Managers;
 using GarryLibrary.Models;
+using Microsoft.Extensions.Logging;
 
 namespace GarryBot.Commands;
 
@@ -20,76 +21,116 @@ namespace GarryBot.Commands;
 /// <param name="memberManager">Server member manager service</param>
 [Command("birthday")]
 public class BirthdayCommands(
-    ServerMemberManager memberManager)
+    ServerMemberManager memberManager,
+    ILogger<BirthdayCommands> logger)
 {
     [Command("check"), RequireGuild]
     public async Task CheckBirthday(SlashCommandContext ctx, DiscordUser user)
     {
-        if (await Validation.IsBot(ctx)) return;
-        
-        var member = await memberManager.GetMember(user, ctx.Guild!);
+        try
+        {
+            if (await Validation.IsBot(ctx)) return;
 
-        if (await Validation.BirthdayNotSet(ctx, member)) return;
-        
-        await ctx.RespondAsync(MessageTemplates.CreateBirthdayCard(member), true);
+            var member = await memberManager.GetMember(user, ctx.Guild!);
+
+            if (await Validation.BirthdayNotSet(ctx, member)) return;
+
+            await ctx.RespondAsync(MessageTemplates.CreateBirthdayCard(member), true);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error executing birthday check command for user {User}", ctx.User.Username);
+            await ctx.RespondAsync(MessageTemplates.CreateError("An error occurred"), true);
+        }
     }
 
     [Command("next"), RequireGuild]
     public async Task NextBirthday(SlashCommandContext ctx)
     {
-        var members = await GetServerMembers(ctx.Guild!);
-        var nextBirthday = memberManager.GetNextBirthday(members);
-        
-        await ctx.RespondAsync(MessageTemplates.CreateNextBirthday(nextBirthday, ctx.Guild!));
+        try
+        {
+            var members = await GetServerMembers(ctx.Guild!);
+            var nextBirthday = memberManager.GetNextBirthday(members);
+
+            await ctx.RespondAsync(MessageTemplates.CreateNextBirthday(nextBirthday, ctx.Guild!));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error executing birthday next command for user {User}", ctx.User.Username);
+            await ctx.RespondAsync(MessageTemplates.CreateError("An error occurred"), true);
+        }
     }
 
     [Command("list"), RequireGuild]
     public async Task BirthdayList(SlashCommandContext ctx)
     {
-        var members = await GetServerMembers(ctx.Guild!);
-        var filteredMembers = members.Where(x => x.Birthday.HasValue).ToList();
-        
-        await ctx.RespondWithModalAsync(
-            new DiscordInteractionResponseBuilder(
-                MessageTemplates.CreateBirthdayList(ctx.Guild!, filteredMembers, "1")));
+        try
+        {
+            var members = await GetServerMembers(ctx.Guild!);
+            var filteredMembers = members.Where(x => x.Birthday.HasValue).ToList();
+
+            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder(
+                    MessageTemplates.CreateBirthdayList(ctx.Guild!, filteredMembers, "1")));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error executing birthday list command for user {User}", ctx.User.Username);
+            await ctx.RespondAsync(MessageTemplates.CreateError("An error occurred"), true);
+        }
     }
 
     [Command("change"), RequireGuild]
     [RequirePermissions(DiscordPermissions.Administrator)]
     public async Task ChangeBirthday(SlashCommandContext ctx, DiscordUser user, long year, long month, long day)
     {
-        if (await Validation.IsBot(ctx)) return;
-
-        if (!DateTime.TryParse($"{year}-{month}-{day}", out var date))
+        try
         {
-            await ctx.RespondAsync(MessageTemplates.CreateError("Invalid date"), true);
-            return;
+            if (await Validation.IsBot(ctx)) return;
+
+            if (!DateTime.TryParse($"{year}-{month}-{day}", out var date))
+            {
+                await ctx.RespondAsync(MessageTemplates.CreateError("Invalid date"), true);
+                return;
+            }
+
+            var member = await memberManager.GetMember(user, ctx.Guild!);
+            member.Birthday = date;
+            await memberManager.UpdateMemberAsync(member);
+
+            await ctx.RespondAsync(
+                MessageTemplates.CreateSuccess($"Birthday updated to {date.ToShortDateString()} for {user.Mention}!"), true);
         }
-
-        var member = await memberManager.GetMember(user, ctx.Guild!);
-        member.Birthday = date;
-        await memberManager.UpdateMemberAsync(member);
-
-        await ctx.RespondAsync(
-            MessageTemplates.CreateSuccess($"Birthday updated to {date.ToShortDateString()} for {user.Mention}!"), true);
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error executing birthday change command for user {User}", ctx.User.Username);
+            await ctx.RespondAsync(MessageTemplates.CreateError("An error occurred"), true);
+        }
     }
 
     [Command("add"), RequireGuild]
     public async Task AddBirthday(SlashCommandContext ctx, long year, long month, long day)
     {
-        if (!DateTime.TryParse($"{year}-{month}-{day}", out var date))
+        try
         {
-            await ctx.RespondAsync(MessageTemplates.CreateError("Invalid date"), true);
-            return;
+            if (!DateTime.TryParse($"{year}-{month}-{day}", out var date))
+            {
+                await ctx.RespondAsync(MessageTemplates.CreateError("Invalid date"), true);
+                return;
+            }
+
+            var member = await memberManager.GetMember(ctx.User, ctx.Guild!);
+            member.Birthday = date;
+            await memberManager.UpdateMemberAsync(member);
+
+            await ctx.RespondAsync(
+                MessageTemplates.CreateSuccess($"Birthday updated to {date.ToShortDateString()}"), true);
         }
-        
-        var member = await memberManager.GetMember(ctx.User, ctx.Guild!);
-        member.Birthday = date;
-        await memberManager.UpdateMemberAsync(member);
-
-        await ctx.RespondAsync(
-            MessageTemplates.CreateSuccess($"Birthday updated to {date.ToShortDateString()}"), true);
-
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error executing birthday add command for user {User}", ctx.User.Username);
+            await ctx.RespondAsync(MessageTemplates.CreateError("An error occurred"), true);
+        }
     }
     
     private async Task<List<ServerMember>> GetServerMembers(DiscordGuild guild) => await memberManager.GetMembersAsync(guild);
