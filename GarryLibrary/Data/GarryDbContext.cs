@@ -8,7 +8,6 @@ public class GarryDbContext(DbContextOptions<GarryDbContext> options) : DbContex
 {
     public DbSet<ServerConfig> ServerConfigs { get; set; }
     public DbSet<ServerMember> ServerMembers { get; set; }
-    public DbSet<ServerRole> ServerRoles { get; set; }
     public DbSet<WheelPicker> WheelPickers { get; set; }
     public DbSet<WheelOption> WheelOptions { get; set; }
     public DbSet<SantaParticipant> SantaParticipants { get; set; }
@@ -33,10 +32,6 @@ public class GarryDbContext(DbContextOptions<GarryDbContext> options) : DbContex
         modelBuilder.Entity<ServerMember>()
             .HasIndex(sm => new { sm.GuildId, sm.UserId })
             .IsUnique();
-
-        // ServerRole - Composite Primary Key
-        modelBuilder.Entity<ServerRole>()
-            .HasKey(sr => new { sr.GuildId, sr.RoleId });
 
         // WheelPicker - One-to-Many with WheelOptions
         modelBuilder.Entity<WheelPicker>()

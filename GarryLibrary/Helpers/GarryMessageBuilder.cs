@@ -81,9 +81,9 @@ public class GarryMessageBuilder
         return this;
     }
     
-    public GarryMessageBuilder WithFooter(string footer)
+    public GarryMessageBuilder WithFooter(string footer, string iconUrl = "")
     {
-        _embed.WithFooter(footer);
+        _embed.WithFooter(footer, iconUrl);
         return this;
     }
     

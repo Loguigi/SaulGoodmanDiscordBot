@@ -75,6 +75,59 @@ public static class MessageTemplates
     }
 
     #endregion
+    
+    #region Wheel System
+
+    public static DiscordMessageBuilder CreateWheelSpin(ServerMember member, WheelPicker wheel, SpinData spinData)
+    {
+        var spinAgainButton = new DiscordButtonComponent(
+            DiscordButtonStyle.Primary,
+            spinData.ToButtonId(),
+            "Spin Again",
+            false,
+            new DiscordComponentEmoji("🎡")
+        );
+
+        var spinAndRemoveData = spinData with { ShouldRemoveLastOption = true };
+        var spinAndRemoveButton = new DiscordButtonComponent(
+            DiscordButtonStyle.Danger,
+            spinAndRemoveData.ToButtonId(),
+            "Remove & Spin",
+            false,
+            new DiscordComponentEmoji("❌")
+        );
+
+        var buttons = new DiscordComponent[] { spinAgainButton, spinAndRemoveButton };
+    
+        // Format the previous spin display
+        string previousSpinDisplay;
+        if (spinData.PreviousOptionSpun == null)
+        {
+            previousSpinDisplay = "------";
+        }
+        else if (spinData.ShouldRemoveLastOption)
+        {
+            previousSpinDisplay = $"❌ ~~{spinData.PreviousOptionSpun}~~ ❌";
+        }
+        else
+        {
+            previousSpinDisplay = spinData.PreviousOptionSpun;
+        }
+    
+        return new GarryMessageBuilder()
+            .WithGuildBranding(member.Guild!)
+            .WithTitle($"🌀 {wheel.Name} 🌀")
+            .WithDescription($"# {spinData.LastOptionSpun}")
+            .WithThumbnail(wheel.ImageUrl ?? "")
+            .WithField("Spin Count", spinData.SpinCount.ToString(), true)
+            .WithField("Total Options", $"{wheel.AvailableOptions.Count} / {wheel.WheelOptions.Count}", true)
+            .WithField("Previous Spin", previousSpinDisplay, true)
+            .WithFooter($"Spun by {member.DisplayName}", member.User.AvatarUrl)
+            .WithTheme(EmbedTheme.Wheel)
+            .WithButtons(buttons)
+            .Build();
+    }
+    #endregion
 
     #region Birthday System
 
@@ -175,6 +228,16 @@ public static class MessageTemplates
             .WithPagination(new PageContext<ServerMember>(members, 10, page, IDHelper.Misc.WHO))
             .WithColor(DiscordColor.Azure)
             .Build();
+    }
+
+    public static DiscordEmbedBuilder CreateIdentityCard(ServerMember member)
+    {
+        return new GarryMessageBuilder()
+            .WithTitle("Who are you?")
+            .WithUserBranding(member)
+            .WithDescription($"# **{member.Name!}**")
+            .WithColor(DiscordColor.Aquamarine)
+            .ToEmbed();
     }
 
     public static DiscordEmbedBuilder CreateRandomNumber(int result, int min, int max)

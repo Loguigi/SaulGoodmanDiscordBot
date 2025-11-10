@@ -7,15 +7,8 @@ namespace GarryLibrary.Managers;
 
 public class WheelPickerManager(
     IDataRepository<WheelPicker> wheelPickerRepository,
-    IDataRepository<WheelOption> wheelOptionRepository,
-    Random random)
+    IDataRepository<WheelOption> wheelOptionRepository)
 {
-    public string SpinWheel(WheelPicker wheel)
-    {
-        random.Next();
-        return wheel.AvailableOptions[random.Next(wheel.AvailableOptions.Count)].Option;
-    }
-    
     public async Task<List<WheelPicker>> GetAllAsync(DiscordGuild guild) => await
         wheelPickerRepository.GetAllAsync(q => 
             q.Include(wp => wp.WheelOptions));

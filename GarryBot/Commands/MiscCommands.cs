@@ -28,6 +28,38 @@ public class MiscCommands(
                     MessageTemplates.CreateIdentityDisplay(ctx.Guild!, members, "1")));
         }, "who");
     }
+
+    [Command("whois"), RequireGuild]
+    public async Task WhoIs(SlashCommandContext ctx, DiscordUser user)
+    {
+        await ExecuteAsync(ctx, async () =>
+        {
+            if (await Validation.IsBot(ctx, user)) return;
+
+            var member = await memberManager.GetMember(user, ctx.Guild!);
+
+            if (member.Name == null)
+            {
+                await ctx.RespondAsync(MessageTemplates.CreateError("This user does not have a name set"), true);
+                return;
+            }
+
+            await ctx.RespondAsync(MessageTemplates.CreateIdentityCard(member));
+        }, "whois");
+    }
+
+    [Command("iam"), RequireGuild]
+    public async Task IAm(SlashCommandContext ctx, string name)
+    {
+        await ExecuteAsync(ctx, async () =>
+        {
+            var member = await memberManager.GetMember(ctx.User, ctx.Guild!);
+            member.Name = name;
+            await memberManager.UpdateMemberAsync(member);
+            
+            await ctx.RespondAsync(MessageTemplates.CreateSuccess($"Name updated to {name}"), true);
+        }, "iam");
+    }
     
     [Command("egg"), RequireGuild]
     public async Task Egg(SlashCommandContext ctx)

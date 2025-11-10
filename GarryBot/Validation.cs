@@ -1,6 +1,7 @@
 using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
 using GarryLibrary.Helpers;
+using GarryLibrary.Managers;
 using GarryLibrary.Models;
 
 namespace GarryBot;
@@ -37,5 +38,20 @@ public static class Validation
         }
         
         return !member.Birthday.HasValue;
+    }
+    
+    public static async Task<(bool hasWheels, List<WheelPicker> wheels)> GetWheelsOrError(
+        SlashCommandContext ctx, 
+        WheelPickerManager wheelManager)
+    {
+        var wheels = await wheelManager.GetAllAsync(ctx.Guild!);
+        
+        if (wheels.Count == 0)
+        {
+            await ctx.RespondAsync(MessageTemplates.CreateError("No wheels found in this guild"), true);
+            return (false, wheels);
+        }
+        
+        return (true, wheels);
     }
 }
