@@ -4,33 +4,39 @@ using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
 using GarryLibrary.Helpers;
 using GarryLibrary.Managers;
+using Microsoft.Extensions.Logging;
 
 namespace GarryBot.Commands;
 
 
 public class LevelCommands(
-    ServerMemberManager memberManager)
+    ServerMemberManager memberManager,
+    ILogger<LevelCommands> logger)
+    : BaseCommand<LevelCommands>(logger)
 {
     [Command("level"), RequireGuild]
     public async Task Level(SlashCommandContext ctx, DiscordUser? user = null)
     {
-        if (user != null && user.IsBot)
+        await ExecuteAsync(ctx, async () =>
         {
-            await ctx.RespondAsync(MessageTemplates.CreateError("This is a bot"), true);
-            return;
-        }
+            if (await Validation.IsBot(ctx, user)) return;
 
-        var member = await memberManager.GetMember(user ?? ctx.User, ctx.Guild!);
+            var members = await memberManager.GetMembersAsync(ctx.Guild!);
+            var member = members.First(x => x.User == (user ?? ctx.User));
 
-        await ctx.RespondAsync(MessageTemplates.CreateLevelCard(member, ctx.Guild!));
+            await ctx.RespondAsync(MessageTemplates.CreateLevelCard(member, ctx.Guild!));
+        }, "level");
     }
 
     [Command("leaderboard"), RequireGuild]
     public async Task Leaderboard(SlashCommandContext ctx)
     {
-        var members = await memberManager.GetMembersAsync(ctx.Guild!);
+        await ExecuteAsync(ctx, async () =>
+        {
+            var members = await memberManager.GetMembersAsync(ctx.Guild!);
 
-        await ctx.RespondWithModalAsync(
-            new DiscordInteractionResponseBuilder(MessageTemplates.CreateLeaderboard(members, ctx.Guild!, "1")));
+            await ctx.RespondWithModalAsync(
+                new DiscordInteractionResponseBuilder(MessageTemplates.CreateLeaderboard(members, ctx.Guild!, "1")));
+        }, "leaderboard");
     }
 }

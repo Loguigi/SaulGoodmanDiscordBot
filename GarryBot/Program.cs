@@ -57,6 +57,7 @@ var host = Host.CreateDefaultBuilder(args)
         #region Event Handlers
         services.AddScoped<LevelHandlers>();
         services.AddScoped<MiscHandlers>();
+        services.AddScoped<GuildEventHandler>();
         #endregion
         
         #region Other Services

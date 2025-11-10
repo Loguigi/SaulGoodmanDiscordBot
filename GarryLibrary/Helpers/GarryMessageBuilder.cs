@@ -11,6 +11,12 @@ public class GarryMessageBuilder
     public DiscordMessageBuilder Build() => _builder.AddEmbed(_embed);
     public DiscordEmbedBuilder ToEmbed() => _embed;
 
+    public GarryMessageBuilder WithContent(string content)
+    {
+        _builder.WithContent(content);
+        return this;
+    }
+
     public GarryMessageBuilder WithTitle(string title)
     {
         _embed.WithTitle(title);

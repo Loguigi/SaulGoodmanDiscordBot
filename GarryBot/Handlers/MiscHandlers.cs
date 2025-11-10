@@ -1,4 +1,5 @@
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using GarryLibrary.Helpers;
 using GarryLibrary.Managers;
@@ -21,6 +22,7 @@ public class MiscHandlers(
         return id switch
         {
             IDHelper.Misc.EGG => HandleEggCounter(e),
+            IDHelper.Misc.WHO => HandleIdentityList(e),
             _ => Task.CompletedTask
         };
     }
@@ -35,7 +37,7 @@ public class MiscHandlers(
             if (channelLeftFrom.Users.Count() == 1)
             {
                 var remainingMember = channelLeftFrom.Users.First();
-                logger.LogInformation("{User} left voice channel {Channel}, {RemainingUser} is now alone", 
+                logger.LogDebug("{User} left voice channel {Channel}, {RemainingUser} is now alone", 
                     e.User.Username, channelLeftFrom.Name, remainingMember.Username);
                 
                 // Your logic here
@@ -50,11 +52,35 @@ public class MiscHandlers(
         try
         {
             logger.LogDebug("Handling egg counter for user {User}", e.User.Username);
-            // Your logic here
+            
+            var page = IDHelper.GetId(e.Id, 1);
+            var members = await memberManager.GetMembersAsync(e.Guild);
+            
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
+                new DiscordInteractionResponseBuilder(MessageTemplates.CreateEggCounter(e.Guild, members, page)));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error handling egg counter for user {User}", e.User.Username);
+            throw;
+        }
+    }
+
+    public async Task HandleIdentityList(ComponentInteractionCreatedEventArgs e)
+    {
+        try
+        {
+            logger.LogDebug("Handling identity page turn for user {User}", e.User.Username);
+            
+            var page = IDHelper.GetId(e.Id, 1);
+            var members = await memberManager.GetMembersAsync(e.Guild);
+            
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
+                new DiscordInteractionResponseBuilder(MessageTemplates.CreateIdentityDisplay(e.Guild, members, page)));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error handling identity page turn for user {User}", e.User.Username);
             throw;
         }
     }

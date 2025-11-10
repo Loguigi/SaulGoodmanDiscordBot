@@ -61,7 +61,7 @@ public static class MessageTemplates
         return new GarryMessageBuilder()
             .WithUserFocus(member, guild, prefix)
             .WithTheme(EmbedTheme.Level)
-            .WithFields(fields)
+            .WithFields(fields, true)
             .ToEmbed();
     }
 
@@ -186,6 +186,14 @@ public static class MessageTemplates
             .WithField("Max", max.ToString(), true)
             .WithColor(DiscordColor.Lilac)
             .ToEmbed();
+    }
+
+    public static DiscordMessageBuilder CreateGuildEventMessage(string message, string eventUrl)
+    {
+        return new GarryMessageBuilder()
+            .WithDescription($"### {message}")
+            .WithContent(eventUrl)
+            .Build();
     }
 
     #endregion

@@ -1,5 +1,6 @@
 using DSharpPlus;
 using DSharpPlus.EventArgs;
+using GarryLibrary.Helpers;
 using GarryLibrary.Managers;
 using Microsoft.Extensions.Logging;
 
@@ -13,6 +14,9 @@ public class GuildEventHandler(
     public async Task HandleEventAsync(DiscordClient s, ScheduledGuildEventCreatedEventArgs e)
     {
         var config = await configManager.GetConfig(e.Guild);
-        await config.DefaultChannel!.SendMessageAsync($"https://discord.com/events/{e.Guild.Id}/{e.Event.Id}");
+        logger.LogInformation("Scheduled event created: {EventName} in guild {Guild}", e.Event.Name, e.Guild.Name);
+        var message = $"🗓️ New event created by {e.Creator.Mention}";
+        await config.DefaultChannel!.SendMessageAsync(MessageTemplates.CreateGuildEventMessage(message, 
+            $"https://discord.com/events/{e.Guild.Id}/{e.Event.Id}"));
     }
 }

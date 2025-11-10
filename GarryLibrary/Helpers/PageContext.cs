@@ -46,7 +46,7 @@ public class PageContext<T>(List<T> data, int itemsPerPage, string currentPage, 
     [
         new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{FIRST_PAGE}", "", CurrentPage == 1, new DiscordComponentEmoji("⏮️")),
         new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{CurrentPage - 1}", "", CurrentPage - 1 < 1, new DiscordComponentEmoji("⏪")),
-        new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{CurrentPage + 1}", "", CurrentPage + 1 > CurrentPage, new DiscordComponentEmoji("⏩")),
+        new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{CurrentPage + 1}", "", CurrentPage + 1 > TotalPages, new DiscordComponentEmoji("⏩")),
         new DiscordButtonComponent(DiscordButtonStyle.Primary, $"{customId}\\{LAST_PAGE}", "", CurrentPage == TotalPages, new DiscordComponentEmoji("⏭️"))
     ];
 

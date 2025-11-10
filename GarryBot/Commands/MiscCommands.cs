@@ -12,90 +12,65 @@ public class MiscCommands(
     ServerMemberManager memberManager,
     Random random,
     ILogger<MiscCommands> logger)
+    : BaseCommand<MiscCommands>(logger)
 {
-    [Command("who")]
+    private readonly ILogger<MiscCommands> _logger = logger;
+
+    [Command("who"), RequireGuild]
     public async Task Who(SlashCommandContext ctx)
     {
-        try
+        await ExecuteAsync(ctx, async () =>
         {
-            logger.LogInformation("Who command invoked by {User} in guild {Guild}", 
-                ctx.User.Username, ctx.Guild?.Name);
-            
             var members = await memberManager.GetMembersAsync(ctx.Guild!);
-            // Your logic here
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error executing who command for user {User}", ctx.User.Username);
-            await ctx.RespondAsync(MessageTemplates.CreateError("An error occurred while fetching members"), true);
-        }
+
+            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder(
+                    MessageTemplates.CreateIdentityDisplay(ctx.Guild!, members, "1")));
+        }, "who");
     }
     
-    [Command("egg")]
+    [Command("egg"), RequireGuild]
     public async Task Egg(SlashCommandContext ctx)
     {
-        try
+        await ExecuteAsync(ctx, async () =>
         {
-            logger.LogInformation("Egg command invoked by {User} in guild {Guild}", 
-                ctx.User.Username, ctx.Guild?.Name);
-            
             var members = await memberManager.GetMembersAsync(ctx.Guild!);
             await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder(MessageTemplates.CreateEggCounter(ctx.Guild!, members, "1")));
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error executing egg command for user {User}", ctx.User.Username);
-            await ctx.RespondAsync(MessageTemplates.CreateError("An error occurred"), true);
-        }
+        }, "egg");
     }
 
-    [Command("flip")]
+    [Command("flip"), RequireGuild]
     public async Task Flip(SlashCommandContext ctx)
     {
-        try
+        await ExecuteAsync(ctx, async () =>
         {
-            logger.LogInformation("Flip command invoked by {User} in guild {Guild}", 
-                ctx.User.Username, ctx.Guild?.Name);
-            
             var flip = random.Next(2) == 1 ? FlipResult.Heads : FlipResult.Tails;
             var member = await memberManager.GetMember(ctx.User, ctx.Guild!);
-            
+
             await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder(MessageTemplates.CreateCoinFlip(member, FlipData.FirstFlip(flip))));
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error executing flip command for user {User}", ctx.User.Username);
-            await ctx.RespondAsync(MessageTemplates.CreateError("An error occurred"), true);
-        }
+                new DiscordInteractionResponseBuilder(
+                    MessageTemplates.CreateCoinFlip(member, FlipData.FirstFlip(flip))));
+        }, "flip");
     }
 
-    [Command("rng")]
+    [Command("rng"), RequireGuild]
     public async Task Rng(SlashCommandContext ctx, int min, int max)
     {
-        try
+        await ExecuteAsync(ctx, async () =>
         {
-            logger.LogInformation("RNG command invoked by {User} with range {Min}-{Max}", 
-                ctx.User.Username, min, max);
-            
             if (min > max)
             {
-                logger.LogWarning("User {User} provided invalid range: min={Min} > max={Max}", 
+                _logger.LogWarning("User {User} provided invalid range: min={Min} > max={Max}",
                     ctx.User.Username, min, max);
                 await ctx.RespondAsync(MessageTemplates.CreateError("Min must be less than max"), true);
                 return;
             }
-            
+
             int number = random.Next(min, max + 1);
-            logger.LogDebug("Generated random number: {Number}", number);
-            
+            _logger.LogDebug("Generated random number: {Number}", number);
+
             await ctx.RespondAsync(MessageTemplates.CreateRandomNumber(number, min, max));
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error executing RNG command for user {User}", ctx.User.Username);
-            await ctx.RespondAsync(MessageTemplates.CreateError("An error occurred"), true);
-        }
+        }, "rng");
     }
 }

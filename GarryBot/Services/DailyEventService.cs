@@ -54,14 +54,11 @@ public class DailyEventService : IHostedService, IDisposable
         {
             _logger.LogInformation("Running daily event checks...");
             
-            // Create a scope to resolve scoped services
             using var scope = _serviceProvider.CreateScope();
             
-            // Resolve your managers
             var memberManager = scope.ServiceProvider.GetRequiredService<ServerMemberManager>();
             var configManager = scope.ServiceProvider.GetRequiredService<ServerConfigManager>();
             
-            // Check all guilds the bot is in
             foreach (var guild in _discordClient.Guilds.Values)
             {
                 await CheckGuildEvents(guild, memberManager, configManager);
@@ -73,7 +70,6 @@ public class DailyEventService : IHostedService, IDisposable
         }
         finally
         {
-            // Reset timer for next 24 hours
             if (_timer != null) _timer.Interval = TimeSpan.FromHours(24).TotalMilliseconds;
 
             _timer?.Start();
@@ -129,6 +125,32 @@ public class DailyEventService : IHostedService, IDisposable
             if (!string.IsNullOrEmpty(message))
             {
                 await channel!.SendMessageAsync(MessageTemplates.CreateBirthdayNotification(member, message));
+            }
+        }
+    }
+
+    private async Task CheckGuildEvents(
+        DiscordGuild guild,
+        ServerConfig config)
+    {
+        var channel = config.DefaultChannel ?? guild.GetDefaultChannel();
+
+        foreach (var guildEvent in guild.ScheduledEvents)
+        {
+            var daysUntilEvent = (guildEvent.Value.StartTime - DateTime.Now.Date).Days;
+
+            string message = daysUntilEvent switch
+            {
+                0 => "This event is happening **today**!",
+                1 => "This event is happening **tomorrow**!",
+                3 or 7 or 14 or 21 or 28 => $"This event is happening in `{daysUntilEvent}` days!",
+                _ => string.Empty
+            };
+
+            if (!string.IsNullOrEmpty(message))
+            {
+                await channel!.SendMessageAsync(MessageTemplates.CreateGuildEventMessage(message,
+                    $"https://discord.com/events/{guild.Id}/{guildEvent.Key}"));
             }
         }
     }

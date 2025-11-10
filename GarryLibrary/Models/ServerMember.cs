@@ -66,7 +66,7 @@ public class ServerMember : IPageable
     {
         IDHelper.Levels.LEADERBOARD => $"{GetRankText()} {DisplayMention} `LVL {Level}` `{Experience} XP`",
         IDHelper.Misc.WHO => $"### * {User.Mention} ➡️ {Name ?? "`?`"}",
-        IDHelper.Birthdays.LIST => $"### {DisplayMention}: {Birthday:MMMM d} `({Age + 1})`",
+        IDHelper.Birthdays.LIST => $"### {DisplayMention}: {Birthday:MMMM d} `({Age})`",
         IDHelper.Misc.EGG => $"### 🥚 {DisplayMention}: `{EggCount}` 🥚",
         _ => ""
     };

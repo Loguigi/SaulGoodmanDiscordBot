@@ -11,12 +11,13 @@ public class LevelHandlers(
     ServerMemberManager memberManager,
     ServerConfigManager configManager,
     ILogger<LevelHandlers> logger)
-    : IEventHandler<MessageCreatedEventArgs>, IEventHandler<ComponentInteractionCreatedEventArgs>
+    : ComponentInteractionHandler<LevelHandlers>(logger), 
+        IEventHandler<MessageCreatedEventArgs>
 {
     public async Task HandleEventAsync(DiscordClient s, MessageCreatedEventArgs e)
     {
         if (e.Author.IsBot) return;
-        
+    
         try
         {
             var member = await memberManager.GetMember(e.Author, e.Guild);
@@ -25,43 +26,35 @@ public class LevelHandlers(
 
             if (levelUp)
             {
-                logger.LogInformation("User {User} leveled up to level {Level} in guild {Guild}", 
+                Logger.LogInformation("User {User} leveled up to level {Level} in guild {Guild}", 
                     e.Author.Username, member.Level, e.Guild.Name);
-                
+            
                 var defaultChannel = config.DefaultChannel ?? e.Guild.GetDefaultChannel();
                 await defaultChannel!.SendMessageAsync(MessageTemplates.CreateLevelUpNotification(member, config.LevelUpMessage));
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error processing message for level system from user {User} in guild {Guild}", 
+            Logger.LogError(ex, "Error processing message for level system from user {User} in guild {Guild}", 
                 e.Author.Username, e.Guild.Name);
         }
     }
 
-    public async Task HandleEventAsync(DiscordClient s, ComponentInteractionCreatedEventArgs e)
+    protected override Task RouteInteraction(string id, ComponentInteractionCreatedEventArgs e)
     {
-        if (e.Id.Contains(IDHelper.Levels.LEADERBOARD))
+        return id switch
         {
-            logger.LogDebug("Leaderboard interaction from {User}", e.User.Username);
-            await HandleLeaderboard(e);
-        }
+            IDHelper.Levels.LEADERBOARD => HandleLeaderboard(e),
+            _ => Task.CompletedTask
+        };
     }
 
     private async Task HandleLeaderboard(ComponentInteractionCreatedEventArgs e)
     {
-        try
-        {
-            var page = IDHelper.GetId(e.Id, 1);
-            var members = await memberManager.GetMembersAsync(e.Guild);
-
-            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.UpdateMessage,
-                new DiscordInteractionResponseBuilder(MessageTemplates.CreateLeaderboard(members, e.Guild, page)));
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error handling leaderboard for guild {Guild}", e.Guild.Name);
-            throw;
-        }
+        var members = await memberManager.GetMembersAsync(e.Guild);
+        
+        await HandlePagedResponse(e, 
+            page => MessageTemplates.CreateLeaderboard(members, e.Guild, page),
+            "leaderboard");
     }
 }
