@@ -36,8 +36,8 @@ public class BirthdayCommands(
 
             if (await Validation.BirthdayNotSet(ctx, member)) return;
 
-            await ctx.RespondAsync(MessageTemplates.CreateBirthdayCard(member), true);
-            
+            await SendMessage(ctx, MessageTemplates.CreateBirthdayCard(member), true);
+
         }, "birthday check");
     }
 
@@ -49,7 +49,7 @@ public class BirthdayCommands(
             var members = await GetServerMembers(ctx.Guild!);
             var nextBirthday = memberManager.GetNextBirthday(members);
 
-            await ctx.RespondAsync(MessageTemplates.CreateNextBirthday(nextBirthday, ctx.Guild!));
+            await SendMessage(ctx, MessageTemplates.CreateNextBirthday(nextBirthday, ctx.Guild!));
         }, "birthday next");
     }
 
@@ -61,9 +61,7 @@ public class BirthdayCommands(
             var members = await GetServerMembers(ctx.Guild!);
             var filteredMembers = members.Where(x => x.Birthday.HasValue).ToList();
 
-            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder(
-                    MessageTemplates.CreateBirthdayList(ctx.Guild!, filteredMembers, "1")));
+            await SendMessage(ctx, MessageTemplates.CreateBirthdayList(ctx.Guild!, filteredMembers, "1"));
         }, "birthday list");
     }
 
@@ -77,7 +75,7 @@ public class BirthdayCommands(
 
             if (!DateTime.TryParse($"{year}-{month}-{day}", out var date))
             {
-                await ctx.RespondAsync(MessageTemplates.CreateError("Invalid date"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("Invalid date"), true);
                 return;
             }
 
@@ -85,7 +83,7 @@ public class BirthdayCommands(
             member.Birthday = date;
             await memberManager.UpdateMemberAsync(member);
 
-            await ctx.RespondAsync(
+            await SendMessage(ctx,
                 MessageTemplates.CreateSuccess($"Birthday updated to {date.ToShortDateString()} for {user.Mention}!"),
                 true);
         }, "birthday change");
@@ -98,7 +96,7 @@ public class BirthdayCommands(
         {
             if (!DateTime.TryParse($"{year}-{month}-{day}", out var date))
             {
-                await ctx.RespondAsync(MessageTemplates.CreateError("Invalid date"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("Invalid date"), true);
                 return;
             }
 
@@ -106,8 +104,8 @@ public class BirthdayCommands(
             member.Birthday = date;
             await memberManager.UpdateMemberAsync(member);
 
-            await ctx.RespondAsync(
-                MessageTemplates.CreateSuccess($"Birthday updated to {date.ToShortDateString()}"), true);
+            await SendMessage(ctx, MessageTemplates.CreateSuccess($"Birthday updated to {date.ToShortDateString()}"),
+                true);
         }, "birthday add");
     }
     

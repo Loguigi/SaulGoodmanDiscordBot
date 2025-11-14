@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace GarryBot.Handlers;
 
 public abstract class ComponentInteractionHandler<THandler>(ILogger<THandler> logger) 
-    : IEventHandler<ComponentInteractionCreatedEventArgs>
+    : BaseMessageSender, IEventHandler<ComponentInteractionCreatedEventArgs>
 {
     protected ILogger<THandler> Logger { get; } = logger;
     
@@ -40,7 +40,7 @@ public abstract class ComponentInteractionHandler<THandler>(ILogger<THandler> lo
     
     protected async Task HandlePagedResponse(
         ComponentInteractionCreatedEventArgs e,
-        Func<string, DiscordMessageBuilder> messageBuilder,
+        Func<string, DiscordInteractionResponseBuilder> messageBuilder,
         string handlerName)
     {
         await HandleWithLogging(e, async args =>
@@ -48,7 +48,7 @@ public abstract class ComponentInteractionHandler<THandler>(ILogger<THandler> lo
             var page = IDHelper.GetId(args.Id, 1);
             await args.Interaction.CreateResponseAsync(
                 DiscordInteractionResponseType.UpdateMessage,
-                new DiscordInteractionResponseBuilder(messageBuilder(page)));
+                messageBuilder(page));
         }, handlerName);
     }
 }

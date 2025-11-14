@@ -32,7 +32,7 @@ public class WheelPickerCommands(
             
             if (currentWheels.Any(x => x.Name == name))
             {
-                await ctx.RespondAsync(MessageTemplates.CreateError("A wheel with that name already exists"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("A wheel with that name already exists"), true);
                 return;
             }
 
@@ -43,7 +43,7 @@ public class WheelPickerCommands(
                 ImageUrl = image?.Url,
             });
             
-            await ctx.RespondAsync(MessageTemplates.CreateSuccess($"Wheel created with name {name}"), true);
+            await SendMessage(ctx, MessageTemplates.CreateSuccess($"Wheel created with name {name}"), true);
         }, "create");
     }
     
@@ -61,7 +61,7 @@ public class WheelPickerCommands(
             var wheel = wheels.FirstOrDefault(w => w.Name == wheelName);
             if (wheel == null)
             {
-                await ctx.RespondAsync(MessageTemplates.CreateError("Wheel not found"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("Wheel not found"), true);
                 return;
             }
 
@@ -70,7 +70,7 @@ public class WheelPickerCommands(
                 // Validate file type
                 if (!file.FileName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
                 {
-                    await ctx.RespondAsync(MessageTemplates.CreateError("Please upload a .txt file"), true);
+                    await SendMessage(ctx, MessageTemplates.CreateError("Please upload a .txt file"), true);
                     return;
                 }
 
@@ -89,7 +89,7 @@ public class WheelPickerCommands(
 
                     if (options.Count == 0)
                     {
-                        await ctx.RespondAsync(MessageTemplates.CreateError("No valid options found in file"), true);
+                        await SendMessage(ctx, MessageTemplates.CreateError("No valid options found in file"), true);
                         return;
                     }
 
@@ -99,25 +99,25 @@ public class WheelPickerCommands(
                         await wheelManager.AddOptionAsync(wheel, opt);
                     }
 
-                    await ctx.RespondAsync(
+                    await SendMessage(ctx,
                         MessageTemplates.CreateSuccess($"Added {options.Count} option(s) to wheel '{wheelName}'"), 
                         true);
                 }
                 catch (HttpRequestException ex)
                 {
                     _logger.LogError(ex, "Failed to download file from Discord");
-                    await ctx.RespondAsync(MessageTemplates.CreateError("Failed to download file"), true);
+                    await SendMessage(ctx, MessageTemplates.CreateError("Failed to download file"), true);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error processing file");
-                    await ctx.RespondAsync(MessageTemplates.CreateError("Error processing file"), true);
+                    await SendMessage(ctx, MessageTemplates.CreateError("Error processing file"), true);
                 }
             }
             else if (option != null)
             {
                 await wheelManager.AddOptionAsync(wheel, option);
-                await ctx.RespondAsync(MessageTemplates.CreateSuccess($"Added option '{option}' to wheel '{wheelName}'"), true);
+                await SendMessage(ctx, MessageTemplates.CreateSuccess($"Added option '{option}' to wheel '{wheelName}'"), true);
             }
         }, "add");
     }
@@ -134,13 +134,13 @@ public class WheelPickerCommands(
             var wheel = wheels.FirstOrDefault(w => w.Name == wheelName);
             if (wheel == null)
             {
-                await ctx.RespondAsync(MessageTemplates.CreateError("Wheel not found"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("Wheel not found"), true);
                 return;
             }
 
             if (wheel.AvailableOptions.Count == 0)
             {
-                await ctx.RespondAsync(MessageTemplates.CreateError("No options available in this wheel"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("No options available in this wheel"), true);
                 return;
             }
 
@@ -169,7 +169,7 @@ public class WheelPickerCommands(
             var wheel = wheels.FirstOrDefault(w => w.Name == wheelName);
             if (wheel == null)
             {
-                await ctx.RespondAsync(MessageTemplates.CreateError("Wheel not found"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("Wheel not found"), true);
                 return;
             }
         }, "delete");
@@ -187,7 +187,7 @@ public class WheelPickerCommands(
             var wheel = wheels.FirstOrDefault(w => w.Name == wheelName);
             if (wheel == null)
             {
-                await ctx.RespondAsync(MessageTemplates.CreateError("Wheel not found"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("Wheel not found"), true);
                 return;
             }
         }, "reload");
@@ -205,7 +205,7 @@ public class WheelPickerCommands(
             var wheel = wheels.FirstOrDefault(w => w.Name == wheelName);
             if (wheel == null)
             {
-                await ctx.RespondAsync(MessageTemplates.CreateError("Wheel not found"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("Wheel not found"), true);
                 return;
             }
         }, "list");

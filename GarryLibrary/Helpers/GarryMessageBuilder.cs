@@ -5,69 +5,73 @@ namespace GarryLibrary.Helpers;
 
 public class GarryMessageBuilder
 {
-    private DiscordMessageBuilder _builder = new();
-    private DiscordEmbedBuilder _embed = new();
+    private DiscordMessageBuilder _messageBuilder = new();
+    private DiscordEmbedBuilder _embedBuilder = new();
 
-    public DiscordMessageBuilder Build() => _builder.AddEmbed(_embed);
-    public DiscordEmbedBuilder ToEmbed() => _embed;
+    public DiscordInteractionResponseBuilder Build()
+    {
+        return new DiscordInteractionResponseBuilder(_messageBuilder.AddEmbed(_embedBuilder));
+    }
+    
+    public DiscordMessageBuilder BuildMessage() => _messageBuilder.AddEmbed(_embedBuilder);
 
     public GarryMessageBuilder WithContent(string content)
     {
-        _builder.WithContent(content);
+        _messageBuilder.WithContent(content);
         return this;
     }
 
     public GarryMessageBuilder WithTitle(string title)
     {
-        _embed.WithTitle(title);
+        _embedBuilder.WithTitle(title);
         return this;
     }
 
     public GarryMessageBuilder WithDescription(string description)
     {
-        _embed.WithDescription(description);
+        _embedBuilder.WithDescription(description);
         return this;
     }
 
     public GarryMessageBuilder WithThumbnail(string url)
     {
-        _embed.WithThumbnail(url);
+        _embedBuilder.WithThumbnail(url);
         return this;
     }
 
     public GarryMessageBuilder WithColor(DiscordColor color)
     {
-        _embed.WithColor(color);
+        _embedBuilder.WithColor(color);
         return this;
     }
 
     public GarryMessageBuilder WithTimestamp()
     {
-        _embed.WithTimestamp(DateTime.Now);
+        _embedBuilder.WithTimestamp(DateTime.Now);
         return this;
     }
 
     public GarryMessageBuilder WithUserMention(DiscordUser user)
     {
-        _builder.WithContent(user.Mention).AddMention(new UserMention(user));
+        _messageBuilder.WithContent(user.Mention).AddMention(new UserMention(user));
         return this;
     }
 
     public GarryMessageBuilder WithRoleMention(DiscordRole role)
     {
-        _builder.WithContent(role.Mention).AddMention(new RoleMention(role));
+        _messageBuilder.WithContent(role.Mention).AddMention(new RoleMention(role));
         return this;
     }
 
     public GarryMessageBuilder WithEveryoneMention()
     {
-        _builder.WithContent("@everyone").AddMention(new EveryoneMention());
+        _messageBuilder.WithContent("@everyone").AddMention(new EveryoneMention());
         return this;
     }
 
     public GarryMessageBuilder WithField(string name, string value, bool inline = false)
     {
-        _embed.AddField(name, value, inline);
+        _embedBuilder.AddField(name, value, inline);
         return this;
     }
 
@@ -75,7 +79,7 @@ public class GarryMessageBuilder
     {
         foreach (var field in fields)
         {
-            _embed.AddField(field.Key, field.Value, inline);
+            _embedBuilder.AddField(field.Key, field.Value, inline);
         }
 
         return this;
@@ -83,27 +87,27 @@ public class GarryMessageBuilder
     
     public GarryMessageBuilder WithFooter(string footer, string iconUrl = "")
     {
-        _embed.WithFooter(footer, iconUrl);
+        _embedBuilder.WithFooter(footer, iconUrl);
         return this;
     }
     
     public GarryMessageBuilder WithGuildBranding(DiscordGuild guild)
     {
-        _embed.WithAuthor(guild.Name, "", guild.IconUrl);
+        _embedBuilder.WithAuthor(guild.Name, "", guild.IconUrl);
         return this;
     }
 
     public GarryMessageBuilder WithUserBranding(ServerMember member)
     {
-        _embed.WithAuthor(member.DisplayName, "", member.User.AvatarUrl);
+        _embedBuilder.WithAuthor(member.DisplayName, "", member.User.AvatarUrl);
         return this;
     }
 
     public GarryMessageBuilder WithPagination(PageContext<ServerMember> pageContext)
     {
-        _embed.WithDescription(pageContext.GetPageText())
+        _embedBuilder.WithDescription(pageContext.GetPageText())
             .WithFooter(pageContext.PageStatus);
-        _builder.AddComponents(pageContext.GetPageButtons());
+        _messageBuilder.AddComponents(pageContext.GetPageButtons());
         return this;
     }
 
@@ -112,12 +116,12 @@ public class GarryMessageBuilder
         WithGuildBranding(guild);
         if (string.IsNullOrWhiteSpace(prefix))
         {
-            _embed.WithTitle($"{member.DisplayName}")
+            _embedBuilder.WithTitle($"{member.DisplayName}")
                 .WithThumbnail(member.User.AvatarUrl);
         }
         else
         {
-            _embed.WithTitle($"# {prefix} {member.Name ?? member.User.GlobalName}")
+            _embedBuilder.WithTitle($"# {prefix} {member.Name ?? member.User.GlobalName}")
                 .WithThumbnail(member.User.AvatarUrl);
         }
 
@@ -126,13 +130,13 @@ public class GarryMessageBuilder
 
     public GarryMessageBuilder WithButtons(params DiscordComponent[] buttons)
     {
-        _builder.AddComponents(buttons);
+        _messageBuilder.AddComponents(buttons);
         return this;
     }
 
     public GarryMessageBuilder WithTheme(EmbedTheme theme)
     {
-        _embed.WithColor(theme switch
+        _embedBuilder.WithColor(theme switch
         {
             EmbedTheme.Success => DiscordColor.Green,
             EmbedTheme.Error => DiscordColor.Red,

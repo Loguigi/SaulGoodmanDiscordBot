@@ -14,31 +14,31 @@ public static class MessageTemplates
 
     #region Status Messages
 
-    public static DiscordEmbedBuilder CreateSuccess(string message)
+    public static DiscordInteractionResponseBuilder CreateSuccess(string message)
     {
         return new GarryMessageBuilder()
             .WithTitle("✅ Success")
             .WithDescription(message)
             .WithThumbnail(ImageUrls.Success)
             .WithTheme(EmbedTheme.Success)
-            .ToEmbed();
+            .Build();
     }
 
-    public static DiscordEmbedBuilder CreateError(string message)
+    public static DiscordInteractionResponseBuilder CreateError(string message)
     {
         return new GarryMessageBuilder()
             .WithTitle("❌ Error")
             .WithDescription(message)
             .WithThumbnail(ImageUrls.Error)
             .WithTheme(EmbedTheme.Error)
-            .ToEmbed();
+            .Build();
     }
 
     #endregion
 
     #region Level System
 
-    public static DiscordMessageBuilder CreateLeaderboard(List<ServerMember> members, DiscordGuild guild, string page)
+    public static DiscordInteractionResponseBuilder CreateLeaderboard(List<ServerMember> members, DiscordGuild guild, string page)
     {
         return new GarryMessageBuilder()
             .WithTitle("Leaderboard")
@@ -48,7 +48,7 @@ public static class MessageTemplates
             .Build();
     }
 
-    public static DiscordEmbedBuilder CreateLevelCard(ServerMember member, DiscordGuild guild)
+    public static DiscordInteractionResponseBuilder CreateLevelCard(ServerMember member, DiscordGuild guild)
     {
         var prefix = GetRankEmoji(member.Rank);
         var fields = new Dictionary<string, string>
@@ -62,23 +62,23 @@ public static class MessageTemplates
             .WithUserFocus(member, guild, prefix)
             .WithTheme(EmbedTheme.Level)
             .WithFields(fields, true)
-            .ToEmbed();
+            .Build();
     }
 
-    public static DiscordEmbedBuilder CreateLevelUpNotification(ServerMember member, string message)
+    public static DiscordMessageBuilder CreateLevelUpNotification(ServerMember member, string message)
     {
         return new GarryMessageBuilder()
             .WithDescription($"### ⬆️ {member.User.Mention} {message}")
             .WithFooter($"Level {member.Level - 1} ➡️ Level {member.Level}")
             .WithTheme(EmbedTheme.Wheel)
-            .ToEmbed();
+            .BuildMessage();
     }
 
     #endregion
     
     #region Wheel System
 
-    public static DiscordMessageBuilder CreateWheelSpin(ServerMember member, WheelPicker wheel, SpinData spinData)
+    public static DiscordInteractionResponseBuilder CreateWheelSpin(ServerMember member, WheelPicker wheel, SpinData spinData)
     {
         var spinAgainButton = new DiscordButtonComponent(
             DiscordButtonStyle.Primary,
@@ -131,7 +131,7 @@ public static class MessageTemplates
 
     #region Birthday System
 
-    public static DiscordMessageBuilder CreateBirthdayList(DiscordGuild guild, IEnumerable<ServerMember> members, string page)
+    public static DiscordInteractionResponseBuilder CreateBirthdayList(DiscordGuild guild, IEnumerable<ServerMember> members, string page)
     {
         var sortedMembers = members.OrderBy(x => x.NextBirthday).ToList();
         
@@ -143,17 +143,17 @@ public static class MessageTemplates
             .Build();
     }
 
-    public static DiscordEmbedBuilder CreateBirthdayCard(ServerMember member)
+    public static DiscordInteractionResponseBuilder CreateBirthdayCard(ServerMember member)
     {
         return new GarryMessageBuilder()
             .WithTitle("Birthday")
             .WithDescription($"# {member.FormattedBirthday}")
             .WithUserBranding(member)
             .WithTheme(EmbedTheme.Birthday)
-            .ToEmbed();
+            .Build();
     }
 
-    public static DiscordEmbedBuilder CreateNextBirthday(ServerMember member, DiscordGuild guild)
+    public static DiscordInteractionResponseBuilder CreateNextBirthday(ServerMember member, DiscordGuild guild)
     {
         var daysUntil = member.DaysUntilBirthday?.Days ?? 0;
         var daysText = daysUntil switch
@@ -168,7 +168,7 @@ public static class MessageTemplates
             .WithDescription($"### {member.User.Mention}\n{member.FormattedBirthday}\n**{daysText}**")
             .WithGuildBranding(guild)
             .WithTheme(EmbedTheme.Birthday)
-            .ToEmbed();
+            .Build();
     }
 
     public static DiscordMessageBuilder CreateBirthdayNotification(ServerMember member, string message, bool isBirthday = false)
@@ -180,14 +180,14 @@ public static class MessageTemplates
 
         if (isBirthday) builder.WithEveryoneMention();
         
-        return builder.Build();
+        return builder.BuildMessage();
     }
 
     #endregion
 
     #region Miscellaneous
 
-    public static DiscordMessageBuilder CreateEggCounter(DiscordGuild guild, IEnumerable<ServerMember> members, string page)
+    public static DiscordInteractionResponseBuilder CreateEggCounter(DiscordGuild guild, IEnumerable<ServerMember> members, string page)
     {
         var sortedMembers = members.OrderByDescending(x => x.EggCount).ToList();
         
@@ -199,7 +199,7 @@ public static class MessageTemplates
             .Build();
     }
 
-    public static DiscordMessageBuilder CreateCoinFlip(ServerMember member, FlipData flipData)
+    public static DiscordInteractionResponseBuilder CreateCoinFlip(ServerMember member, FlipData flipData)
     {
         var button = new DiscordButtonComponent(
             DiscordButtonStyle.Success, 
@@ -220,7 +220,7 @@ public static class MessageTemplates
             .Build();
     }
 
-    public static DiscordMessageBuilder CreateIdentityDisplay(DiscordGuild guild, List<ServerMember> members, string page)
+    public static DiscordInteractionResponseBuilder CreateIdentityDisplay(DiscordGuild guild, List<ServerMember> members, string page)
     {
         return new GarryMessageBuilder()
             .WithTitle("Who are these people?")
@@ -230,17 +230,17 @@ public static class MessageTemplates
             .Build();
     }
 
-    public static DiscordEmbedBuilder CreateIdentityCard(ServerMember member)
+    public static DiscordInteractionResponseBuilder CreateIdentityCard(ServerMember member)
     {
         return new GarryMessageBuilder()
             .WithTitle("Who are you?")
             .WithUserBranding(member)
             .WithDescription($"# **{member.Name!}**")
             .WithColor(DiscordColor.Aquamarine)
-            .ToEmbed();
+            .Build();
     }
 
-    public static DiscordEmbedBuilder CreateRandomNumber(int result, int min, int max)
+    public static DiscordInteractionResponseBuilder CreateRandomNumber(int result, int min, int max)
     {
         return new GarryMessageBuilder()
             .WithTitle("Random Number")
@@ -248,7 +248,7 @@ public static class MessageTemplates
             .WithField("Min", min.ToString(), true)
             .WithField("Max", max.ToString(), true)
             .WithColor(DiscordColor.Lilac)
-            .ToEmbed();
+            .Build();
     }
 
     public static DiscordMessageBuilder CreateGuildEventMessage(string message, string eventUrl)
@@ -256,7 +256,7 @@ public static class MessageTemplates
         return new GarryMessageBuilder()
             .WithDescription($"### {message}")
             .WithContent(eventUrl)
-            .Build();
+            .BuildMessage();
     }
 
     #endregion

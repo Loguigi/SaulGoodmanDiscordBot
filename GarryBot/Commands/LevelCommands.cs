@@ -24,7 +24,7 @@ public class LevelCommands(
             var members = await memberManager.GetMembersAsync(ctx.Guild!);
             var member = members.First(x => x.User == (user ?? ctx.User));
 
-            await ctx.RespondAsync(MessageTemplates.CreateLevelCard(member, ctx.Guild!));
+            await SendMessage(ctx, MessageTemplates.CreateLevelCard(member, ctx.Guild!));
         }, "level");
     }
 
@@ -35,8 +35,7 @@ public class LevelCommands(
         {
             var members = await memberManager.GetMembersAsync(ctx.Guild!);
 
-            await ctx.RespondWithModalAsync(
-                new DiscordInteractionResponseBuilder(MessageTemplates.CreateLeaderboard(members, ctx.Guild!, "1")));
+            await SendMessage(ctx, MessageTemplates.CreateLeaderboard(members, ctx.Guild!, "1"));
         }, "leaderboard");
     }
 }

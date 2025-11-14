@@ -23,9 +23,7 @@ public class MiscCommands(
         {
             var members = await memberManager.GetMembersAsync(ctx.Guild!);
 
-            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder(
-                    MessageTemplates.CreateIdentityDisplay(ctx.Guild!, members, "1")));
+            await SendMessage(ctx, MessageTemplates.CreateIdentityDisplay(ctx.Guild!, members, "1"));
         }, "who");
     }
 
@@ -40,11 +38,11 @@ public class MiscCommands(
 
             if (member.Name == null)
             {
-                await ctx.RespondAsync(MessageTemplates.CreateError("This user does not have a name set"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("This user does not have a name set"), true);
                 return;
             }
 
-            await ctx.RespondAsync(MessageTemplates.CreateIdentityCard(member));
+            await SendMessage(ctx, MessageTemplates.CreateIdentityCard(member));
         }, "whois");
     }
 
@@ -56,8 +54,8 @@ public class MiscCommands(
             var member = await memberManager.GetMember(ctx.User, ctx.Guild!);
             member.Name = name;
             await memberManager.UpdateMemberAsync(member);
-            
-            await ctx.RespondAsync(MessageTemplates.CreateSuccess($"Name updated to {name}"), true);
+
+            await SendMessage(ctx, MessageTemplates.CreateSuccess($"Name updated to {name}"), true);
         }, "iam");
     }
     
@@ -67,8 +65,7 @@ public class MiscCommands(
         await ExecuteAsync(ctx, async () =>
         {
             var members = await memberManager.GetMembersAsync(ctx.Guild!);
-            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder(MessageTemplates.CreateEggCounter(ctx.Guild!, members, "1")));
+            await SendMessage(ctx, MessageTemplates.CreateEggCounter(ctx.Guild!, members, "1"));
         }, "egg");
     }
 
@@ -95,14 +92,14 @@ public class MiscCommands(
             {
                 _logger.LogWarning("User {User} provided invalid range: min={Min} > max={Max}",
                     ctx.User.Username, min, max);
-                await ctx.RespondAsync(MessageTemplates.CreateError("Min must be less than max"), true);
+                await SendMessage(ctx, MessageTemplates.CreateError("Min must be less than max"), true);
                 return;
             }
 
             int number = random.Next(min, max + 1);
             _logger.LogDebug("Generated random number: {Number}", number);
 
-            await ctx.RespondAsync(MessageTemplates.CreateRandomNumber(number, min, max));
+            await SendMessage(ctx, MessageTemplates.CreateRandomNumber(number, min, max));
         }, "rng");
     }
 }

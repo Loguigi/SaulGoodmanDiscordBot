@@ -12,7 +12,8 @@ public static class Validation
     {
         if (ctx.User.IsBot)
         {
-            await ctx.RespondAsync(MessageTemplates.CreateError("This is a bot"), true);
+            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder(MessageTemplates.CreateError("This is a bot")).AsEphemeral());
         }
         
         return ctx.User.IsBot;
@@ -24,7 +25,8 @@ public static class Validation
         
         if (user.IsBot)
         {
-            await ctx.RespondAsync(MessageTemplates.CreateError("This is a bot"), true);
+            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder(MessageTemplates.CreateError("This is a bot")).AsEphemeral());
         }
         
         return user.IsBot;
@@ -34,7 +36,8 @@ public static class Validation
     {
         if (!member.Birthday.HasValue)
         {
-            await ctx.RespondAsync(MessageTemplates.CreateError("This user does not have a birthday set"), true);
+            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder(MessageTemplates.CreateError("Birthday not set")).AsEphemeral());
         }
         
         return !member.Birthday.HasValue;
@@ -48,7 +51,8 @@ public static class Validation
         
         if (wheels.Count == 0)
         {
-            await ctx.RespondAsync(MessageTemplates.CreateError("No wheels found in this guild"), true);
+            await ctx.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder(MessageTemplates.CreateError("No wheels found")).AsEphemeral());
             return (false, wheels);
         }
         
