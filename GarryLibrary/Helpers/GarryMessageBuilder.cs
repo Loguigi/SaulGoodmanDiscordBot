@@ -39,6 +39,12 @@ public class GarryMessageBuilder
         return this;
     }
 
+    public GarryMessageBuilder WithImage(string url)
+    {
+        _embedBuilder.WithImageUrl(url);
+        return this;
+    }
+
     public GarryMessageBuilder WithColor(DiscordColor color)
     {
         _embedBuilder.WithColor(color);
@@ -107,7 +113,7 @@ public class GarryMessageBuilder
     {
         _embedBuilder.WithDescription(pageContext.GetPageText())
             .WithFooter(pageContext.PageStatus);
-        _messageBuilder.AddComponents(pageContext.GetPageButtons());
+        _messageBuilder.AddActionRowComponent(pageContext.GetPageButtons());
         return this;
     }
 
@@ -128,9 +134,9 @@ public class GarryMessageBuilder
         return this;
     }
 
-    public GarryMessageBuilder WithButtons(params DiscordComponent[] buttons)
+    public GarryMessageBuilder WithButtons(params DiscordButtonComponent[] buttons)
     {
-        _messageBuilder.AddComponents(buttons);
+        _messageBuilder.AddActionRowComponent(buttons);
         return this;
     }
 

@@ -45,7 +45,7 @@ public class GarryDbContext(DbContextOptions<GarryDbContext> options) : DbContex
 
         // WheelOption
         modelBuilder.Entity<WheelOption>()
-            .HasKey(wo => wo.Id);
+            .HasKey(wo => new { wo.WheelId, wo.Option });
 
         // SantaConfig - Primary Key
         modelBuilder.Entity<SantaConfig>()

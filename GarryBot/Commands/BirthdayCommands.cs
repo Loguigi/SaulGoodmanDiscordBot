@@ -66,7 +66,6 @@ public class BirthdayCommands(
     }
 
     [Command("change"), RequireGuild]
-    [RequirePermissions(DiscordPermissions.Administrator)]
     public async Task ChangeBirthday(SlashCommandContext ctx, DiscordUser user, long year, long month, long day)
     {
         await ExecuteAsync(ctx, async () =>

@@ -97,7 +97,7 @@ public static class MessageTemplates
             new DiscordComponentEmoji("❌")
         );
 
-        var buttons = new DiscordComponent[] { spinAgainButton, spinAndRemoveButton };
+        var buttons = new[] { spinAgainButton, spinAndRemoveButton };
     
         // Format the previous spin display
         string previousSpinDisplay;
@@ -197,6 +197,16 @@ public static class MessageTemplates
             .WithTheme(EmbedTheme.Egg)
             .WithPagination(new PageContext<ServerMember>(sortedMembers, 10, page, IDHelper.Misc.EGG))
             .Build();
+    }
+
+    public static DiscordMessageBuilder CreateEggNotification(ServerMember member, string gif)
+    {
+        return new GarryMessageBuilder()
+            .WithTheme(EmbedTheme.Egg)
+            .WithDescription($"# 🥚 You are egg {member.User.Mention} 🥚")
+            .WithImage(gif)
+            .WithFooter($"you have 🐣`{member.EggCount}`🐣 eggs")
+            .BuildMessage();
     }
 
     public static DiscordInteractionResponseBuilder CreateCoinFlip(ServerMember member, FlipData flipData)
