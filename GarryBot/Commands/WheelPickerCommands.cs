@@ -190,6 +190,11 @@ public class WheelPickerCommands(
                 await SendMessage(ctx, MessageTemplates.CreateError("Wheel not found"), true);
                 return;
             }
+
+            var removedOptions = wheel.TempRemovedOptions.Count;
+            await wheelManager.RestoreWheelOptions(wheel);
+
+            await SendMessage(ctx, MessageTemplates.CreateSuccess($"Restored `{removedOptions}` options for {wheel.Name}"));
         }, "reload");
     }
 
@@ -208,6 +213,8 @@ public class WheelPickerCommands(
                 await SendMessage(ctx, MessageTemplates.CreateError("Wheel not found"), true);
                 return;
             }
+            
+            
         }, "list");
     }
 }

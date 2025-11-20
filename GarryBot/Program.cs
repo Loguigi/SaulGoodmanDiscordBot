@@ -54,19 +54,21 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddScoped<ServerConfigManager>();
         #endregion
         
-        #region Event Handlers
-        services.AddScoped<LevelHandlers>();
-        services.AddScoped<MiscHandlers>();
-        services.AddScoped<GuildEventHandler>();
-        #endregion
-        
         #region Other Services
         services.AddSingleton<Random>();
         services.AddHostedService<DailyEventService>();
         #endregion
     
         #region Discord Service
-        services.AddDiscordClient(discordToken, DiscordIntents.All);
+        services.AddDiscordClient(discordToken, DiscordIntents.All)
+            .ConfigureEventHandlers(b =>
+            {
+                b.AddEventHandlers<ComponentInteractionHandler>(ServiceLifetime.Scoped);
+                b.AddEventHandlers<MessageCreatedHandler>(ServiceLifetime.Scoped);
+                b.AddEventHandlers<ScheduledGuildEventHandler>(ServiceLifetime.Scoped);
+                b.AddEventHandlers<VoiceStateUpdatedEventHandler>(ServiceLifetime.Scoped);
+            });
+
         services.AddCommandsExtension((provider, extension) =>
         {
             extension.AddCommands(typeof(Program).Assembly);

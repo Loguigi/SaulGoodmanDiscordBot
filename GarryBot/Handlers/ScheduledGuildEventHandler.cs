@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace GarryBot.Handlers;
 
-public class GuildEventHandler(
+public class ScheduledGuildEventHandler(
     ServerConfigManager configManager,
-    ILogger<GuildEventHandler> logger)
+    ILogger<ScheduledGuildEventHandler> logger)
     : IEventHandler<ScheduledGuildEventCreatedEventArgs>
 {
     public async Task HandleEventAsync(DiscordClient s, ScheduledGuildEventCreatedEventArgs e)
