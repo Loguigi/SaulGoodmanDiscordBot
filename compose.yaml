@@ -2,17 +2,20 @@
   dev:
     image: garrybot
     env_file:
-      - /Volumes/Mr. L/.config/.env.development
+      - ~/.env/.env.development
     build:
       context: .
       dockerfile: GarryBot/Dockerfile
-    restart: unless-stopped
+      args:
+        BUILD_CONFIGURATION: Debug
 
   prod:
-    image: garrybot-1
+    image: garrybot
     env_file:
-      - /Volumes/Mr. L/.config/.env.production
+      - ~/.env/.env.production
     build:
       context: .
       dockerfile: GarryBot/Dockerfile
+      args:
+        BUILD_CONFIGURATION: Release
     restart: unless-stopped

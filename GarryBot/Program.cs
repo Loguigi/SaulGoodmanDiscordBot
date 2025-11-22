@@ -26,11 +26,8 @@ var host = Host.CreateDefaultBuilder(args)
             logging.ClearProviders();
             logging.AddConsole();
             logging.AddDebug();
-#if DEBUG
+
             logging.SetMinimumLevel(LogLevel.Information);
-#else
-            logging.SetMinimumLevel(LogLevel.Warning);
-#endif
         });
     
         #region Data Source Service
