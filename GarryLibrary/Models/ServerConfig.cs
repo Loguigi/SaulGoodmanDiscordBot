@@ -5,7 +5,7 @@ namespace GarryLibrary.Models;
 
 public class ServerConfig
 {
-    public int GuildId { get; set; }
+    public long GuildId { get; set; }
     public DiscordGuild? Guild { get; set; }
     
     #region General Config

@@ -9,9 +9,44 @@ public class WheelPickerManager(
     IDataRepository<WheelPicker> wheelPickerRepository,
     IDataRepository<WheelOption> wheelOptionRepository)
 {
-    public async Task<List<WheelPicker>> GetAllAsync(DiscordGuild guild) => await
-        wheelPickerRepository.GetAllAsync(q => 
-            q.Include(wp => wp.WheelOptions));
+    public async Task<List<WheelPicker>> GetAllAsync(DiscordGuild guild)
+    {
+        var wheels = await wheelPickerRepository.GetAllAsync(q =>
+            q.Where(wp => wp.GuildId == (long)guild.Id)
+                .Include(wp => wp.WheelOptions));
+
+        foreach (var wheel in wheels)
+        {
+            OrderWheelOptions(wheel);
+        }
+        
+        return wheels;
+    }
+
+    public async Task<WheelPicker?> GetWheelById(int id)
+    {
+        var wheel = (await wheelPickerRepository.GetAllAsync(q =>
+            q.Where(wp => wp.Id == id)
+                .Include(wp => wp.WheelOptions)))
+        .FirstOrDefault();
+        
+        if (wheel != null) OrderWheelOptions(wheel);
+        
+        return wheel;
+    }
+
+
+    public async Task<WheelPicker?> GetWheelByName(string name, DiscordGuild guild)
+    {
+        var wheel = (await wheelPickerRepository.GetAllAsync(q =>
+            q.Where(wp => wp.GuildId == (long)guild.Id && wp.Name == name)
+                .Include(wp => wp.WheelOptions)))
+        .FirstOrDefault();
+        
+        if (wheel != null) OrderWheelOptions(wheel);
+
+        return wheel;
+    }
 
     public async Task CreateWheelAsync(WheelPicker wheel) => await wheelPickerRepository.CreateAsync(wheel);
     
@@ -53,4 +88,6 @@ public class WheelPickerManager(
             await wheelOptionRepository.UpdateAsync(option);
         }
     }
+    
+    private void OrderWheelOptions(WheelPicker wheel) => wheel.WheelOptions = wheel.WheelOptions.OrderBy(wo => wo.TempRemoved).ToList();
 }

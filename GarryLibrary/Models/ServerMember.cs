@@ -28,6 +28,7 @@ public class ServerMember : IPageable
     [NotMapped] public int Rank { get; set; }
     [NotMapped] public int ExpNeededForNextLevel => 2 * (int)Math.Pow(Level + 1, 2) - 2;
     [NotMapped] public string? FormattedBirthday => Birthday?.ToString("MMMM d, yyyy");
+    [NotMapped] public string? FormattedNextBirthday => NextBirthday?.ToString("MMMM d, yyyy");
     [NotMapped] public int Age 
     {
         get 
@@ -66,7 +67,7 @@ public class ServerMember : IPageable
     {
         IDHelper.Levels.LEADERBOARD => $"{GetRankText()} {DisplayMention} `LVL {Level}` `{Experience} XP`",
         IDHelper.Misc.WHO => $"### * {User.Mention} ➡️ {Name ?? "`?`"}",
-        IDHelper.Birthdays.LIST => $"### {DisplayMention}: {Birthday:MMMM d} `({Age})`",
+        IDHelper.Birthdays.LIST => $"### * {DisplayMention}: {FormattedNextBirthday} `({Age + 1})`",
         IDHelper.Misc.EGG => $"### 🥚 {DisplayMention}: `{EggCount}` 🥚",
         _ => ""
     };

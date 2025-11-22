@@ -9,12 +9,13 @@ public class ServerConfigManager(
 {
     public async Task<ServerConfig> GetConfig(DiscordGuild guild)
     {
-        var config = await configRepository.GetAsync(new { GuildId = (long)guild.Id });
+        var config = (await configRepository.GetAllAsync()).FirstOrDefault(sc => sc.GuildId == (long)guild.Id);
         if (config is null)
         {
             var channelId = guild.GetDefaultChannel()?.Id;
-            config = new ServerConfig()
+            config = new ServerConfig
             {
+                GuildId = (long)guild.Id,
                 DefaultChannelId = channelId == null ? null : (long)channelId,
                 DefaultChannel = guild.GetDefaultChannel(),
             };

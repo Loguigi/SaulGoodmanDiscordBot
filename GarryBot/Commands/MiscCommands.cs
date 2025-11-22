@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using DSharpPlus.Commands;
 using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Commands.Processors.SlashCommands;
@@ -16,7 +17,7 @@ public class MiscCommands(
 {
     private readonly ILogger<MiscCommands> _logger = logger;
 
-    [Command("who"), RequireGuild]
+    [Command("who"), RequireGuild, Description("Displays a list of all members' names in the server")]
     public async Task Who(SlashCommandContext ctx)
     {
         await ExecuteAsync(ctx, async () =>
@@ -27,7 +28,7 @@ public class MiscCommands(
         }, "who");
     }
 
-    [Command("whois"), RequireGuild]
+    [Command("whois"), RequireGuild, Description("Displays a member's name if set")]
     public async Task WhoIs(SlashCommandContext ctx, DiscordUser user)
     {
         await ExecuteAsync(ctx, async () =>
@@ -46,7 +47,7 @@ public class MiscCommands(
         }, "whois");
     }
 
-    [Command("iam"), RequireGuild]
+    [Command("iam"), RequireGuild, Description("Set your name in the server")]
     public async Task IAm(SlashCommandContext ctx, string name)
     {
         await ExecuteAsync(ctx, async () =>
@@ -59,7 +60,7 @@ public class MiscCommands(
         }, "iam");
     }
     
-    [Command("egg"), RequireGuild]
+    [Command("egg"), RequireGuild, Description("Rotten egg counts in the server")]
     public async Task Egg(SlashCommandContext ctx)
     {
         await ExecuteAsync(ctx, async () =>
@@ -69,7 +70,7 @@ public class MiscCommands(
         }, "egg");
     }
 
-    [Command("flip"), RequireGuild]
+    [Command("flip"), RequireGuild, Description("Flip a coin! Heads or tails?"),]
     public async Task Flip(SlashCommandContext ctx)
     {
         await ExecuteAsync(ctx, async () =>
@@ -83,7 +84,7 @@ public class MiscCommands(
         }, "flip");
     }
 
-    [Command("rng"), RequireGuild]
+    [Command("rng"), RequireGuild, Description("Generate a random number between two numbers")]
     public async Task Rng(SlashCommandContext ctx, int min, int max)
     {
         await ExecuteAsync(ctx, async () =>

@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using DSharpPlus.Commands;
 using DSharpPlus.Commands.ContextChecks;
 using DSharpPlus.Commands.Processors.SlashCommands;
@@ -14,7 +15,7 @@ public class LevelCommands(
     ILogger<LevelCommands> logger)
     : BaseCommand<LevelCommands>(logger)
 {
-    [Command("level"), RequireGuild]
+    [Command("level"), RequireGuild, Description("Displays your level card or another user's level card")]
     public async Task Level(SlashCommandContext ctx, DiscordUser? user = null)
     {
         await ExecuteAsync(ctx, async () =>
@@ -28,7 +29,7 @@ public class LevelCommands(
         }, "level");
     }
 
-    [Command("leaderboard"), RequireGuild]
+    [Command("leaderboard"), RequireGuild, Description("Displays the server leaderboard")]
     public async Task Leaderboard(SlashCommandContext ctx)
     {
         await ExecuteAsync(ctx, async () =>

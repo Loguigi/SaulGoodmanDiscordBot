@@ -4,15 +4,12 @@ public record FlipData(FlipResult LastFlip, int HeadCount, int TailsCount)
 {
     public string ToButtonId() => $@"{IDHelper.Misc.FLIP}\{LastFlip}\{HeadCount}\{TailsCount}";
 
-    public FlipData Flip(FlipData data, FlipResult flip)
+    public FlipData Flip(FlipResult flip) => flip switch
     {
-        return flip switch
-        {
-            FlipResult.Heads => new FlipData(FlipResult.Heads, data.HeadCount + 1, data.TailsCount),
-            FlipResult.Tails => new FlipData(FlipResult.Tails, data.HeadCount, data.TailsCount + 1),
-            _ => throw new ArgumentException("Invalid flip result")
-        };
-    }
+        FlipResult.Heads => new FlipData(FlipResult.Tails, HeadCount + 1, TailsCount),
+        FlipResult.Tails => new FlipData(FlipResult.Heads, HeadCount, TailsCount + 1),
+        _ => throw new ArgumentException("Invalid flip result")
+    };
     
     public static FlipData FirstFlip(FlipResult flip) => flip switch
     {

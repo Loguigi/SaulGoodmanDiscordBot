@@ -109,7 +109,7 @@ public class GarryMessageBuilder
         return this;
     }
 
-    public GarryMessageBuilder WithPagination(PageContext<ServerMember> pageContext)
+    public GarryMessageBuilder WithPagination<T>(PageContext<T> pageContext)
     {
         _embedBuilder.WithDescription(pageContext.GetPageText())
             .WithFooter(pageContext.PageStatus);

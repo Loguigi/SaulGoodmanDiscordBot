@@ -80,9 +80,10 @@ public static class MessageTemplates
 
     public static DiscordInteractionResponseBuilder CreateWheelSpin(ServerMember member, WheelPicker wheel, SpinData spinData)
     {
+        var spinAgainData = spinData with { ShouldRemoveLastOption = false };
         var spinAgainButton = new DiscordButtonComponent(
             DiscordButtonStyle.Primary,
-            spinData.ToButtonId(),
+            spinAgainData.ToButtonId(),
             "Spin Again",
             false,
             new DiscordComponentEmoji("🎡")
@@ -127,6 +128,17 @@ public static class MessageTemplates
             .WithButtons(buttons)
             .Build();
     }
+
+    public static DiscordInteractionResponseBuilder CreateWheelOptionList(WheelPicker wheel, DiscordGuild guild, string page)
+    {
+        return new GarryMessageBuilder()
+            .WithGuildBranding(guild)
+            .WithTitle($"{wheel.Name} - {wheel.WheelOptions.Count} Options")
+            .WithThumbnail(wheel.ImageUrl ?? "")
+            .WithColor(DiscordColor.Gold)
+            .WithPagination(new PageContext<WheelOption>(wheel.WheelOptions, 20, page, $"{IDHelper.WheelPicker.List}\\{wheel.Id}"))
+            .Build();
+    }
     #endregion
 
     #region Birthday System
@@ -165,8 +177,9 @@ public static class MessageTemplates
 
         return new GarryMessageBuilder()
             .WithTitle("Next Birthday")
-            .WithDescription($"### {member.User.Mention}\n{member.FormattedBirthday}\n**{daysText}**")
+            .WithDescription($"# {member.DisplayMention}\n\n{member.FormattedNextBirthday}\n**{daysText}**")
             .WithGuildBranding(guild)
+            .WithThumbnail(member.User.AvatarUrl)
             .WithTheme(EmbedTheme.Birthday)
             .Build();
     }
@@ -203,9 +216,9 @@ public static class MessageTemplates
     {
         return new GarryMessageBuilder()
             .WithTheme(EmbedTheme.Egg)
-            .WithDescription($"# 🥚 You are egg {member.User.Mention} 🥚")
+            .WithDescription($"# 🥚 Egg {member.User.Mention} 🥚")
             .WithImage(gif)
-            .WithFooter($"you have 🐣`{member.EggCount}`🐣 eggs")
+            .WithFooter($"you have 🐣    {member.EggCount}    🐣 eggs")
             .BuildMessage();
     }
 

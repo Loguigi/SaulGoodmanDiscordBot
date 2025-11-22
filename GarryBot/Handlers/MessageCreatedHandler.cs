@@ -6,7 +6,11 @@ using Microsoft.Extensions.Logging;
 
 namespace GarryBot.Handlers;
 
-public class MessageCreatedHandler(ServerMemberManager memberManager, ServerConfigManager configManager, ILogger<MessageCreatedHandler> logger) : IEventHandler<MessageCreatedEventArgs>
+public class MessageCreatedHandler(
+    ServerMemberManager memberManager, 
+    ServerConfigManager configManager, 
+    ILogger<MessageCreatedHandler> logger) 
+    : IEventHandler<MessageCreatedEventArgs>
 {
     public async Task HandleEventAsync(DiscordClient s, MessageCreatedEventArgs e)
     {
@@ -21,6 +25,9 @@ public class MessageCreatedHandler(ServerMemberManager memberManager, ServerConf
         {
             var member = await memberManager.GetMember(e.Author, e.Guild);
             var config = await configManager.GetConfig(e.Guild);
+
+            if (!config.EnableLevels) return;
+            
             var levelUp = await memberManager.GrantExp(member);
 
             if (levelUp)

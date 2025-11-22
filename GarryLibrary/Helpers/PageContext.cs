@@ -22,6 +22,7 @@ public class PageContext<T>(List<T> data, int itemsPerPage, string currentPage, 
     public string GetPageText()
     {
         StringBuilder text = new();
+        string id = customId.Split('\\', StringSplitOptions.RemoveEmptyEntries).First();
         
         if (data.Count == 0) return text.ToString();
         
@@ -30,11 +31,19 @@ public class PageContext<T>(List<T> data, int itemsPerPage, string currentPage, 
             .Take(itemsPerPage)
             .ToList();
 
-        foreach (var item in pageItems)
+        for (var i = 0; i < pageItems.Count; i++)
         {
-            if (item is IPageable pageItem)
+            var item = pageItems[i];
+
+            if (item is not IPageable pageItem) continue;
+            
+            if (pageItem.Indexed)
             {
-                text.AppendLine(pageItem.GetPageItemDisplay(customId));
+                text.AppendLine($"`{i + 1}.` {pageItem.GetPageItemDisplay(id)}");
+            }
+            else
+            {
+                text.AppendLine(pageItem.GetPageItemDisplay(id));
             }
         }
             
@@ -49,11 +58,4 @@ public class PageContext<T>(List<T> data, int itemsPerPage, string currentPage, 
         new(DiscordButtonStyle.Primary, $"{customId}\\{CurrentPage + 1}", "", CurrentPage + 1 > TotalPages, new DiscordComponentEmoji("⏩")),
         new(DiscordButtonStyle.Primary, $"{customId}\\{LAST_PAGE}", "", CurrentPage == TotalPages, new DiscordComponentEmoji("⏭️"))
     ];
-
-    private int ParsePage(string page) => page switch
-    {
-        FIRST_PAGE => 1,
-        LAST_PAGE => TotalPages,
-        _ => int.Parse(page)
-    };
 }

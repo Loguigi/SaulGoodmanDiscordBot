@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using DSharpPlus;
 using DSharpPlus.Commands;
 using DSharpPlus.Commands.ContextChecks;
@@ -19,13 +20,13 @@ namespace GarryBot.Commands;
 /// - birthday add (year) (month) (day)
 /// </summary>
 /// <param name="memberManager">Server member manager service</param>
-[Command("birthday")]
+[Command("birthday"), Description("Commands to manage user birthdays in the server")]
 public class BirthdayCommands(
     ServerMemberManager memberManager,
     ILogger<BirthdayCommands> logger)
     : BaseCommand<BirthdayCommands>(logger)
 {
-    [Command("check"), RequireGuild]
+    [Command("check"), Description("Check a member's birthday"), RequireGuild]
     public async Task CheckBirthday(SlashCommandContext ctx, DiscordUser user)
     {
         await ExecuteAsync(ctx, async () =>
@@ -41,7 +42,7 @@ public class BirthdayCommands(
         }, "birthday check");
     }
 
-    [Command("next"), RequireGuild]
+    [Command("next"), Description("Check who's birthday is next"), RequireGuild]
     public async Task NextBirthday(SlashCommandContext ctx)
     {
         await ExecuteAsync(ctx, async () =>
@@ -53,7 +54,7 @@ public class BirthdayCommands(
         }, "birthday next");
     }
 
-    [Command("list"), RequireGuild]
+    [Command("list"), Description("Gets a list of all members' birthdays in the server"), RequireGuild]
     public async Task BirthdayList(SlashCommandContext ctx)
     {
         await ExecuteAsync(ctx, async () =>
@@ -65,7 +66,7 @@ public class BirthdayCommands(
         }, "birthday list");
     }
 
-    [Command("change"), RequireGuild]
+    [Command("change"), Description("Change a member's birthday"), RequireGuild]
     public async Task ChangeBirthday(SlashCommandContext ctx, DiscordUser user, long year, long month, long day)
     {
         await ExecuteAsync(ctx, async () =>
@@ -88,7 +89,7 @@ public class BirthdayCommands(
         }, "birthday change");
     }
 
-    [Command("add"), RequireGuild]
+    [Command("add"), Description("Add your birthday"), RequireGuild]
     public async Task AddBirthday(SlashCommandContext ctx, long year, long month, long day)
     {
         await ExecuteAsync(ctx, async () =>

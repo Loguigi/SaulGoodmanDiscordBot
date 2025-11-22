@@ -11,6 +11,7 @@ public class ComponentInteractionHandler(
     ServerMemberManager memberManager,
     ServerConfigManager configManager,
     WheelPickerManager wheelPickerManager,
+    Random random,
     ILogger<ComponentInteractionHandler> logger) 
     : BaseMessageSender, IEventHandler<ComponentInteractionCreatedEventArgs>
 {
@@ -43,6 +44,7 @@ public class ComponentInteractionHandler(
             // Misc
             IDHelper.Misc.EGG => HandleEggCounter(e),
             IDHelper.Misc.WHO => HandleIdentityList(e),
+            IDHelper.Misc.FLIP => HandleCoinFlip(e),
             
             _ => Task.CompletedTask
         };
@@ -65,7 +67,36 @@ public class ComponentInteractionHandler(
 
     private async Task HandleWheelSpin(ComponentInteractionCreatedEventArgs e)
     {
-        
+        try
+        {
+            var spinData = SpinData.FromButtonId(e.Id);
+            var wheel = await wheelPickerManager.GetWheelById(spinData.WheelId);
+            var member = await memberManager.GetMember(e.User, e.Guild);
+
+            if (wheel is null) return;
+            
+            var result = wheel.Spin(random);
+            spinData = spinData.IncrementSpin(result!.Option);
+
+            if (spinData is { ShouldRemoveLastOption: true, PreviousOptionSpun: not null })
+            {
+                var option = wheel.WheelOptions.First(o => o.Option == spinData.PreviousOptionSpun);
+                await wheelPickerManager.TempRemoveOptionAsync(wheel, option);
+            }
+            if (wheel.AvailableOptions.Count == 0)
+            {
+                await UpdateMessage(e, MessageTemplates.CreateError("No options available in this wheel"));
+                return;
+            }
+            
+            await UpdateMessage(e, MessageTemplates.CreateWheelSpin(member, wheel, spinData));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error handling {Handler} for user {User} in {Guild}", 
+                "wheel spin", e.User.Username, e.Guild.Name);
+            throw;
+        }
     }
     
     private async Task HandleWheelList(ComponentInteractionCreatedEventArgs e)
@@ -73,8 +104,11 @@ public class ComponentInteractionHandler(
         await HandlePagedResponse(e,
             async page =>
             {
-                var wheelPickers = await wheelPickerManager.GetAllAsync(e.Guild);
-                throw new NotImplementedException();
+                var wheel = await wheelPickerManager.GetWheelById(Convert.ToInt32(IDHelper.GetId(e.Id, 2)));
+                
+                return wheel is null 
+                    ? MessageTemplates.CreateError("Wheel not found") 
+                    : MessageTemplates.CreateWheelOptionList(wheel, e.Guild, page);
             }, "wheel list");
     }
 
@@ -126,6 +160,26 @@ public class ComponentInteractionHandler(
                 return MessageTemplates.CreateIdentityDisplay(e.Guild, members, page);
             },
             "identity list");
+    }
+
+    private async Task HandleCoinFlip(ComponentInteractionCreatedEventArgs e)
+    {
+        try
+        {
+            var member = await memberManager.GetMember(e.User, e.Guild);
+            var flipData = FlipData.FromButtonId(e.Id);
+            var flip = random.Next(2) == 1 ? FlipResult.Heads : FlipResult.Tails;
+
+            flipData = flipData.Flip(flip);
+            
+            await UpdateMessage(e, MessageTemplates.CreateCoinFlip(member, flipData));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error handling {Handler} for user {User} in {Guild}", 
+                "coin flip", e.User.Username, e.Guild.Name);
+            throw;
+        }
     }
     #endregion
 
