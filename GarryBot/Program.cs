@@ -61,9 +61,9 @@ var host = Host.CreateDefaultBuilder(args)
             .ConfigureEventHandlers(b =>
             {
                 b.AddEventHandlers<ComponentInteractionHandler>(ServiceLifetime.Scoped);
-                b.AddEventHandlers<MessageCreatedHandler>(ServiceLifetime.Scoped);
                 b.AddEventHandlers<ScheduledGuildEventHandler>(ServiceLifetime.Scoped);
                 b.AddEventHandlers<VoiceStateUpdatedEventHandler>(ServiceLifetime.Scoped);
+                b.AddEventHandlers<MessageCreatedHandler>(ServiceLifetime.Scoped);
             });
 
         services.AddCommandsExtension((provider, extension) =>
