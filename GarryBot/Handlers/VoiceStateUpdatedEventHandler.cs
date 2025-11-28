@@ -25,7 +25,8 @@ public class VoiceStateUpdatedEventHandler(
         "https://c.tenor.com/9X0oPE0NH-oAAAAC/tenor.gif",
         "https://media.tenor.com/l_QovZ2fRm8AAAAi/eg-babei-egg.gif",
         "https://c.tenor.com/BLnW_FXfGGoAAAAC/tenor.gif",
-        "https://c.tenor.com/LRT9-BMh938AAAAd/tenor.gif"
+        "https://c.tenor.com/LRT9-BMh938AAAAd/tenor.gif",
+        "https://c.tenor.com/BFneuY3HqyAAAAAd/tenor.gif",
     ];
     
     public async Task HandleEventAsync(DiscordClient s, VoiceStateUpdatedEventArgs e)
