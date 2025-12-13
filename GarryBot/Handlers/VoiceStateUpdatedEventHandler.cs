@@ -36,6 +36,8 @@ public class VoiceStateUpdatedEventHandler(
 
     private async Task HandleRottenEgg(VoiceStateUpdatedEventArgs e)
     {
+        ServerMember member;
+        
         try
         {
             if (e.Before is null) return;
@@ -51,11 +53,16 @@ public class VoiceStateUpdatedEventHandler(
                     var memberLeft = await e.Before.GetUserAsync();
                     var guild = await e.GetGuildAsync();
 
-                    logger.LogDebug("{User} left voice channel {Channel}, {RemainingUser} is now alone",
-                        memberLeft!.Username, channelLeftFrom.Name, remainingMember.Username);
-
-                    var member = await memberManager.GetMember(remainingMember, guild!);
-                    member.EggCount++;
+                    if (remainingMember.IsBot)
+                    {
+                        member = await memberManager.GetMember(memberLeft!, guild!);
+                        member.EggCount += 3;
+                    }
+                    else
+                    {
+                        member = await memberManager.GetMember(remainingMember, guild!);
+                        member.EggCount++;
+                    }
                     await memberManager.UpdateMemberAsync(member);
 
                     var config = await configManager.GetConfig(guild!);
