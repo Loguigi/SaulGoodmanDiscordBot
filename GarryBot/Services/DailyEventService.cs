@@ -33,14 +33,15 @@ public class DailyEventService : IHostedService, IDisposable
         _logger.LogInformation("Daily Event Service starting...");
         
         // Calculate time until next midnight
-        var now = DateTime.Now;
-        var nextMidnight = DateTime.Today.AddDays(1);
-        var timeUntilMidnight = nextMidnight - now;
+        var nowUtc = DateTimeOffset.UtcNow;
+        var nowLocal = TimeZoneInfo.ConvertTime(nowUtc, TimeZoneInfo.FindSystemTimeZoneById("America/New_York"));
+        var nextMidnight = nowLocal.AddDays(1);
+        var timeUntilMidnight = nextMidnight - nowLocal;
 
         // Start timer that triggers at midnight, then every 24 hours
         _timer = new Timer(timeUntilMidnight.TotalMilliseconds);
         _timer.Elapsed += async (sender, e) => await OnTimerElapsed();
-        _timer.AutoReset = false; // We'll reset it manually
+        _timer.AutoReset = false;
         _timer.Start();
 
         _logger.LogInformation("Daily Event Service will first run at {NextRun}", nextMidnight);
@@ -89,6 +90,7 @@ public class DailyEventService : IHostedService, IDisposable
             var members = await memberManager.GetMembersAsync(guild);
             
             await CheckBirthdays(guild, members, config);
+            await CheckGuildEvents(guild, config);
         }
         catch (Exception ex)
         {
