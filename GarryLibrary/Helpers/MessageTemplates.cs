@@ -136,7 +136,7 @@ public static class MessageTemplates
             .WithTitle($"{wheel.Name} - {wheel.WheelOptions.Count} Options")
             .WithThumbnail(wheel.ImageUrl ?? "")
             .WithColor(DiscordColor.Gold)
-            .WithPagination(new PageContext<WheelOption>(wheel.WheelOptions, 20, page, $"{IDHelper.WheelPicker.List}\\{wheel.Id}"))
+            .WithPagination(new PageContext<WheelOption>(wheel.WheelOptions, 20, page, $@"{IDHelper.WheelPicker.List}\{page}\{wheel.Id}"))
             .Build();
     }
     #endregion
