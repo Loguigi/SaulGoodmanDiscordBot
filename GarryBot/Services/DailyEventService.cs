@@ -35,7 +35,7 @@ public class DailyEventService : IHostedService, IDisposable
         // Calculate time until next midnight
         var nowUtc = DateTimeOffset.UtcNow;
         var nowLocal = TimeZoneInfo.ConvertTime(nowUtc, TimeZoneInfo.FindSystemTimeZoneById("America/New_York"));
-        var nextMidnight = nowLocal.AddDays(1);
+        var nextMidnight = DateOnly.FromDateTime(nowLocal.LocalDateTime).AddDays(1).ToDateTime(new TimeOnly(1, 0, 0));
         var timeUntilMidnight = nextMidnight - nowLocal;
 
         // Start timer that triggers at midnight, then every 24 hours
