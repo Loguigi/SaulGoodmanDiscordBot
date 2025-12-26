@@ -40,10 +40,8 @@ public class VoiceStateUpdatedEventHandler(
         
         try
         {
-            if (e.Before is null) return;
-            
             // Check if user left a voice channel
-            if (e.Before.ChannelId != null && e.After.ChannelId != e.Before.ChannelId)
+            if (e.Before != null! && e.After.ChannelId != e.Before.ChannelId)
             {
                 var channelLeftFrom = await e.Before.GetChannelAsync();
 
