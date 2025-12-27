@@ -33,18 +33,22 @@ public class DailyEventService : IHostedService, IDisposable
         _logger.LogInformation("Daily Event Service starting...");
         
         // Calculate time until next midnight
+        var eastern = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
         var nowUtc = DateTimeOffset.UtcNow;
-        var nowLocal = TimeZoneInfo.ConvertTime(nowUtc, TimeZoneInfo.FindSystemTimeZoneById("America/New_York"));
-        var nextMidnight = DateOnly.FromDateTime(nowLocal.LocalDateTime).AddDays(1).ToDateTime(new TimeOnly(1, 0, 0));
-        var timeUntilMidnight = nextMidnight - nowLocal;
+        var nowLocal = TimeZoneInfo.ConvertTime(nowUtc, eastern);
+        var nextRunEastern = nowLocal.Date.AddDays(1).AddHours(1);
+        
+        var nextRunUtc = TimeZoneInfo.ConvertTime(nextRunEastern, eastern, TimeZoneInfo.Utc);
+
+        var delay = nextRunUtc - nowUtc;
 
         // Start timer that triggers at midnight, then every 24 hours
-        _timer = new Timer(timeUntilMidnight.TotalMilliseconds);
-        _timer.Elapsed += async (sender, e) => await OnTimerElapsed();
+        _timer = new Timer(delay.TotalMilliseconds);
+        _timer.Elapsed += async (_, _) => await OnTimerElapsed();
         _timer.AutoReset = false;
         _timer.Start();
 
-        _logger.LogInformation("Daily Event Service will first run at {NextRun}", nextMidnight);
+        _logger.LogInformation("Daily Event Service will first run at {NextRun}", nextRunUtc);
         
         return Task.CompletedTask;
     }
